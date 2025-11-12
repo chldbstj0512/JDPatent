@@ -1,0 +1,1319 @@
+﻿country,date,title,applicant,ipc_code,naics_code,abstract,file_name,ocr_text
+US,2021-02-22,PROPIONIBACTERIUM ACNES PROPHYLACTIC AND THERAPEUTIC IMMUNE TREATMENT,Origimm Biotechnology GmbH,"A61K 39/05, A61P 17/10, A61P 31/04, C07K 14/195","325412, 541715, 621511","The present invention discloses a vaccine comprising one or more of Dermatan sulfate-binding adhesin 1 of P. acnes (DsA1 polypeptide), Dermatan sulfate-binding adhesin 2 of P. acnes (DsA2 polypeptide), and putative iron-transport protein (PITP) polypeptide of P acnes, and/or a fragment and/or derivative of DsAl and/or DsA2 and/or PITP, wherein the DsAl polypeptide and the DsA2 polypeptide comprise from N- to C-terminus an N-terminal swapping region (“NSR”), a first conserved sub-domain (“CSD1”), a first swapping region (“SR1”), a second conserved sub-domain (“CSD2”), a second swapping region (“SR2”), a third conserved sub-domain (“CSD3”), a Pro-Thr repeat containing region (“PT repeat region”), and a C-terminal region (“CTR”), and wherein the PITP polypeptide comprises from N- to C-terminus an extended neocarzinostatin family domain (““ENFD”), a first swapping region (“SR1”), a heme-binding domain (“HbD”), a second swapping region (“SR2”) including the C-terminal LPXTG motif, and a hydrophobic C-terminal region (““hLAR”). Specification includes a Sequence Listing.",test_01.pdf,"--- Page 1 (ocr) ---
+US 20240139302A1
+
+a2) Patent Application Publication co) Pub. No.: US 2024/0139302 Al
+
+as) United States
+
+Selak et al.
+
+(43) Pub. Date:          May 2, 2024
+
+ 
+
+(54) PROPIONIBACTERIUM ACNES
+PROPHYLACTIC AND THERAPEUTIC
+IMMUNE TREATMENT
+
+(71) Applicant: Origimm Biotechnology GmbH, Wien
+(AT)
+
+(72) Inventors: Sanja Selak, Wein (AT); Christine
+Triska, Korneuburg (AT); Manfired
+Schuster, Schrick (AT); Johannes
+Séllner, Wien (AT); Bernhard
+Roppenser, Wien (AT); Theresa
+Weinhaupl, Wien (AT); Max Réssler,
+Wien (AT)
+
+(21) Appl. No.: — 17/801,099
+
+(22) PCT Filed:      Feb. 22, 2021
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+(86) PCT No.:      PCT/EP2021/054346
+8 371 (0001),
+(2) Date:       Aug. 19, 2022
+(30)            Foreign Application Priority Data
+Feb. 21, 2020 (EP) wee cteeeeteneeeees 20158656.7
+Feb. 21, 2020 (EP) ...             ... 20158659.1
+Feb. 21, 2020 (EP) ...             ... 20158661.7
+Feb. 21, 2020 (EP) .[시니늬늬니니이에에에에에아아아 20158662.5
+100,000> (> IA1 (NCTC737)
+| ES [A2 (P.aen31}
+| ES] 1B (KPA171202)
+| RSI IC (PV68)
+| a tl (HLOSOPA2)
+80,000- MHI {Asn12)
+은
+근 는 50.000-
+ey
+so
+oy       |
+o         |
+sc
+5 = 40,0004
+®         |
+20,000-
+o-           fey ep
+
+oh. oi dn
+
+Publication Classification
+
+(51) Int. CL
+AGIK 39/05                 (2006.01)
+AGIP 17/10                 (2006.01)
+AGIP 31/04                 (2006.01)
+CO7K 14/195             (2006.01)
+(52) U.S. Cl
+CPC .……………   A61K 39/05 (2013.01); A6IP 17/10
+(2018.01); A61P 31/04 (2018.01); CO7K
+14/195 (2013.01)
+(57)                          ABSTRACT
+
+The present invention discloses a vaccine comprising one or
+more of Dermatan sulfate-binding adhesin 1 of P. acnes
+(DsA1 polypeptide), Dermatan sulfate-binding adhesin 2 of
+P. acnes (DsA2 polypeptide), and putative iron-transport
+protein (PITP) polypeptide of P acnes, and/or a fragment
+and/or derivative of DsAl and/or DsA2 and/or PITP,
+wherein the DsAl polypeptide and the DsA2 polypeptide
+comprise from N- to C-terminus an N-terminal swapping
+region (“NSR”), a first conserved sub-domain (“CSD1”), a
+first swapping region (“SR1”), a second conserved sub-
+domain (“CSD2”), a second swapping region (“SR2”), a
+third conserved sub-domain (“CSD3”), a Pro-Thr repeat
+containing region (“PT repeat region”), and a C-terminal
+region (“CTR”), and wherein the PITP polypeptide com-
+prises from N- to C-terminus an extended neocarzinostatin
+family domain (““ENFD”), a first swapping region (“SR1”),
+a heme-binding domain (“HbD”), a second swapping region
+(“SR2”) including the C-terminal LPXTG motif, and a
+hydrophobic C-terminal region (““hLAR”).
+
+Specification includes a Sequence Listing.
+
+    
+
+Soh
+
+ 
+
+ 
+
+UA SARs
+
+ERAN
+
+ 
+
+ 
+
+on aon
+ee &€ F&F EP SF EF EE S ¥
+
+   
+
+Immunization antigens
+
+--- Page 2 (ocr) ---
+Patent Application Publication 51852, 2024 Sheet 1 of 83      US 2024/0139302 Al
+
+ 
+ 
+
+Fig. 1A
+
+Sosa aes
+
+ 
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+  
+
+CP EE PEPE EEE ES SE
+
+PIPL POPP ELE D
+COO
+
+Immunization antigens
+
+woe an Ne of
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+c.f .                     c
+Pea 2
+oOo
+o cra =
+Foraoo N                           =
+오거 준오봉 도                %
+우으논트쿠로                    4
+zimo re
+.                               tL
+THANE
+}      3}      3      Ps      }      ㅎ
+음      3      3      a      3
+8      g      g      ¢      a
+-          WAS -/+ IJ
+
+Bulpulq sseuns"
+US,2013-11-22,DEFECT MANAGEMENT POLICIES FOR NAND FLASH MEMORY,"Intel Corporation, Santa Clara, CA","G06F 11/00, G11C 29/00, G06F 11/07, G11B 20/18","334413, 334111, 541715","Systems and methods of managing defects in nonvolatile storage systems that can be used to avoid an inadvertent loss of data, while maintaining as much useful memory in the nonvolatile storage systems as possible. The disclosed systems and methods can monitor a plurality of trigger events for detecting possible defects in one or more nonvolatile memory (NVM) devices included in the nonvolatile storage systems, and apply one or more defect management policies to the respective NVM devices based on the types of trigger events that resulted in detection of the possible defects. Such defect management policies can be used proactively to retire memory in the nonvolatile storage systems with increased granularity, focusing the retirement of memory on regions of nonvolatile memory that are likely to contain a defect.",test_02.pdf,"--- Page 1 (ocr) ---
+US009535777B2
+
+ 
+
+a2) United States Patent            (10) Patent No.:     US 9,535,777 B2
+Kalavade et al.                               (45) Date of Patent:          Jan. 3, 2017
+(54) DEFECT MANAGEMENT POLICIES FOR          (56)                 References Cited
+
+NAND FLASH MEMORY
+U.S. PATENT DOCUMENTS
+
+(71) Applicant: Intel Corporation, Santa Clara, CA
+
+5,619,644 A * 4/1997 Crockett 0... GO6F 11/0727
+
+(US)                                                                                          714/13
+
+5,968,182 A * 10/1999 Chen uc GOOF 11/1435
+
+(72) Inventors: Pranav Kalavade, San Jose, CA (US);                                                       714/42
+Feng Zhu, San Jose, CA (US); Shyam           6,931,571 B2* 8/2005 Bernadat ............... GO6F 11/073
+
+714/25
+
+Sunder Raghunathan, Sunnyvale, CA
+(US); Ravi H. Motwani, San Diego,
+CA (US)
+
+8,347,029 B2    1/2013 Trika et al.
+(Continued)
+
+(73) Assignee: Intel Corporation, Santa Clara, CA                     FOREIGN PATENT DOCUMENTS
+
+(US)                                             wo          2013089715 Al 6/2013
+(*) Notice:      Subject to any disclaimer, the term of this                           OTHER PUBLICATIONS
+patent is extended or adjusted under 35
+U.S.C. 154(b) by 263 days.                    International Search Report for PCT/US20141061486, “Defect
+Management Policies for NAND Flash Memory”, date of mailing
+(21) Appl. No.: 14/087,282                              Jan. 16, 2015.
+(22) Filed:      Nov. 22, 2013                                 Primary Examiner — Christine Tu
+(74) Attorney, Agent, or Firm — Chapin Intellectual
+(65)                 Prior Publication Data                   Property Law, LLC
+US 2015/0149818 Al     May 28, 2015                  (57)                   ABSTRACT
+(51) Int. CL                                           Systems and methods of managing defects in nonvolatile
+GO6F 11/00                (2006.01)                                    storage systems that can be used to avoid an inadvertent loss
+GIIC 29/00          (2006.01)                        of data, while maintaining as much useful memory in the
+
+nonvolatile storage systems as possible. The disclosed sys-
+tems and methods can monitor a plurality of trigger events
+for detecting possible defects in one or more nonvolatile
+memory (NVM) devices included in the nonvolatile storage
+
+GO6F 11/07              (2006.01)
+GIB 20/18            (2006.01)
+(52) U.S. Cl
+
+CPC veces  GO6F 11/0751 (2013.01); GO6F 11/073       systems, and apply one or more defect management policies
+(2013.01); GIB 20/1816 (2013.01)       to the respective NVM devices based on the types of trigger
+(58) Field of Classification Search                                       events that resulted in detection of the possible defects. Such
+
+CPC . GO6F 11/0727; GO6F 11/0751; GO6F 11/073;        defect management policies can be used proactively to retire
+GO6F 11/079; GO6F 3/067;G11B memory in the nonvolatile storage systems with increased
+20/1816; G11B 20/18         granularity, focusing the retirement of memory on regions of
+
+USPC. we 714/773, 741, 763, 742, 25, 31-33,     nonvolatile memory that are likely to contain a defect.
+35,714/37, 39, 48-49; 703/13-17, 23, 26
+See application file for complete search history.                        20 Claims, 5 Drawing Sheets
+
+ 
+  
+       
+        
+
+                                                                                                                                                                                                   
+                                                                                                                                                                                                                 
+
+Monitor plurality of trigger
+events for detecting possible
+dafects in selacted NVM davice
+
+ 
+
+‘Apply at least one policy, including
+policy of retiring NVM storage
+location af LDPC codeword for
+
+which host processor issued data
+read request, or retiring physical
+memory page that includes NVM
+storage location of LDPC codeword
+for which host processor issued
+data read request
+306
+
+Type of trigger
+vent corresponds to SBR
+trigger event or XOR data
+Tecovery trigger event?
+
+ 
+ 
+
+‘Apply at least one policy,
+including policy of retiring
+NVM storage location of
+LDPC codeword for which
+host pracessor issued one
+or more data read
+
+ 
+  
+
+Type of trigger
+event corresponds to
+predetermined number of HBR
+
+trigger events?                             requests, or retiring
+308
+
+physical memary page
+that includes NVM
+storage location of LDPC
+codeword for which host
+processor issued data
+read requests
+
+--- Page 2 (ocr) ---
+US 9,535,777 B2
+
+ 
+
+Page 2
+(56)                 References Cited
+U.S. PATENT DOCUMENTS
+8,503,238 BL* 8/2013 Wu wee GIIC 16/06
+365/185.09
+
+8,549,380 B2 10/2013. Motwani
+
+8,549,382 B2 10/2013. Motwani
+
+8,560,922 B2 10/2013 Bivens et al.
+
+9,135,100 B2* 9/2015 Ware we GO6F 11/1008
+2008/0244338 Al 10/2008 Mokhlesi et al.
+2009/0044085 Al     2/2009 Zeng
+2010/0115376 Al     5/2010 Shalvi et al.
+2010/0122148 Al     5/2010 Flynn et al.
+2010/0185906 Al     7/2010 Rauschmayer et al.
+2011/0055468 Al     3/2011 Gonzalez et al.
+2013/0262418 Al 10/2013 Bhasin et al.
+
+* cited by examiner"
+US,2012-05-16,TECHNIQUES TO PERFORM POWER FAIL-SAFE CACHING WITHOUT ATOMIC METADATA,SANJEEV N. TRIKA,"G06F 12/08, G06F 12/02","334111, 511210, 541511","A method and system to allow power fail-safe write-back or write-through caching of data in a persistent storage device into one or more cache lines of a caching device. No metadata associated with any of the cache lines is written atomically into the caching device when the data in the storage device is cached. As such, specialized cache hardware to allow atomic writing of metadata during the caching of data is not required.",test_03.pdf,"--- Page 1 (ocr) ---
+US 20120290774A1
+
+a2) Patent Application Publication co) Pub. No.: US 2012/0290774 Al
+
+as) United States
+
+TRIKA
+
+(43) Pub. Date:        Nov. 15, 2012
+
+ 
+
+(54) TECHNIQUES TO PERFORM POWER
+FAIL-SAFE CACHING WITHOUT ATOMIC
+
+METADATA
+(76) Inventor:          SANJEEV N. TRIKA, Hillsboro,
+OR (US)
+(21) Appl. No.:         13/473,419
+(22) Filed:              May 16, 2012
+
+Related U.S. Application Data
+
+(63) Continuation of application No. 12/414,385, filed on
+Mar. 30, 2009, now Pat. No. 8,195,891.
+
+Publication Classification
+
+(51) Int. Cl.
+GO6F 12/08              (2006.01)
+GO6F 12/02              (2006.01)
+
+(52) U.S. CL .. 711/103; 711/135; 711/142; 711/E12.022;
+711/E12.026; 711/E12.008
+
+(57)                        ABSTRACT
+
+A method and system to allow power fail-safe write-back or
+write-through caching of data in a persistent storage device
+into one or more cache lines ofa caching device. No metadata
+associated with any of the cache lines is written atomically
+into the caching device when the data in the storage device is
+cached. As such, specialized cache hardware to allow atomic
+writing of metadata during the caching of data is not required.
+
+210 Host I/O
+
+ 
+
+150 1/O Controller
+
+200
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+212                           214
+Recovery <>» Run-time
+controller                     controller
+
+160                           170
+
+Storage                       Caching
+device                         device
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+--- Page 2 (ocr) ---
+Patent Application Publication
+
+ 
+
+ 
+
+130
+
+Display device
+
+ 
+
+ 
+
+ 
+
+Nov. 15, 2012 Sheet 1 of 9
+
+ 
+
+ 
+
+110
+
+Processor
+
+ 
+
+ 
+
+ 
+
+1
+
+ 
+
+ 
+
+120
+
+~ !.1611701/ / (3「히가1105
+Controller
+
+ 
+
+ 
+
+!
+
+ 
+
+ 
+
+150
+
+/O Controller
+
+ 
+
+ 
+
+>
+
+ 
+
+US 2012/0290774 Al
+
+140
+
+Main memory
+
+142
+Volatile Memory
+
+144
+
+Non-Volatile
+Memory
+
+ 
+
+——__ oo.
+
+ 
+
+ 
+
+160
+Storage
+device
+
+ 
+
+ 
+
+ 
+
+ 
+
+100
+
+200
+
+170
+Caching
+device
+
+ 
+
+ 
+
+FIG. 1
+
+|
+
+ 
+
+ 
+
+180
+Network
+Interface
+
+ 
+
+ 
+
+ 
+
+210 Host I/O
+
+ 
+
+150 I/O Controller
+
+ 
+
+ 
+
+ 
+
+212
+Recovery
+controller
+
+ 
+
+~
+
+ 
+
+ 
+
+214
+Run-time
+controller
+
+ 
+
+ 
+
+ 
+
+160
+
+Storage
+device
+
+FIG. 2
+
+170
+Caching
+device
+
+ 
+
+190
+Keyboard/
+Mouse"
+KR,2017-05-08,인간화 항-IL-1R3 항체,엠에이비 디스커버리 게엠베하,"C07K 16/28, A61P 35/00, C07K 16/2866, C07K 2317/24, C07K 2317/76",,"본 발명은 IL-1R3에 특이적으로 결합하는 인간화 항체 또는 이의 단편 또는 유도체 또는 IL-1R3 결합 특이성을 부여하기에 충분한 상기 항체의 적어도 일부를 함유하는 폴리펩티드에 관한 것이다. 상기 항체는 IL-1R3 유도된 NFkB 활성을 억제한다. 이들은 또한 IL-1알파, IL-1베타, IL-33, 및/또는 IL-36 자극된 NFkB 활성을 억제한다. 본 발명은 추가로, 암과 같은 IL-1R3 매개된 질환의 치료에 있어서의 상기 인간화 항체의 용도에 관한 것이다. 본 발명은 마지막으로 약제학적으로 허용되는 담체 및 치료학적 유효량의 본 발명에 따르는 항체를 포함하는 약제학적 조성물을 포함한다. 약제학적 조성물은 암과 같은 IL-1R3 매개된 질환을 치료하는데 사용될 수 있다.",test_04.pdf,"--- Page 1 (text) ---
+등록특허 10-2381257
+등록특허 10-2381257
+(19) 대한민국특허청(KR) (45) 공고일자 2022년04월04일
+(11) 등록번호 10-2381257
+(12) 등록특허공보(B1)
+(24) 등록일자 2022년03월28일
+(51) 국제특허분류(Int. Cl.) (73) 특허권자
+C07K 16/28 (2006.01) A61P 35/00 (2006.01) 엠에이비 디스커버리 게엠베하
+(52) CPC특허분류 독일, 82061 노이리트, 포스튼리더 스트라쎄 8-14
+C07K 16/2866 (2013.01) (72) 발명자
+A61P 35/00 (2018.01)
+피셔 슈테판
+(21) 출원번호 10-2018-7034930
+독일, 82362 바일하임, 알프피츠스트라쎄 1
+(22) 출원일자(국제) 2017년05월08일
+브란트 미카엘
+심사청구일자 2020년03월04일
+독일, 81476 뮌헨, 스피젤버그스트라쎄 7
+(85) 번역문제출일자 2018년11월30일
+카잔지안 린다 베로니크
+(65) 공개번호 10-2019-0004762
+독일, 80802 뮌헨, 레오폴드스트라쎄 52
+(43) 공개일자 2019년01월14일
+(74) 대리인
+(86) 국제출원번호 PCT/EP2017/060925
+특허법인한얼
+(87) 국제공개번호 WO 2017/191325
+국제공개일자 2017년11월09일
+(30) 우선권주장
+16168617.5 2016년05월06일
+유럽특허청(EPO)(EP)
+(56) 선행기술조사문헌
+WO2015132602 A1*
+WO2016020502 A1*
+KR1020140003550 A
+WO2016207304 A2
+*는 심사관에 의하여 인용된 문헌
+전체 청구항 수 : 총 17 항 심사관 : 허명숙
+(54) 발명의 명칭 인간화 항-IL-1R3 항체
+(57) 요 약
+본 발명은 IL-1R3에 특이적으로 결합하는 인간화 항체 또는 이의 단편 또는 유도체 또는 IL-1R3 결합 특이성을
+부여하기에 충분한 상기 항체의 적어도 일부를 함유하는 폴리펩티드에 관한 것이다. 상기 항체는 IL-1R3 유도된
+NFkB 활성을 억제한다. 이들은 또한 IL-1알파, IL-1베타, IL-33, 및/또는 IL-36 자극된 NFkB 활성을 억제한다.
+본 발명은 추가로, 암과 같은 IL-1R3 매개된 질환의 치료에 있어서의 상기 인간화 항체의 용도에 관한 것이다.
+본 발명은 마지막으로 약제학적으로 허용되는 담체 및 치료학적 유효량의 본 발명에 따르는 항체를 포함하는 약
+제학적 조성물을 포함한다. 약제학적 조성물은 암과 같은 IL-1R3 매개된 질환을 치료하는데 사용될 수 있다.
+- 1 -
+--- Page 2 (text) ---
+등록특허 10-2381257
+(52) CPC특허분류
+C07K 2317/24 (2013.01)
+C07K 2317/76 (2013.01)
+- 2 -"
+KR,2012-04-25,마이크로RNA 화합물 및 MIR-21 활성 조절 방법,"레굴루스 테라퓨틱스 인크, 존스 홉킨스","C12N 15/113, A61K 48/00, A61P 35/00, C07H 21/00","325412, 541715, 621511","본 발명은 miR-21 활성의 저해를 위한 조성물 및 방법이다. 조성물은 miR-21 활성의 강한 저해제를 낳는 특정 뉴클레오시드 수정 패턴을 가지고 있다. 조성물은 miR-21을 저해하는 데 이용될 수 있으며, 섬유증 및 암과 같은, 비정상적인 miR-21의 발현과 관련이 있는 질병을 치료하는 데 이용될 수 있다.",test_05.pdf,"--- Page 1 (text) ---
+등록특허 10-2055172
+등록특허 10-2055172
+(19) 대한민국특허청(KR) (45) 공고일자 2020년01월23일
+(11) 등록번호 10-2055172
+(12) 등록특허공보(B1)
+(24) 등록일자 2019년12월06일
+(51) 국제특허분류(Int. Cl.) (73) 특허권자
+C12N 15/113 (2010.01) A61K 48/00 (2006.01) 레굴루스 테라퓨틱스 인크
+A61P 35/00 (2006.01) C07H 21/00 (2006.01) 미국 92121 캘리포니아 샌디에고 사이언스 센터
+(21) 출원번호 10-2013-7031227 드라이브 10614
+(22) 출원일자(국제) 2012년04월25일 (72) 발명자
+심사청구일자 2017년04월04일 바트, 발크리셴
+(85) 번역문제출일자 2013년11월25일 미국 92121 캘리포니아주 샌디에고 존스 홉킨스
+(65) 공개번호 10-2014-0033062 코트 3545
+(43) 공개일자 2014년03월17일 (74) 대리인
+(86) 국제출원번호 PCT/US2012/034880 박영우
+(87) 국제공개번호 WO 2012/148952
+국제공개일자 2012년11월01일
+(30) 우선권주장
+61/478,767 2011년04월25일 미국(US)
+61/565,779 2011년12월01일 미국(US)
+(56) 선행기술조사문헌
+WO2007027894 A2*
+(뒷면에 계속)
+전체 청구항 수 : 총 24 항 심사관 : 문동현
+(54) 발명의 명칭 마이크로RNA 화합물 및 MIR-21 활성 조절 방법
+(57) 요 약
+본 발명은 miR-21 활성의 저해를 위한 조성물 및 방법이다. 조성물은 miR-21 활성의 강한 저해제를 낳는 특정 뉴
+클레오시드 수정 패턴을 가지고 있다. 조성물은 miR-21을 저해하는 데 이용될 수 있으며, 섬유증 및 암과 같은,
+비정상적인 miR-21의 발현과 관련이 있는 질병을 치료하는 데 이용될 수 있다.
+대 표 도 - 도1
+- 1 -
+--- Page 2 (text) ---
+등록특허 10-2055172
+(56) 선행기술조사문헌
+WO2009043353 A2*
+WO2009106367 A1
+WO2009058907 A1
+WO2010099161 A1
+*는 심사관에 의하여 인용된 문헌
+- 2 -"
+US,2006-06-01,"METHOD FOR OPERATING A PLAYBACK UNIT IN A VEHICLE, FOR PLAYING BACK DATA STORED ON A DATA MEDIUM","Harman Becker Automotive Systems GmbH, Karlsbad (DE)",H04M 1/64,"334310, 334220, 423690","A system for use in a motor vehicle includes a wireless receiver that receives, over a wireless communication channel, supplemental information representative of the characteristics of the contents of a playback media, and provides received supplemental information indicative thereof. A playback device receives the received supplemental information and stores the received supplemental information in a non-volatile memory device. The playback unit may generate a request for supplement information in response to and indicative of a playback media inserted into the playback unit. The system may also include a wireless transmitter that receives the request and transmits the received request over the communication channel. In another embodiment, a radio connection is established between a computing device and the wireless receiver. The computing device transmits characteristic data of selected data media over the radio connection to the wireless receiver, which provides the received data to the playback unit that stores the received data in a memory device for subsequent on-demand retrieval and display. In this embodiment, an operator can transfer to the motor vehicle the characteristic data stored in the computing device (e.g., personal computer) relating to selected data media.",test_06.pdf,"--- Page 1 (ocr) ---
+US008036641B2
+
+ 
+
+a2) United States Patent                        (10) Patent No.:           US 8,036,641 B2
+Hovestadt et al.                                       (45) Date of Patent:          *Oct. 11, 2011
+(54) METHOD FOR OPERATING A PLAYBACK                 5,751,672 A      5/1998 Yankowski
+UNIT IN A VEHICLE, FOR PLAYING BACK                  oes  수       a loos  pochstein al
+DATA STORED ON A DATA MEDIUM                           5'806.018 A       9/1998 Smith et al.
+5,809,115 A       9/1998 Inkinen
+(75) Inventors: Guido Hovestadt, Karlsruhe (DE); Dirk         5,862,488 A * 1/1999 Kotzinetal. 0 455/510
+Lappe, Karlsruhe (DE); Stefan Wolf,               5,914,941 A * 6/1999 Janky voces 370/313
+Matital (DE)                5970390 A 10/1999 Kogaet a
+970,                         oga et al.
+(73) Assignee: Harman Becker Automotive Systems                                   (Continued)
+GmbH, Karlsbad (DE)
+FOREIGN PATENT DOCUMENTS
+(*) Notice: Subject to any disclaimer, the term of this      DE               41 25 874          2/1993
+patent is extended or adjusted under 35                           (Continued)
+U.S.C. 154(b) by 133 days.
+This patent is subject to a terminal dis- | Primary Examiner — Cong Tran
+claimer.                                                   (74) Attorney, Agent, or Firm — O’ Shea Getz P.C.
+(21) Appl. No.: 11/444,974                                            (57)                        ABSTRACT
+(22) Filed:     Jun. 1, 2006                            A system for use ina motor vehicle includes a wireless
+receiver that receives, over a wireless communication chan-
+(65)                   Prior Publication Data                      nel, supplemental information representative of the charac-
+teristics of the contents of a playback media, and provides
+US 2007/0136771 Al       Jun. 14, 2007                       received supplemental information indicative thereof. A
+playback device receives the received supplemental informa-
+(51) Int. Cl.                                                   tion and stores the received supplemental information in a
+HO4M 1/64               (2006.01)                                            .                   .                         :
+non-volatile memory device. The playback unit may generate
+(52) U.S.C one 455/412.1; 455/3.06; 455/414.1       a request for supplement information in response to and
+(58) Field of Classification Search ............... 455/412.1,      indicative of a playback media inserted into the playback unit.
+455/3.06, 414.1, 403, 407-408, 550.1, 552.1,       The system may also include a wireless transmitter that
+455/557, 566; 379/76; 369/30.01, 30.04,      receives the request and transmits the received request over
+369/30.06, 47.1, 59.23; 725/62—-64, 75, 87;       the communication channel. In another embodiment, a radio
+348/14.01-4          connection is established between a computing device and the
+See application file for complete search history.               wireless receiver. The computing device transmits character-
+,                                           istic data of selected data media over the radio connection to
+(56)                          References Cited                                       the wireless receiver, which provides the received data to the
+U.S. PATENT DOCUMENTS                                      playback unit that stores the received data ina memory device
+or subsequent on-demand retrieval and display. In this
+4,870,515 A          9/1989 Stokes                                                       embodiment, an operator can transfer to the motor vehicle the
+0 49  수     10198  디아이 etal                           characteristic data stored in the computing device (e.g., per-
+5.502.497 A * 3/1996 Yamaashi etal. cc... 348/473       sonal computer) relating to selected data media.
+5,706,211 A * 1/1998 Beletic etal. oc. 709/206
+5,732,324 A      3/1998 Rieger, III                                             12 Claims, 1 Drawing Sheet
+
+oN]
+
+22
+
+--- Page 2 (ocr) ---
+US 8,036,641 B2
+
+ 
+
+ 
+
+Page 2
+U.S. PATENT DOCUMENTS              6,701,161 Bl* 3/2004 Wendling oo... 455/556.1
+5,977,964 A 11/1999 Williams et al.                6,728,531 Bl 4/2004 Lee et al.
+5.987.323 A   11/1999 Huotari                     6,993,134 BI *  1/2006 Epstein eee teeta anne ene ee 380/262
+5.991.640 A 11/1999 Lilja et al.                 7,272,843 B1* 9/2007 Nejimeet al. oc... 725/32
+6,028,537 A * 2/2000 Sumanetal. …………………… 340/988    2001/0053943 Al 12/2001 Kaneko et al.
+6,034,925 A   3/2000 Wehmeyer                 2002/0056142 Al* 5/2002 Redmond .      시 725/151
+6,101,387 A   8/2000 Granberg et al.             2008/0155616 Al* 6/2008 Loganetal. cece 725/93
+6,169,955 21  1/2001 Fultz
+6,246,672 BL* 6/2001 Lumelsky ………………ㄴ… 370/310          FOREIGN PATENT DOCUMENTS
+6,271,455 B1* 8/2001 Ishigakiet al. oo... 84/605
+6,334,061 81 12/2001 Cunningham et al.           DE       197 27 325     31999. 이니이이아아아아서 23/6
+DE      197 37 322    3/1999...      시. 178
+6,493,430 B2 12/2002 Leuca etal.
+cuca |                     DE        197 50372      5/1999 200 15/163
+6.527.641 131   3/2003 Sinclair et al.
+,                                                 DE            199 17 169        11/2000 veces 1/38
+6,563,769 B1* 5/2003 Van Der Meulen ........ 369/30.06   EP        0777 106     6/1997           21720
+6,563,805 821  5/2003 Maetal.                   ;        III 아마마마마마마
+6,564,003 B2*  5/2003 40060 하키. .………………… 386/69    * cited by examiner"
+KR,2008-09-16,유무형 상품 결합을 통한 온라인 판매 방법 및 시스템,주식회사 인터파크아이엔티,G06Q 30/00,"454110, 541511, 541519","본 발명은 온라인 쇼핑몰에서 판매하는 실제의 유형상품과 무형상품에 대한 활동을 결합한 상품에 대하여 다양한 수단을 이용하여 추천한 회원에게 기존의 가격보다 낮은 가격으로 판매하는 방법 및 시스템에 관한 것으로, 고객에 의해 선택된 적어도 하나의 유형상품에 대한 주문서 작성을 입력받는 단계와, 상기 고객의 관련 정보를 근거로 상기 유형상품에 할인혜택 적용여부를 선택할 수 있는 화면을 출력하는 단계와, 상기 할인혜택에 대하여 추천회원들로부터 작성된 추천 게시물을 출력하는 단계와, 상기 할인혜택과 관련된 무형상품 및 상기 게시물을 작성한 추천회원에 대한 상기 고객의 입력을 수신하는 단계와, 상기 고객의 입력을 근거로 한 할인혜택을 상기 유형상품 가격에 적용하는 단계 및 상기 추천회원에게 소정의 혜택을 부여하는 단계를 포함하여 이루어질 수 있다.",test_07.pdf,"--- Page 1 (text) ---
+공개특허 10-2010-0031931
+(19) 대한민국특허청(KR) (11) 공개번호 10-2010-0031931
+(12) 공개특허공보(A) (43) 공개일자 2010년03월25일
+(71) 출원인
+(51) Int. Cl.
+주식회사 인터파크아이엔티
+G06Q 30/00 (2006.01)
+서울 서초구 서초동 1304-3
+(21) 출원번호 10-2008-0090817
+(72) 발명자
+(22) 출원일자 2008년09월16일
+이상규
+심사청구일자 2008년09월16일
+경기도 용인시 수지구 동천동 868 수진마을 2단지
+아파트 202-202
+박진수
+서울특별시 광진구 자양2동 601-3 대양리버빌 501
+(74) 대리인
+김익환, 신창준, 홍장원
+전체 청구항 수 : 총 14 항
+(54) 유무형 상품 결합을 통한 온라인 판매 방법 및 시스템
+(57) 요 약
+본 발명은 온라인 쇼핑몰에서 판매하는 실제의 유형상품과 무형상품에 대한 활동을 결합한 상품에 대하여 다양한
+수단을 이용하여 추천한 회원에게 기존의 가격보다 낮은 가격으로 판매하는 방법 및 시스템에 관한 것으로, 고객
+에 의해 선택된 적어도 하나의 유형상품에 대한 주문서 작성을 입력받는 단계와, 상기 고객의 관련 정보를 근거
+로 상기 유형상품에 할인혜택 적용여부를 선택할 수 있는 화면을 출력하는 단계와, 상기 할인혜택에 대하여 추천
+회원들로부터 작성된 추천 게시물을 출력하는 단계와, 상기 할인혜택과 관련된 무형상품 및 상기 게시물을 작성
+한 추천회원에 대한 상기 고객의 입력을 수신하는 단계와, 상기 고객의 입력을 근거로 한 할인혜택을 상기 유형
+상품 가격에 적용하는 단계 및 상기 추천회원에게 소정의 혜택을 부여하는 단계를 포함하여 이루어질 수 있다.
+대 표 도 - 도1
+- 1 -
+--- Page 2 (text) ---
+공개특허 10-2010-0031931
+특허청구의 범위
+청구항 1
+고객에 의해 선택된 적어도 하나의 유형상품에 대한 주문서 작성을 입력받는 단계;
+상기 고객의 관련 정보를 근거로 상기 유형상품에 할인혜택 적용여부를 선택할 수 있는 화면을 출력하는 단계;
+상기 할인혜택에 대하여 추천회원들로부터 작성된 추천 게시물을 출력하는 단계;
+상기 할인혜택과 관련된 무형상품 및 상기 게시물을 작성한 추천회원에 대한 상기 고객의 입력을 수신하는
+단계;
+상기 고객의 입력을 근거로 한 할인혜택을 상기 유형상품 가격에 적용하는 단계; 및
+상기 추천회원에게 소정의 혜택을 부여하는 단계를 포함하는 것을 특징으로 하는 유무형 상품 결합을 통한 온라
+인 판매 방법.
+청구항 2
+제 1 항에 있어서, 상기 추천 게시물은,
+상기 추천회원으로부터 게시판 또는 상기 추천회원의 블로그에 작성된 상기 유형상품 및 관련 무형상품에 대한
+텍스트, 이미지, 동영상, 상기 상품관련 페이지의 링크 중 적어도 하나를 포함하는 것을 특징으로 하는 유무형
+상품 결합을 통한 온라인 판매 방법.
+청구항 3
+제 1 항에 있어서, 상기 고객의 관련정보는,
+상기 고객의 성별, 연령, 구매이력, 등급, 결혼여부, 자녀유무 중 적어도 하나를 포함하는 것을 특징으로 하는
+유무형 상품 결합을 통한 온라인 판매 방법.
+청구항 4
+제 1 항에 있어서, 상기 추천회원에게 부여하는 소정의 혜택은,
+상기 추천회원이 작성한 추천 게시물의 누적된 조회횟수 또는 추천횟수를 고려하여 적용되는 것을 특징으로 하
+는 유무형 상품 결합을 통한 온라인 판매 방법.
+청구항 5
+고객에 의해 선택된 적어도 하나의 유형상품에 대한 주문서 작성을 입력받는 단계;
+상기 고객의 관련 정보를 근거로 상기 유형상품에 할인혜택 적용여부를 선택할 수 있는 화면을 출력하는 단계;
+상기 할인혜택에 대하여 추천회원들로부터 작성된 추천 게시물을 확인할 수 있는 링크정보를 출력하는 단계;
+상기 추천 게시물을 통해 상기 할인혜택과 관련된 무형상품에 대한 상기 고객의 입력을 수신하는 단계;
+상기 고객의 입력을 근거로 한 할인혜택을 상기 유형상품 가격에 적용하는 단계; 및
+상기 추천 게시물을 작성한 추천회원에게 소정의 혜택을 부여하는 단계를 포함하는 것을 특징으로 하는 유무형
+상품 결합을 통한 온라인 판매 방법.
+청구항 6
+제 5 항에 있어서, 상기 추천 게시물을 작성한 추천회원에게 소정의 혜택을 부여하는 단계는,
+상기 링크정보를 통해 상기 추천 게시물을 확인할 수 있는 화면이 출력된 경우, 수행되는 것을 특징으로 하는
+유무형 상품 결합을 통한 온라인 판매 방법.
+청구항 7
+- 2 -"
+KR,2008-08-13,온라인 쇼핑에서 유무형 상품 결합을 통한 가격조정 방법 및 시스템,주식회사 인터파크아이엔티,G06Q 30/00,"454110, 541511, 541519","본 발명은 고객에 의해 선택된 적어도 하나의 유형상품에 대한 주문서 작성을 입력받는 단계와, 상기 고객의 관련 정보를 근거로 상기 유형상품에 할인혜택 적용여부를 선택할 수 있는 화면을 출력하는 단계와, 상기 고객으로부터 할인이 선택되면, 특정 무형상품과 관련된 상기 고객의 입력을 수신하는 단계 및 상기 고객의 입력을 근거로 한 할인혜택을 상기 유형상품 가격에 적용하는 단계를 포함하여 이루어질 수 있다. 또한, 본 발명은 고객에 의해 선택된 적어도 하나의 유형상품에 대한 주문서 작성 입력 및 특정 무형상품과 관련된 사용자 입력을 수신하는 수신부와, 고객의 관련 정보를 근거로 상기 유형상품에 할인혜택 적용여부를 선택할 수 있는 화면을 구성하는 상품목록 구성부와, 상기 구성된 화면을 출력하는 출력부와, 상기 고객의 입력을 근거로 한 할인혜택을 상기 유형상품 가격에 적용하는 결합부 및 상기 수신부, 상품목록 구성부, 출력부 및 결합부를 제어하는 제어부를 포함하는 온라인 쇼핑에서 유무형 상품 결합을 통한 가격조정 시스템을 제공한다.",test_08.pdf,"--- Page 1 (text) ---
+등록특허 10-0906581
+(19) 대한민국특허청(KR) (45) 공고일자 2009년07월10일
+(11) 등록번호 10-0906581
+(12) 등록특허공보(B1)
+(24) 등록일자 2009년07월01일
+(73) 특허권자
+(51) Int. Cl.
+주식회사 인터파크아이엔티
+G06Q 30/00 (2006.01)
+서울 서초구 서초동 1304-3
+(21) 출원번호 10-2008-0079181
+(72) 발명자
+(22) 출원일자 2008년08월13일
+이상규
+심사청구일자 2008년08월13일
+경기도 용인시 수지구 동천동 868 수진마을 2단지
+(56) 선행기술조사문헌
+아파트 202-202
+KR1020010092953 A*
+박진수
+KR1020000072703 A*
+서울특별시 광진구 자양2동 601-3 대양리버빌 501
+*는 심사관에 의하여 인용된 문헌
+(74) 대리인
+김익환, 신창준, 홍장원
+전체 청구항 수 : 총 2 항 심사관 : 유진태
+(54) 온라인 쇼핑에서 유무형 상품 결합을 통한 가격조정 방법 및 시스템
+(57) 요 약
+본 발명은 고객에 의해 선택된 적어도 하나의 유형상품에 대한 주문서 작성을 입력받는 단계와, 상기 고객의 관
+련 정보를 근거로 상기 유형상품에 할인혜택 적용여부를 선택할 수 있는 화면을 출력하는 단계와, 상기 고객으로
+부터 할인이 선택되면, 특정 무형상품과 관련된 상기 고객의 입력을 수신하는 단계 및 상기 고객의 입력을 근거
+로 한 할인혜택을 상기 유형상품 가격에 적용하는 단계를 포함하여 이루어질 수 있다.
+또한, 본 발명은 고객에 의해 선택된 적어도 하나의 유형상품에 대한 주문서 작성 입력 및 특정 무형상품과 관련
+된 사용자 입력을 수신하는 수신부와, 고객의 관련 정보를 근거로 상기 유형상품에 할인혜택 적용여부를 선택할
+수 있는 화면을 구성하는 상품목록 구성부와, 상기 구성된 화면을 출력하는 출력부와, 상기 고객의 입력을 근거
+로 한 할인혜택을 상기 유형상품 가격에 적용하는 결합부 및 상기 수신부, 상품목록 구성부, 출력부 및 결합부를
+제어하는 제어부를 포함하는 온라인 쇼핑에서 유무형 상품 결합을 통한 가격조정 시스템을 제공한다.
+대 표 도 - 도1
+- 1 -
+--- Page 2 (text) ---
+등록특허 10-0906581
+특허청구의 범위
+청구항 1
+온라인 쇼핑에서 유무형 상품 결합을 통한 가격조정 방법에 있어서,
+수신부가 고객에 의해 선택된 적어도 하나의 유형상품에 대한 주문서 작성을 입력받는 단계;
+출력부가 상기 고객의 관련 정보를 근거로 상기 유형상품에 할인혜택 적용여부를 선택할 수 있는 화면을 출력하
+는 단계;
+상기 수신부가 상기 고객으로부터 할인이 선택되면, 특정 무형상품 구매를 위한 상기 고객의 입력을 수신하는
+단계; 및
+결합부가 상기 고객의 입력 내용을 등급별로 구분하고, 상기 등급에 근거하여 할인혜택을 상기 유형상품 가격에
+적용하는 단계를 포함하되,
+상기 할인혜택 적용여부를 선택할 수 있는 화면을 출력하는 단계는,
+상기 고객의 회원등급에 따라 적용가능한 할인혜택 또는 무형상품에 대한 선택폭을 다르게 제공하는 것을 특징
+으로 하는 온라인 쇼핑에서 유무형 상품 결합을 통한 가격조정 방법.
+청구항 2
+제 1 항에 있어서, 상기 할인혜택 적용여부를 선택할 수 있는 화면을 출력하는 단계는,
+복수개의 할인혜택 선택 항목 중 적어도 하나의 항목을 선택할 수 있는 화면을 포함하여 출력하는 것을 특징으
+로 하는 온라인 쇼핑에서 유무형 상품 결합을 통한 가격조정 방법.
+청구항 3
+삭제
+청구항 4
+삭제
+청구항 5
+삭제
+청구항 6
+삭제
+청구항 7
+삭제
+청구항 8
+삭제
+청구항 9
+삭제
+청구항 10
+삭제
+명 세 서
+- 2 -"
+US,2014-09-26,METHOD AND SYSTEM FOR USING NAND PAGE BUFFERS TO IMPROVE THE TRANSFER BUFFER UTILIZATION OF A SOLID STATE DRIVE,"INTEL CORPORATION, Santa Clara, CA (US)","G06F 11/10, G11C 29/52, G11C 16/04, G06F 12/02, G06F 3/06, G11C 29/42, G06F 12/08, G11C 29/04","334111, 334210, 334413","A page data (e.g., upper page data) received from a host is stored in a transfer buffer of a controller of a solid state drive. Another page data (e.g., lower page data) is read from a non-volatile memory (e.g., a NAND memory) to store in the transfer buffer as an error corrected page data. The error corrected page data and the page data are written to the non-volatile memory. In additional embodiments, a controller loads a page data (e.g., upper page data) received from the host in one or more NAND page buffers. The controller reads another page data (e.g., lower page data) from a NAND memory to store in a transfer buffer as an error corrected page data. The error corrected page data stored in the transfer buffer is loaded to the one or more NAND page buffers.",test_09.pdf,"--- Page 1 (ocr) ---
+a2) United States Patent
+
+Wakchaure et al.
+
+US009529668B2
+
+US 9,529,668 B2
+Dec. 27, 2016
+
+(0) Patent No.:
+(45) Date of Patent:
+
+ 
+
+(54)
+
+(71)
+
+(72)
+
+(73)
+
+(*)
+
+(21)
+
+(22)
+
+(65)
+
+(51)
+
+(52)
+
+(58)
+
+METHOD AND SYSTEM FOR USING NAND
+PAGE BUFFERS TO IMPROVE THE
+TRANSFER BUFFER UTILIZATION OF A
+SOLID STATE DRIVE
+
+Applicants: Yogesh B. Wakchaure, Folsom, CA
+(US); David J. Pelster, Longmont, CO
+(US); Eric L. Hoffman, Lafayette, CO
+(US); Xin Guo, San Jose, CA (US);
+Aliasgar S. Madraswala, Folsom, CA
+(US)
+
+Inventors: Yogesh B. Wakchaure, Folsom, CA
+(US); David J. Pelster, Longmont, CO
+(US); Eric L. Hoffman, Lafayette, CO
+(US); Xin Guo, San Jose, CA (US);
+Aliasgar S. Madraswala, Folsom, CA
+(US)
+
+Assignee: INTEL CORPORATION, Santa Clara,
+
+CA (US)
+
+Notice:       Subject to any disclaimer, the term of this
+
+patent is extended or adjusted under 35
+
+USS.C. 154(b) by 41 days.
+
+Appl. No.: 14/499,010
+Filed:      Sep. 26, 2014
+
+Prior Publication Data
+
+US 2016/0092299 Al     Mar. 31, 2016
+
+Int. Cl.
+
+GO6F 11/10         (2006.01)
+
+GUC L146          (2006.01)
+(Continued)
+
+USS. Cl.
+
+CPC ....... G06F 11/1068 (2013.01); GO6F 11/1072
+
+(2013.01); G1IC 11/5628 (2013.01);
+
+(Continued)
+
+Field of Classification Search
+CPC GO6F 11/1068; GO6F 3/0679; GO6F 11/1072;
+
+[Exemplary Operations in a fret embodiment
+
+GO6F 12/0246; GOG6F 11/1048; GO6F
+3/0619; GO6F 2212/7201; GO6F 3/0688;
+GO6F 2212/222; GO6F 2212/2022; GO6F
+2212/214; GO6F 2212/7203; GO6F
+12/0868; GO6F 2003/0691; GO6F
+2212/202; GO6F 2212/403; GO6F 3/0656;
+GO6F 11/106; G11C 29/52; G11C
+16/0483; G11C 2211/5643; G11C
+2211/5641; G11C 29/42; G11C
+2211/5648; G11C 11/1072; G11C
+
+2211/5642
+(Continued)
+(56)                 References Cited
+U.S. PATENT DOCUMENTS
+8,819,337 BL* 8/2014 Oshinsky ............ GO6F 11/1441
+365/185.07
+2005/0237814 AL* 10/2005 Li wee GIIC 11/5628
+365/185.28
+(Continued)
+FOREIGN PATENT DOCUMENTS
+CN            103714856         4/2014
+
+OTHER PUBLICATIONS
+
+NVM Express, Inc., “NVM Express”, Revision 1.1b, Jul. 2, 2014,
+172 pp.
+
+(Continued)
+
+Primary Examiner — April Y Blair
+
+Assistant Examiner — Sazzad Hossain
+
+(74) Attorney, Agent, or Firm — Konrad Raynes Davda &
+Victor LLP; Rabindranath Dutta
+
+(57)                        ABSTRACT
+
+A page data (e.g., upper page data) received from a host is
+stored in a transfer buffer of a controller of a solid state
+drive. Another page data (e.g., lower page data) is read from
+a non-volatile memory (e.g., a NAND memory) to store in
+the transfer buffer as an error corrected page data. The error
+
+(Continued)
+
+Controlter raceives lower page data from the host in the transfer buffer of the
+controller from the host, and writes the lower page data to the NAND memory
+(once the lower page data has been written to the NAND memary the lower
+page data may be overwritten in the transfer buffer of the controller}
+
+04
+‘Controller receives upper page data in the transfer buffer of the controllar from
+the host
+
+306
+
+Controller reads the lower page data from the NAND memory, and then stores
+the lower page data in the transfer buffer of the contraller after passing the
+lower page data through the EEC engine to detect and correct any errors in the
+
+{therefore the transfer buffer stores both lower and upper page data at this
+point)
+
+310
+
+Controller writes the corrected lower page data to the NAND memory
+
+ 
+
+1
+
+Controller writes the upper page data that was received in the transfer buffer
+to the NAND memory
+
+--- Page 2 (ocr) ---
+US 9,529,668 B2
+Page 2
+
+ 
+
+corrected page data and the page data are written to the
+non-volatile memory. In additional embodiments, a control-
+ler loads a page data (e.g., upper page data) received from
+the host in one or more NAND page buffers. The controller
+reads another page data (e.g., lower page data) from a
+NAND memory to store in a transfer buffer as an error
+corrected page data. The error corrected page data stored in
+the transfer buffer is loaded to the one or more NAND page
+buffers.
+
+23 Claims, 9 Drawing Sheets
+
+(51) Int. Cl.
+G1IC 29/52               (2006.01)
+GIIC 16/04             (2006.01)
+GOOF 12/02             (2006.01)
+GOOF 3/06               (2006.01)
+GLIC 29/42              (2006.01)
+GOOF 12/08             (2016.01)
+GIIC 29/04              (2006.01)
+(52) U.S. Cl
+000 .………   GIIC 11/5642 (2013.01); GIIC 29/52
+
+(2013.01); GO6F 3/0619 (2013.01); GO6F
+3/0656 (2013.01); GO6F 3/0679 (2013.01);
+GO6F 3/0688 (2013.01); GO6F 11/106
+(2013.01); GO6F 11/1048 (2013.01); GOOF
+12/0246 (2013.01); GO6F 12/0868 (2013.01);
+GO6F 2003/0691 (2013.01); GO6F 2212/202
+(2013.01); GO6F 2212/2022 (2013.01); GOOF
+2212/214 (2013.01); GO6F 2212/222
+(2013.01); GO6F 2212/403 (2013.01); GO6F
+2212/7201 (2013.01); GO6F 2212/7203
+(2013.01); GLIC 16/0483 (2013.01); GLIC
+29/42 (2013.01); GLIC 2029/0411 (2013.01);
+GIIC 2211/5641 (2013.01); GLIC 2211/5642
+(2013.01); GlIC 2211/5643 (2013.01); G1IC
+2211/5648 (2013.01)
+(58) Field of Classification Search
+
+0” 711/102, 105, 118; 714/764, 773
+
+See application file for complete search history.
+
+(56)                 References Cited
+U.S. PATENT DOCUMENTS
+
+2010/0023800 Al* 1/2010 Harari ........0.... GO6F 11/1068
+71472
+2010/0318839 Al* 12/2010 Avila ou... GO6F 12/0802
+714/5.11
+2012/0151118 AL* 6/2012 Flynn ou... GO6F 11/1008
+711/6
+2012/0151166 Al* 6/2012 Suto ww... GO6F 11/1068
+711/162
+2013/0185609 Al* 7/2013) Park wo. GO6F 11/0751
+714/746
+
+2013/0304971 Al 11/2013 Ishikawa
+2013/0304993 Al* 11/2013 DeBruyne ........... GO6F 12/0875
+7117125
+2013/0318422 Al* 11/2013 \6801608 ……………… GO6F 11/08
+714/780
+2014/0068365 Al* 3/2014 Chen uo...니아아아 GO6F 11/106
+714/746
+2014/0075099 Al* 3/2014 Ooneda ............... GO6F 11/1048
+711/103
+
+2014/0101372 Al
+2014/0164881 Al
+
+4/2014 Jung et al.
+6/2014 Chen et al.
+
+OTHER PUBLICATIONS
+
+PCI Express, “PCI Express Base Specification” Revision 3.0, Nov.
+10, 2010, 349 pp. [Part A].
+
+PCI Express, “PCI Express Base Specification” Revision 3.0, Nov.
+10, 2010, 511 pp. [Part B].
+
+PCT Notification of transmittal of the International Search Report &
+Written Opinion of the International Searching Authority, or the
+Declaration, dated Dec. 3, 2015, pp. 2, for Application No. PCT/
+US2015/047029, filed Aug. 26, 2015.
+
+PCT International Search Report, dated Dec. 3, 2015, pp. 3, for
+Application No. PCT/US2015/047029, filed Aug. 26, 2015.
+
+PCT Written Opinion of the International Searching Authority,
+dated Dec. 3, 2015, pp. 11, for Application No. PCT/US2015/
+047029, filed Aug. 26, 2015.
+US2014101372 is the English
+CN1037 14856.
+
+language counterpart of
+
+* cited by examiner"
+US,2020-08-26,COMPLEX QUERY EVALUATION USING SIDEWAYS INFORMATION PASSING,"Oxford Semantic Technologies Limited, Baynards Green (GB)","G06F 7/00, G06F 16/2453, G06F 16/22, G06F 16/901, G06F 16/9035, G06F 16/2455, G06F 16/215","511210, 541511, 541512","A program stored on non-transitory computer-readable storage medium executes a method of evaluating a graph over a query. Decomposition instructions decompose the query into a plurality of subqueries. Evaluation instructions evaluate a subquery of the plurality of subqueries and generate a substitution multiset representing a result of the evaluation of the subquery. Filtration instructions or expansion instructions may operate upon the generated substitution set before passing the substitution set to a next subquery to be evaluated. The filtration instructions identify one or more mappings in the substitution multiset that cannot be safely passed to the second subquery and delete the identified one or more mappings from the substitution multiset. The expansion instructions determine, in a case where the subquery is operated upon by a non-distributive query operator, an expansion of the substitution multiset based at least on adding one or more new substitutions to the substitution multiset.",test_10.pdf,"--- Page 1 (ocr) ---
+a2) United States Patent
+
+US011216456B1
+
+(00) Patent No.: US 11,216,456 B1
+
+ 
+
+Motik et al.                                    (45) Date of Patent:          Jan. 4, 2022
+(54) COMPLEX QUERY EVALUATION USING          (56)                 References Cited
+SIDEWAYS INFORMATION PASSING
+U.S. PATENT DOCUMENTS
+(71)  Applicant: Oxford Semantic Technologies                  6,785,673 Bl *   8/2004  Fernandez 이시 (106 40/143
+Limited, Baynards Green (GB)                  2014/0040292 AL* 2/2014 Basak wees GO6F 16/27
+707/756
+(72) Inventors: Boris Motik, Oxford (GB); Yavor           2014/0172914 Al* 6/2014 Elnikety ............ GO6F 16/9024
+Nenov, Eynsham (GB); Ian Horrocks,                                                        707/774
+Oxford (GB)
+OTHER PUBLICATIONS
+(73) Assignee: OXFORD SEMANTIC
+TECHNOLOGIES LIMITED, Oxford    Harris “SPARQL 1.1 Query Language” W3C Recommendation
+(GB)                                     Mar. 21, 2013; https:/Awww.w3.org/TR/sparql 11-query/). Cited in
+Specification.
+(*) Notice:      Subject to any disclaimer, the term of this           .                 .
+patent is extended or adjusted under 35     * cited by examiner
+US.C. 154(b) by 0 days.                      Primary Examiner — Md | Uddin
+(21) Appl. No.: 17/003,097                                  (74) Attorney, Agent, or Firm — Rossi, Kimms &
+McDowell LLP
+(22) Filed:      Aug. 26, 2020
+(57)                      ABSTRACT
+(51) Int. Cl.                                                                  A program stored on non-transitory computer-readable stor-
+GO6F 7/00             (2006.01)                           age medium executes a method of evaluating a graph over
+GO6F 16/2453        (2019.01)                       a query. Decomposition instructions decompose the query
+GO6F 16/22              (2019.01)                                into a plurality of subqueries. Evaluation instructions evalu-
+GO6F 16/901           (2019.01)                             ate a subquery of the plurality of subqueries and generate a
+6067 16/9035          (2019.01)                             substitution multiset representing a result of the evaluation
+6062 16/2455            (2019.01)                                   of the subquery. Filtration instructions or expansion instruc-
+GO6F 16/215             (2019.01)                                   tions may operate upon the generated substitution set before
+(52) U.S. Cl.                                                      passing the substitution set to a next subquery to be evalu-
+CPC ...... GO06F 16/24535 (2019.01); GO6F 16/215     ated. The filtration instructions identify one or more map-
+(2019.01); GO6F 16/2246 (2019.01); GO6F      pings in the substitution multiset that cannot be safely
+16/24542 (2019.01); GO6F 16/24554      passed to the second subquery and delete the identified one
+(2019.01), GO6F 16/9024 (2019.01); GO6F        or more mappings from the substitution multiset. The expan-
+16/9035 (2019.01)      sion instructions determine, in a case where the subquery is
+(58) Field of Classification Search                               operated upon by a non-distributive query operator, an
+
+CPC wee GO6F 16/2246; GO6F 16/215; GO6F
+
+16/24542; GO6F 16/9035; GO6F
+
+16/24554; GO6F 16/9024
+
+USPC vicesssessseescsseseeteenees 707/769, 774, 999.003
+See application file for complete search history.
+
+expansion of the substitution multiset based at least on
+adding one or more new substitutions to the substitution
+multiset.
+
+18 Claims, 10 Drawing Sheets
+
+MEMORY DEVICE SYSTEM
+
+DATA PROCESSING DEVICE
+
+SYSTEM
+
+INPUT-OUTPUT DEVICE
+
+ 
+
+SYSTEM
+
+--- Page 2 (ocr) ---
+US 11,216,456 B1
+
+Sheet 1 of 10
+
+Jan. 4, 2022
+
+U.S. Patent
+
+T Sid
+
+WALSAS
+ADIAAG LAdLNO-LAdNI
+
+W3LSAS
+JDIAIG ONISS3DOU""d VIVG
+
+WALSAS JDIAAG AYOWSIA"
