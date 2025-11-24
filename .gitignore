@@ -2,4 +2,3 @@
 /sample
 naics_index.faiss
 user_patent_index.faiss
-.env
