@@ -1,4 +1,4 @@
-﻿country,date,title,applicant,ipc_code,naics_code,abstract,file_name,ocr_text,embedding_NAICS
+﻿country,date,title,applicant,ipc_code,naics_code,abstract,file_name,ocr_text
 US,2021-02-22,PROPIONIBACTERIUM ACNES PROPHYLACTIC AND THERAPEUTIC IMMUNE TREATMENT,Origimm Biotechnology GmbH,"A61K 39/05, A61P 17/10, A61P 31/04, C07K 14/195","325412, 541715, 621511","The present invention discloses a vaccine comprising one or more of Dermatan sulfate-binding adhesin 1 of P. acnes (DsA1 polypeptide), Dermatan sulfate-binding adhesin 2 of P. acnes (DsA2 polypeptide), and putative iron-transport protein (PITP) polypeptide of P acnes, and/or a fragment and/or derivative of DsAl and/or DsA2 and/or PITP, wherein the DsAl polypeptide and the DsA2 polypeptide comprise from N- to C-terminus an N-terminal swapping region (“NSR”), a first conserved sub-domain (“CSD1”), a first swapping region (“SR1”), a second conserved sub-domain (“CSD2”), a second swapping region (“SR2”), a third conserved sub-domain (“CSD3”), a Pro-Thr repeat containing region (“PT repeat region”), and a C-terminal region (“CTR”), and wherein the PITP polypeptide comprises from N- to C-terminus an extended neocarzinostatin family domain (““ENFD”), a first swapping region (“SR1”), a heme-binding domain (“HbD”), a second swapping region (“SR2”) including the C-terminal LPXTG motif, and a hydrophobic C-terminal region (““hLAR”). Specification includes a Sequence Listing.",test_01.pdf,"--- Page 1 (ocr) ---
 US 20240139302A1
 
@@ -194,7 +194,7 @@ THANE
 8      g      g      ¢      a
 -          WAS -/+ IJ
 
-Bulpulq sseuns","325414 (0.337), 325412 (0.267), 325413 (0.228), 325620 (0.225), 325612 (0.224)"
+Bulpulq sseuns"
 US,2013-11-22,DEFECT MANAGEMENT POLICIES FOR NAND FLASH MEMORY,"Intel Corporation, Santa Clara, CA","G06F 11/00, G11C 29/00, G06F 11/07, G11B 20/18","334413, 334111, 541715","Systems and methods of managing defects in nonvolatile storage systems that can be used to avoid an inadvertent loss of data, while maintaining as much useful memory in the nonvolatile storage systems as possible. The disclosed systems and methods can monitor a plurality of trigger events for detecting possible defects in one or more nonvolatile memory (NVM) devices included in the nonvolatile storage systems, and apply one or more defect management policies to the respective NVM devices based on the types of trigger events that resulted in detection of the possible defects. Such defect management policies can be used proactively to retire memory in the nonvolatile storage systems with increased granularity, focusing the retirement of memory on regions of nonvolatile memory that are likely to contain a defect.",test_02.pdf,"--- Page 1 (ocr) ---
 US009535777B2
 
@@ -348,7 +348,7 @@ U.S. PATENT DOCUMENTS
 2011/0055468 Al     3/2011 Gonzalez et al.
 2013/0262418 Al 10/2013 Bhasin et al.
 
-* cited by examiner","334112 (0.302), 334413 (0.237), 335910 (0.221), 524291 (0.217), 334118 (0.209)"
+* cited by examiner"
 US,2012-05-16,TECHNIQUES TO PERFORM POWER FAIL-SAFE CACHING WITHOUT ATOMIC METADATA,SANJEEV N. TRIKA,"G06F 12/08, G06F 12/02","334111, 511210, 541511","A method and system to allow power fail-safe write-back or write-through caching of data in a persistent storage device into one or more cache lines of a caching device. No metadata associated with any of the cache lines is written atomically into the caching device when the data in the storage device is cached. As such, specialized cache hardware to allow atomic writing of metadata during the caching of data is not required.",test_03.pdf,"--- Page 1 (ocr) ---
 US 20120290774A1
 
@@ -625,7 +625,7 @@ device
 
 190
 Keyboard/
-Mouse","334112 (0.250), 522320 (0.247), 335910 (0.205), 523991 (0.201), 493190 (0.192)"
+Mouse"
 KR,2017-05-08,인간화 항-IL-1R3 항체,엠에이비 디스커버리 게엠베하,"C07K 16/28, A61P 35/00, C07K 16/2866, C07K 2317/24, C07K 2317/76",,"본 발명은 IL-1R3에 특이적으로 결합하는 인간화 항체 또는 이의 단편 또는 유도체 또는 IL-1R3 결합 특이성을 부여하기에 충분한 상기 항체의 적어도 일부를 함유하는 폴리펩티드에 관한 것이다. 상기 항체는 IL-1R3 유도된 NFkB 활성을 억제한다. 이들은 또한 IL-1알파, IL-1베타, IL-33, 및/또는 IL-36 자극된 NFkB 활성을 억제한다. 본 발명은 추가로, 암과 같은 IL-1R3 매개된 질환의 치료에 있어서의 상기 인간화 항체의 용도에 관한 것이다. 본 발명은 마지막으로 약제학적으로 허용되는 담체 및 치료학적 유효량의 본 발명에 따르는 항체를 포함하는 약제학적 조성물을 포함한다. 약제학적 조성물은 암과 같은 IL-1R3 매개된 질환을 치료하는데 사용될 수 있다.",test_04.pdf,"--- Page 1 (text) ---
 등록특허 10-2381257
 등록특허 10-2381257
@@ -679,7 +679,7 @@ NFkB 활성을 억제한다. 이들은 또한 IL-1알파, IL-1베타, IL-33, 및
 (52) CPC특허분류
 C07K 2317/24 (2013.01)
 C07K 2317/76 (2013.01)
-- 2 -","325414 (0.240), 325412 (0.235), 325413 (0.227), 334517 (0.195), 325613 (0.187)"
+- 2 -"
 KR,2012-04-25,마이크로RNA 화합물 및 MIR-21 활성 조절 방법,"레굴루스 테라퓨틱스 인크, 존스 홉킨스","C12N 15/113, A61K 48/00, A61P 35/00, C07H 21/00","325412, 541715, 621511","본 발명은 miR-21 활성의 저해를 위한 조성물 및 방법이다. 조성물은 miR-21 활성의 강한 저해제를 낳는 특정 뉴클레오시드 수정 패턴을 가지고 있다. 조성물은 miR-21을 저해하는 데 이용될 수 있으며, 섬유증 및 암과 같은, 비정상적인 miR-21의 발현과 관련이 있는 질병을 치료하는 데 이용될 수 있다.",test_05.pdf,"--- Page 1 (text) ---
 등록특허 10-2055172
 등록특허 10-2055172
@@ -721,7 +721,7 @@ WO2009106367 A1
 WO2009058907 A1
 WO2010099161 A1
 *는 심사관에 의하여 인용된 문헌
-- 2 -","325412 (0.223), 325613 (0.221), 562910 (0.211), 325414 (0.198), 541714 (0.197)"
+- 2 -"
 US,2006-06-01,"METHOD FOR OPERATING A PLAYBACK UNIT IN A VEHICLE, FOR PLAYING BACK DATA STORED ON A DATA MEDIUM","Harman Becker Automotive Systems GmbH, Karlsbad (DE)",H04M 1/64,"334310, 334220, 423690","A system for use in a motor vehicle includes a wireless receiver that receives, over a wireless communication channel, supplemental information representative of the characteristics of the contents of a playback media, and provides received supplemental information indicative thereof. A playback device receives the received supplemental information and stores the received supplemental information in a non-volatile memory device. The playback unit may generate a request for supplement information in response to and indicative of a playback media inserted into the playback unit. The system may also include a wireless transmitter that receives the request and transmits the received request over the communication channel. In another embodiment, a radio connection is established between a computing device and the wireless receiver. The computing device transmits characteristic data of selected data media over the radio connection to the wireless receiver, which provides the received data to the playback unit that stores the received data in a memory device for subsequent on-demand retrieval and display. In this embodiment, an operator can transfer to the motor vehicle the characteristic data stored in the computing device (e.g., personal computer) relating to selected data media.",test_06.pdf,"--- Page 1 (ocr) ---
 US008036641B2
 
@@ -802,7 +802,7 @@ cuca |                     DE        197 50372      5/1999 200 15/163
 ,                                                 DE            199 17 169        11/2000 veces 1/38
 6,563,769 B1* 5/2003 Van Der Meulen ........ 369/30.06   EP        0777 106     6/1997           21720
 6,563,805 821  5/2003 Maetal.                   ;        III 아마마마마마마
-6,564,003 B2*  5/2003 40060 하키. .………………… 386/69    * cited by examiner","334310 (0.326), 334610 (0.304), 334112 (0.299), 336320 (0.287), 516210 (0.286)"
+6,564,003 B2*  5/2003 40060 하키. .………………… 386/69    * cited by examiner"
 KR,2008-09-16,유무형 상품 결합을 통한 온라인 판매 방법 및 시스템,주식회사 인터파크아이엔티,G06Q 30/00,"454110, 541511, 541519","본 발명은 온라인 쇼핑몰에서 판매하는 실제의 유형상품과 무형상품에 대한 활동을 결합한 상품에 대하여 다양한 수단을 이용하여 추천한 회원에게 기존의 가격보다 낮은 가격으로 판매하는 방법 및 시스템에 관한 것으로, 고객에 의해 선택된 적어도 하나의 유형상품에 대한 주문서 작성을 입력받는 단계와, 상기 고객의 관련 정보를 근거로 상기 유형상품에 할인혜택 적용여부를 선택할 수 있는 화면을 출력하는 단계와, 상기 할인혜택에 대하여 추천회원들로부터 작성된 추천 게시물을 출력하는 단계와, 상기 할인혜택과 관련된 무형상품 및 상기 게시물을 작성한 추천회원에 대한 상기 고객의 입력을 수신하는 단계와, 상기 고객의 입력을 근거로 한 할인혜택을 상기 유형상품 가격에 적용하는 단계 및 상기 추천회원에게 소정의 혜택을 부여하는 단계를 포함하여 이루어질 수 있다.",test_07.pdf,"--- Page 1 (text) ---
 공개특허 10-2010-0031931
 (19) 대한민국특허청(KR) (11) 공개번호 10-2010-0031931
@@ -873,7 +873,7 @@ G06Q 30/00 (2006.01)
 상기 링크정보를 통해 상기 추천 게시물을 확인할 수 있는 화면이 출력된 경우, 수행되는 것을 특징으로 하는
 유무형 상품 결합을 통한 온라인 판매 방법.
 청구항 7
-- 2 -","449210 (0.294), 459130 (0.257), 455211 (0.254), 459410 (0.253), 425120 (0.252)"
+- 2 -"
 KR,2008-08-13,온라인 쇼핑에서 유무형 상품 결합을 통한 가격조정 방법 및 시스템,주식회사 인터파크아이엔티,G06Q 30/00,"454110, 541511, 541519","본 발명은 고객에 의해 선택된 적어도 하나의 유형상품에 대한 주문서 작성을 입력받는 단계와, 상기 고객의 관련 정보를 근거로 상기 유형상품에 할인혜택 적용여부를 선택할 수 있는 화면을 출력하는 단계와, 상기 고객으로부터 할인이 선택되면, 특정 무형상품과 관련된 상기 고객의 입력을 수신하는 단계 및 상기 고객의 입력을 근거로 한 할인혜택을 상기 유형상품 가격에 적용하는 단계를 포함하여 이루어질 수 있다. 또한, 본 발명은 고객에 의해 선택된 적어도 하나의 유형상품에 대한 주문서 작성 입력 및 특정 무형상품과 관련된 사용자 입력을 수신하는 수신부와, 고객의 관련 정보를 근거로 상기 유형상품에 할인혜택 적용여부를 선택할 수 있는 화면을 구성하는 상품목록 구성부와, 상기 구성된 화면을 출력하는 출력부와, 상기 고객의 입력을 근거로 한 할인혜택을 상기 유형상품 가격에 적용하는 결합부 및 상기 수신부, 상품목록 구성부, 출력부 및 결합부를 제어하는 제어부를 포함하는 온라인 쇼핑에서 유무형 상품 결합을 통한 가격조정 시스템을 제공한다.",test_08.pdf,"--- Page 1 (text) ---
 등록특허 10-0906581
 (19) 대한민국특허청(KR) (45) 공고일자 2009년07월10일
@@ -950,7 +950,7 @@ KR1020000072703 A*
 청구항 10
 삭제
 명 세 서
-- 2 -","449210 (0.276), 423430 (0.238), 459410 (0.236), 456130 (0.236), 423620 (0.233)"
+- 2 -"
 US,2014-09-26,METHOD AND SYSTEM FOR USING NAND PAGE BUFFERS TO IMPROVE THE TRANSFER BUFFER UTILIZATION OF A SOLID STATE DRIVE,"INTEL CORPORATION, Santa Clara, CA (US)","G06F 11/10, G11C 29/52, G11C 16/04, G06F 12/02, G06F 3/06, G11C 29/42, G06F 12/08, G11C 29/04","334111, 334210, 334413","A page data (e.g., upper page data) received from a host is stored in a transfer buffer of a controller of a solid state drive. Another page data (e.g., lower page data) is read from a non-volatile memory (e.g., a NAND memory) to store in the transfer buffer as an error corrected page data. The error corrected page data and the page data are written to the non-volatile memory. In additional embodiments, a controller loads a page data (e.g., upper page data) received from the host in one or more NAND page buffers. The controller reads another page data (e.g., lower page data) from a NAND memory to store in a transfer buffer as an error corrected page data. The error corrected page data stored in the transfer buffer is loaded to the one or more NAND page buffers.",test_09.pdf,"--- Page 1 (ocr) ---
 a2) United States Patent
 
@@ -1224,7 +1224,7 @@ CN1037 14856.
 
 language counterpart of
 
-* cited by examiner","334112 (0.289), 334413 (0.226), 518210 (0.221), 334118 (0.218), 423430 (0.208)"
+* cited by examiner"
 US,2020-08-26,COMPLEX QUERY EVALUATION USING SIDEWAYS INFORMATION PASSING,"Oxford Semantic Technologies Limited, Baynards Green (GB)","G06F 7/00, G06F 16/2453, G06F 16/22, G06F 16/901, G06F 16/9035, G06F 16/2455, G06F 16/215","511210, 541511, 541512","A program stored on non-transitory computer-readable storage medium executes a method of evaluating a graph over a query. Decomposition instructions decompose the query into a plurality of subqueries. Evaluation instructions evaluate a subquery of the plurality of subqueries and generate a substitution multiset representing a result of the evaluation of the subquery. Filtration instructions or expansion instructions may operate upon the generated substitution set before passing the substitution set to a next subquery to be evaluated. The filtration instructions identify one or more mappings in the substitution multiset that cannot be safely passed to the second subquery and delete the identified one or more mappings from the substitution multiset. The expansion instructions determine, in a case where the subquery is operated upon by a non-distributive query operator, an expansion of the substitution multiset based at least on adding one or more new substitutions to the substitution multiset.",test_10.pdf,"--- Page 1 (ocr) ---
 a2) United States Patent
 
@@ -1316,4 +1316,4 @@ ADIAAG LAdLNO-LAdNI
 W3LSAS
 JDIAIG ONISS3DOU""d VIVG
 
-WALSAS JDIAAG AYOWSIA","516210 (0.259), 519290 (0.246), 327211 (0.237), 518210 (0.236), 486110 (0.232)"
+WALSAS JDIAAG AYOWSIA"
