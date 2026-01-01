@@ -1,0 +1,171 @@
+"""
+OpenAI API를 사용하여 target_short_name, target_nation, abstract 정보를 기반으로
+applicant가 올바르게 매칭되었는지 검증하는 스크립트 (비동기 버전)
+"""
+
+import os
+import csv
+import json
+import asyncio
+from dotenv import load_dotenv
+from openai import AsyncOpenAI
+from tqdm.asyncio import tqdm_asyncio
+from datetime import datetime
+
+# .env 파일에서 환경 변수 로드
+load_dotenv()
+
+# OpenAI API 클라이언트 초기화 (비동기)
+client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# 사용할 OpenAI 모델
+# gpt-4o-mini, gpt-4o, gpt-4.1 중 선택
+MODEL = "gpt-4o"
+
+# 입력/출력 파일 경로
+INPUT_CSV_PATH = "./random_1.csv"
+
+OUTPUT_CSV_PATH = f"./random_1_validated_{MODEL}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+
+# 동시 요청 수 제한 (Rate limit 고려)
+MAX_CONCURRENT_REQUESTS = 10
+
+
+
+async def validate_matching(
+    target_short_name: str,
+    target_nation: str,
+    abstract: str,
+    applicant: str,
+    semaphore: asyncio.Semaphore
+) -> dict:
+    """비동기로 매칭 검증"""
+    
+    prompt = f"""당신은 특허 데이터의 매칭 검증 전문가입니다.
+
+아래 정보를 분석하여 'applicant(출원인)'가 'target(대상 기업)'과 올바르게 매칭되었는지 판단해주세요.
+
+## 입력 정보
+- **Target 기업명**: {target_short_name}
+- **Target 국가**: {target_nation}
+- **특허 초록**: {abstract[:500] if abstract else "없음"}...
+- **출원인(Applicant)**: {applicant}
+
+## 판단 기준
+1. Target 기업명과 Applicant가 동일한 기업을 가리키는지 확인
+2. 기업명이 영어/한국어/일본어 등 다른 언어로 표기되었을 수 있음을 고려
+3. 음차 표기(예: Sony → 소니), 약어, 또는 법인 형태(Inc, Ltd, 주식회사 등)의 차이 고려
+4. 특허 초록의 기술 분야가 해당 기업의 사업 분야와 연관성이 있는지 참고
+
+## 응답 형식 (JSON)
+{{
+    "is_valid": true 또는 false,
+    "confidence": 0.0 ~ 1.0 사이의 확신도,
+    "reason": "판단 이유를 간단히 설명"
+}}
+
+JSON만 응답해주세요."""
+
+    async with semaphore:  # 동시 요청 수 제한
+        try:
+            response = await client.chat.completions.create(
+                model=MODEL,
+                messages=[
+                    {"role": "system", "content": "당신은 특허 데이터 매칭 검증 전문가입니다. 항상 유효한 JSON 형식으로만 응답합니다."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1,
+                max_tokens=300
+            )
+            
+            result_text = response.choices[0].message.content.strip()
+            
+            # JSON 파싱
+            if result_text.startswith("```"):
+                result_text = result_text.split("```")[1]
+                if result_text.startswith("json"):
+                    result_text = result_text[4:]
+            result_text = result_text.strip()
+            
+            return json.loads(result_text)
+            
+        except json.JSONDecodeError as e:
+            return {"is_valid": None, "confidence": 0.0, "reason": f"JSON 파싱 오류: {str(e)}"}
+        except Exception as e:
+            return {"is_valid": None, "confidence": 0.0, "reason": f"API 오류: {str(e)}"}
+
+
+async def process_row(row: dict, semaphore: asyncio.Semaphore) -> dict:
+    """단일 행 처리"""
+    validation_result = await validate_matching(
+        target_short_name=row.get('target_short_name', ''),
+        target_nation=row.get('target_nation', ''),
+        abstract=row.get('abstract', ''),
+        applicant=row.get('applicant', ''),
+        semaphore=semaphore
+    )
+    
+    return {
+        **row,
+        'is_valid': validation_result.get('is_valid'),
+        'confidence': validation_result.get('confidence', 0.0),
+        'validation_reason': validation_result.get('reason', '')
+    }
+
+
+async def process_csv_async(input_path: str, output_path: str):
+    """비동기로 CSV 처리"""
+    
+    # CSV 파일 읽기
+    with open(input_path, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)
+    
+    print(f"총 {len(rows)}개의 행을 처리합니다. (동시 요청: {MAX_CONCURRENT_REQUESTS}개)")
+    
+    # 동시 요청 수 제한을 위한 세마포어
+    semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+    
+    # 모든 행을 비동기로 처리
+    tasks = [process_row(row, semaphore) for row in rows]
+    results = await tqdm_asyncio.gather(*tasks, desc="검증 진행")
+    
+    # 결과 CSV 저장
+    if results:
+        fieldnames = list(results[0].keys())
+        with open(output_path, 'w', encoding='utf-8', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(results)
+        
+        print(f"\n결과가 {output_path}에 저장되었습니다.")
+        
+        # 통계 출력
+        valid_count = sum(1 for r in results if r['is_valid'] is True)
+        invalid_count = sum(1 for r in results if r['is_valid'] is False)
+        error_count = sum(1 for r in results if r['is_valid'] is None)
+        
+        print(f"\n=== 검증 결과 통계 ===")
+        print(f"총 처리: {len(results)}건")
+        print(f"유효(True): {valid_count}건 ({valid_count/len(results)*100:.1f}%)")
+        print(f"무효(False): {invalid_count}건 ({invalid_count/len(results)*100:.1f}%)")
+        print(f"오류: {error_count}건 ({error_count/len(results)*100:.1f}%)")
+
+
+def main():
+    """메인 함수"""
+    
+    if not os.getenv("OPENAI_API_KEY"):
+        print("오류: OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
+        return
+    
+    if not os.path.exists(INPUT_CSV_PATH):
+        print(f"오류: 입력 파일을 찾을 수 없습니다: {INPUT_CSV_PATH}")
+        return
+    
+    # 비동기 실행
+    asyncio.run(process_csv_async(INPUT_CSV_PATH, OUTPUT_CSV_PATH))
+
+
+if __name__ == "__main__":
+    main()
