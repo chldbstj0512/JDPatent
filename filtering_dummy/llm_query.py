@@ -1,6 +1,5 @@
 """
-OpenAI API를 사용하여 target_short_name, target_nation, abstract 정보를 기반으로
-applicant가 올바르게 매칭되었는지 검증하는 스크립트 (비동기 버전 + Langfuse 로깅)
+OpenAI API를 사용하여 특허 출원인(applicant)과 대상 기업(target)의 매칭을 검증하는 비동기 스크립트
 """
 
 import os
@@ -11,79 +10,57 @@ from dotenv import load_dotenv
 from tqdm.asyncio import tqdm_asyncio
 from datetime import datetime
 
-# .env 파일에서 환경 변수 로드
 load_dotenv()
 
-# Langfuse OpenAI 통합 사용 (자동 로깅)
-# LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_HOST 환경변수가 설정되어 있으면 자동 활성화
+# Langfuse 통합 (설정된 경우 자동 활성화)
 try:
     from langfuse.openai import AsyncOpenAI
     LANGFUSE_ENABLED = bool(os.getenv("LANGFUSE_SECRET_KEY") and os.getenv("LANGFUSE_PUBLIC_KEY"))
     if LANGFUSE_ENABLED:
-        print("✓ Langfuse 로깅이 활성화되었습니다.")
+        print("✓ Langfuse 로깅 활성화")
 except ImportError:
     from openai import AsyncOpenAI
     LANGFUSE_ENABLED = False
-    print("⚠ Langfuse가 설치되지 않았습니다. 기본 OpenAI 클라이언트를 사용합니다.")
 
-# OpenAI API 클라이언트 초기화 (비동기)
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# 사용할 OpenAI 모델
+# o4-mini 모델은 상대적으로 저렴한 cost, 중간 정도 성능
 MODEL = "o4-mini"
+
+# gpt-5.2 모델은 가장 최신 모델, 높은 cost(o4-mini대비 약 3배 이상), 가장 높은 성능
 #MODEL = "gpt-5.2"
 
-# 입력/출력 파일 경로
 INPUT_CSV_PATH = "./data/input/output_random_6.csv"
 OUTPUT_CSV_PATH = f"./data/output/random_6_validated_{MODEL}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-
-# 동시 요청 수 제한 (Rate limit 고려)
 MAX_CONCURRENT_REQUESTS = 20
-
-# 세션 ID (Langfuse에서 그룹핑용)
-SESSION_ID = f"patent_validation_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
 
 def get_model_params(model: str, max_tokens: int, temperature: float = 0) -> dict:
-    """
-    모델 버전에 따라 적절한 API 파라미터를 반환합니다.
-    
-    - GPT-5 이상, o1, o3, o4 계열: max_completion_tokens 사용
-    - o1, o3, o4 계열: temperature 설정 불가 (고정값 1)
-    - 그 외 (GPT-4, GPT-4o 등): max_tokens + temperature 사용
-    """
-    # 새로운 토큰 파라미터를 사용하는 모델 (max_completion_tokens)
+    """모델별 API 파라미터 반환 (GPT-5/o1/o3/o4는 max_completion_tokens 사용, reasoning 모델은 temperature 제외)"""
     new_token_models = ["gpt-5", "o1", "o3", "o4"]
-    
-    # temperature 설정이 불가능한 모델 (reasoning 모델)
-    no_temperature_models = ["o1", "o3", "o4"]
+    reasoning_models = ["o1", "o3", "o4"]
     
     params = {}
     
-    # 토큰 파라미터 설정
-    use_new_token = any(model.startswith(prefix) for prefix in new_token_models)
-    if use_new_token:
+    if any(model.startswith(p) for p in new_token_models):
         params["max_completion_tokens"] = max_tokens
     else:
         params["max_tokens"] = max_tokens
     
-    # temperature 설정 (reasoning 모델은 제외)
-    no_temp = any(model.startswith(prefix) for prefix in no_temperature_models)
-    if not no_temp:
+    if not any(model.startswith(p) for p in reasoning_models):
         params["temperature"] = temperature
     
     return params
 
 
 async def validate_matching(
-    row_id: str,
     target_short_name: str,
     target_nation: str,
     abstract: str,
     applicant: str,
     semaphore: asyncio.Semaphore
 ) -> dict:
-    """비동기로 매칭 검증 (Langfuse 자동 로깅)"""
+    """OpenAI API를 사용하여 target과 applicant 매칭 검증"""
     
     prompt = f"""당신은 특허 데이터의 매칭 검증 전문가입니다.
 
@@ -102,8 +79,8 @@ async def validate_matching(
 2. 기업명이 영어/한국어/일본어 등 다른 언어로 표기되었을 수 있음을 고려
 3. 음차 표기(예: Sony → 소니), 약어, 또는 법인 형태(Inc, Ltd, 주식회사 등)의 차이 고려
 4. 음차 표기가 일치하지 않더라도, 특허 초록의 기술 분야가 해당 기업의 사업 분야와 연관성이 있는지 참고
-    
 5. 다만 일부 데이터에서는 실제로는 불일치한 매칭이지만, 우연히 표기명과 음차명이 동일할 수 있기 때문에 반드시 Target 기업의 국적과 출원인의 국적 및 사업분야을 고려하여 판단 
+6. 실제 True 데이터를 모델이 False로 판단하는 리스크가 더 크기 때문에 애매한 경우에는 True로 판단하는 것을 권장
 
 ## 응답 형식 (JSON)
 아래 3가지 중 하나로 "is_valid"를 선택하세요.
@@ -131,22 +108,16 @@ async def validate_matching(
     max_retries = 3
     retry_delay = 1.0  # 초
     
-    async with semaphore:  # 동시 요청 수 제한
+    async with semaphore:
         for attempt in range(max_retries):
             try:
-                # 모델 버전에 따라 파라미터 자동 설정
-                # - GPT-5/o1/o3/o4: max_completion_tokens 사용
-                # - o1/o3/o4 (reasoning 모델): temperature 설정 불가
                 model_params = get_model_params(MODEL, max_tokens=1000, temperature=0)
-                
-                # Langfuse 자동 로깅 (환경변수 설정 시 자동 활성화)
                 response = await client.chat.completions.create(
                     model=MODEL,
                     messages=messages,
                     **model_params
                 )
                 
-                # 응답 검증
                 if not response.choices or not response.choices[0].message.content:
                     if attempt < max_retries - 1:
                         await asyncio.sleep(retry_delay * (attempt + 1))
@@ -188,10 +159,7 @@ async def validate_matching(
 
 async def process_row(row: dict, semaphore: asyncio.Semaphore) -> dict:
     """단일 행 처리"""
-    row_id = row.get('id', 'unknown')
-    
     validation_result = await validate_matching(
-        row_id=row_id,
         target_short_name=row.get('target_short_name', ''),
         target_nation=row.get('target_nation', ''),
         abstract=row.get('abstract', ''),
@@ -215,9 +183,7 @@ async def process_csv_async(input_path: str, output_path: str):
         reader = csv.DictReader(f)
         rows = list(reader)
     
-    print(f"총 {len(rows)}개의 행을 처리합니다. (동시 요청: {MAX_CONCURRENT_REQUESTS}개)")
-    if LANGFUSE_ENABLED:
-        print(f"Langfuse 세션 ID: {SESSION_ID}")
+    print(f"총 {len(rows)}개 행 처리 (동시 요청: {MAX_CONCURRENT_REQUESTS}개)")
     
     # 동시 요청 수 제한을 위한 세마포어
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
@@ -226,21 +192,15 @@ async def process_csv_async(input_path: str, output_path: str):
     tasks = [process_row(row, semaphore) for row in rows]
     results = await tqdm_asyncio.gather(*tasks, desc="검증 진행")
     
-    # is_valid 값 정규화 (문자열 "true"/"false" → boolean 변환)
-    for r in results:
-        val = r['is_valid']
-        if val is True or (isinstance(val, str) and val.lower() == "true"):
-            r['is_valid'] = True
-        elif val is False or (isinstance(val, str) and val.lower() == "false"):
-            r['is_valid'] = False
-        elif isinstance(val, str) and val.lower() == "uncertain":
-            r['is_valid'] = "uncertain"
-        # None이나 기타 값은 그대로 유지
+    # 통계 계산
+    def normalize(val):
+        if val is None:
+            return None
+        return str(val).lower() if val else None
     
-    # 통계 계산 (true, false, uncertain, error)
-    valid_count = sum(1 for r in results if r['is_valid'] is True)
-    invalid_count = sum(1 for r in results if r['is_valid'] is False)
-    uncertain_count = sum(1 for r in results if r['is_valid'] == "uncertain")
+    valid_count = sum(1 for r in results if normalize(r['is_valid']) == "true")
+    invalid_count = sum(1 for r in results if normalize(r['is_valid']) == "false")
+    uncertain_count = sum(1 for r in results if normalize(r['is_valid']) == "uncertain")
     error_count = sum(1 for r in results if r['is_valid'] is None)
     
     # 결과 CSV 저장
@@ -259,27 +219,18 @@ async def process_csv_async(input_path: str, output_path: str):
         print(f"❌ 불일치(False): {invalid_count}건 ({invalid_count/len(results)*100:.1f}%)")
         print(f"❓ 불확실(Uncertain): {uncertain_count}건 ({uncertain_count/len(results)*100:.1f}%)")
         print(f"⚠️  오류(Error): {error_count}건 ({error_count/len(results)*100:.1f}%)")
-    
-    if LANGFUSE_ENABLED:
-        print(f"\n✓ Langfuse 로그가 자동 전송되었습니다. 세션: {SESSION_ID}")
 
 
 def main():
     """메인 함수"""
-    
     if not os.getenv("OPENAI_API_KEY"):
         print("오류: OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
         return
-    
-    if not LANGFUSE_ENABLED:
-        print("경고: Langfuse 키가 설정되지 않았습니다. 로깅이 비활성화됩니다.")
-        print("  LANGFUSE_SECRET_KEY와 LANGFUSE_PUBLIC_KEY를 .env 파일에 추가해주세요.")
     
     if not os.path.exists(INPUT_CSV_PATH):
         print(f"오류: 입력 파일을 찾을 수 없습니다: {INPUT_CSV_PATH}")
         return
     
-    # 비동기 실행
     asyncio.run(process_csv_async(INPUT_CSV_PATH, OUTPUT_CSV_PATH))
 
 
