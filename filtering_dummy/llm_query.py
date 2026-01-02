@@ -30,18 +30,49 @@ except ImportError:
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # 사용할 OpenAI 모델
-MODEL = "gpt-4o"
-#MODEL = "gpt-4o-mini"
+MODEL = "o4-mini"
+#MODEL = "gpt-5.2"
 
 # 입력/출력 파일 경로
-INPUT_CSV_PATH = "./data/input/output_random_3.csv"
-OUTPUT_CSV_PATH = f"./data/output/random_3_validated_{MODEL}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+INPUT_CSV_PATH = "./data/input/output_random_6.csv"
+OUTPUT_CSV_PATH = f"./data/output/random_6_validated_{MODEL}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
 # 동시 요청 수 제한 (Rate limit 고려)
-MAX_CONCURRENT_REQUESTS = 10
+MAX_CONCURRENT_REQUESTS = 20
 
 # 세션 ID (Langfuse에서 그룹핑용)
 SESSION_ID = f"patent_validation_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+
+def get_model_params(model: str, max_tokens: int, temperature: float = 0) -> dict:
+    """
+    모델 버전에 따라 적절한 API 파라미터를 반환합니다.
+    
+    - GPT-5 이상, o1, o3, o4 계열: max_completion_tokens 사용
+    - o1, o3, o4 계열: temperature 설정 불가 (고정값 1)
+    - 그 외 (GPT-4, GPT-4o 등): max_tokens + temperature 사용
+    """
+    # 새로운 토큰 파라미터를 사용하는 모델 (max_completion_tokens)
+    new_token_models = ["gpt-5", "o1", "o3", "o4"]
+    
+    # temperature 설정이 불가능한 모델 (reasoning 모델)
+    no_temperature_models = ["o1", "o3", "o4"]
+    
+    params = {}
+    
+    # 토큰 파라미터 설정
+    use_new_token = any(model.startswith(prefix) for prefix in new_token_models)
+    if use_new_token:
+        params["max_completion_tokens"] = max_tokens
+    else:
+        params["max_tokens"] = max_tokens
+    
+    # temperature 설정 (reasoning 모델은 제외)
+    no_temp = any(model.startswith(prefix) for prefix in no_temperature_models)
+    if not no_temp:
+        params["temperature"] = temperature
+    
+    return params
 
 
 async def validate_matching(
@@ -70,16 +101,22 @@ async def validate_matching(
 1. Target 기업명과 Applicant가 동일한 기업을 가리키는지 확인
 2. 기업명이 영어/한국어/일본어 등 다른 언어로 표기되었을 수 있음을 고려
 3. 음차 표기(예: Sony → 소니), 약어, 또는 법인 형태(Inc, Ltd, 주식회사 등)의 차이 고려
-4. 특허 초록의 기술 분야가 해당 기업의 사업 분야와 연관성이 있는지 참고
+4. 음차 표기가 일치하지 않더라도, 특허 초록의 기술 분야가 해당 기업의 사업 분야와 연관성이 있는지 참고
+    
+5. 다만 일부 데이터에서는 실제로는 불일치한 매칭이지만, 우연히 표기명과 음차명이 동일할 수 있기 때문에 반드시 Target 기업의 국적과 출원인의 국적 및 사업분야을 고려하여 판단 
 
 ## 응답 형식 (JSON)
 아래 3가지 중 하나로 "is_valid"를 선택하세요.
 - true: 명확히 일치한다고 판단됨
 - false: 명확히 일치하지 않는다고 판단됨
-- uncertain: 정보가 불충분하거나 판단이 어려움
+- uncertain: 정보가 불충분하거나 판단이 어려움(글자수 최대 100자 이내로 설명)
+
+## 예시
+- Target 기업명이 'Prometheus Biosciences Inc'인 기업은 출원인 '프로메테우스 바이오사이언시즈, 인크.'와 일치한다고 판단
+- Target 기업명: Samsung Electronics, Applicant: OO반도체 회사,  특허 초록: 반도체 장치 및 반도체 장치의 제조 방법 -> 이 경우 회사명은 다르지만, 사업분야가 유사하므로 일치한다고 판단
 
 {{
-    "is_valid": true, false, 또는 "uncertain",
+    "is_valid": "True", "False", 또는 "Uncertain",
     "confidence": 0.0 ~ 1.0 사이의 확신도,
     "reason": "판단 이유를 간단히 설명"
 }}
@@ -91,31 +128,62 @@ async def validate_matching(
         {"role": "user", "content": prompt}
     ]
 
+    max_retries = 3
+    retry_delay = 1.0  # 초
+    
     async with semaphore:  # 동시 요청 수 제한
-        try:
-            # Langfuse 자동 로깅 (환경변수 설정 시 자동 활성화)
-            response = await client.chat.completions.create(
-                model=MODEL,
-                messages=messages,
-                temperature=0.1,
-                max_tokens=300
-            )
-            
-            result_text = response.choices[0].message.content.strip()
-            
-            # JSON 파싱
-            if result_text.startswith("```"):
-                result_text = result_text.split("```")[1]
-                if result_text.startswith("json"):
-                    result_text = result_text[4:]
-            result_text = result_text.strip()
-            
-            return json.loads(result_text)
-            
-        except json.JSONDecodeError as e:
-            return {"is_valid": None, "confidence": 0.0, "reason": f"JSON 파싱 오류: {str(e)}"}
-        except Exception as e:
-            return {"is_valid": None, "confidence": 0.0, "reason": f"API 오류: {str(e)}"}
+        for attempt in range(max_retries):
+            try:
+                # 모델 버전에 따라 파라미터 자동 설정
+                # - GPT-5/o1/o3/o4: max_completion_tokens 사용
+                # - o1/o3/o4 (reasoning 모델): temperature 설정 불가
+                model_params = get_model_params(MODEL, max_tokens=1000, temperature=0)
+                
+                # Langfuse 자동 로깅 (환경변수 설정 시 자동 활성화)
+                response = await client.chat.completions.create(
+                    model=MODEL,
+                    messages=messages,
+                    **model_params
+                )
+                
+                # 응답 검증
+                if not response.choices or not response.choices[0].message.content:
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(retry_delay * (attempt + 1))
+                        continue
+                    return {"is_valid": None, "confidence": 0.0, "reason": "빈 응답"}
+                
+                result_text = response.choices[0].message.content.strip()
+                
+                # JSON 파싱
+                if result_text.startswith("```"):
+                    result_text = result_text.split("```")[1]
+                    if result_text.startswith("json"):
+                        result_text = result_text[4:]
+                result_text = result_text.strip()
+                
+                # 빈 문자열 체크
+                if not result_text:
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(retry_delay * (attempt + 1))
+                        continue
+                    return {"is_valid": None, "confidence": 0.0, "reason": "빈 응답"}
+                
+                return json.loads(result_text)
+                
+            except json.JSONDecodeError as e:
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(retry_delay * (attempt + 1))
+                    continue
+                # 마지막 시도에서도 실패하면 원본 응답도 기록
+                return {"is_valid": None, "confidence": 0.0, "reason": f"JSON 파싱 오류: {str(e)}", "raw_response": result_text[:200] if 'result_text' in locals() else "N/A"}
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(retry_delay * (attempt + 1))
+                    continue
+                return {"is_valid": None, "confidence": 0.0, "reason": f"API 오류: {str(e)}"}
+        
+        return {"is_valid": None, "confidence": 0.0, "reason": "최대 재시도 횟수 초과"}
 
 
 async def process_row(row: dict, semaphore: asyncio.Semaphore) -> dict:
@@ -157,6 +225,17 @@ async def process_csv_async(input_path: str, output_path: str):
     # 모든 행을 비동기로 처리
     tasks = [process_row(row, semaphore) for row in rows]
     results = await tqdm_asyncio.gather(*tasks, desc="검증 진행")
+    
+    # is_valid 값 정규화 (문자열 "true"/"false" → boolean 변환)
+    for r in results:
+        val = r['is_valid']
+        if val is True or (isinstance(val, str) and val.lower() == "true"):
+            r['is_valid'] = True
+        elif val is False or (isinstance(val, str) and val.lower() == "false"):
+            r['is_valid'] = False
+        elif isinstance(val, str) and val.lower() == "uncertain":
+            r['is_valid'] = "uncertain"
+        # None이나 기타 값은 그대로 유지
     
     # 통계 계산 (true, false, uncertain, error)
     valid_count = sum(1 for r in results if r['is_valid'] is True)
