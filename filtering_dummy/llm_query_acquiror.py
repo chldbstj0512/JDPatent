@@ -1,5 +1,5 @@
 """
-OpenAI API를 사용하여 특허 출원인(applicant)과 대상 기업(target)의 매칭을 검증하는 비동기 스크립트
+OpenAI API를 사용하여 특허 출원인(applicant)과 인수 기업(acquiror)의 매칭을 검증하는 비동기 스크립트
 """
 
 import os
@@ -30,8 +30,8 @@ MODEL = "o4-mini"
 # gpt-5.2 모델은 가장 최신 모델, 높은 cost(o4-mini대비 약 3배 이상), 가장 높은 성능
 #MODEL = "gpt-5.2"
 
-INPUT_CSV_PATH = "./data/input/output_random_9.csv"
-OUTPUT_CSV_PATH = f"./data/output/random_9_validated_{MODEL}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+INPUT_CSV_PATH = "./data/input/output_random_acquiror_1.csv"
+OUTPUT_CSV_PATH = f"./data/output/acquiror_1_validated_{MODEL}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 MAX_CONCURRENT_REQUESTS = 20
 
 
@@ -54,34 +54,34 @@ def get_model_params(model: str, max_tokens: int, temperature: float = 0) -> dic
 
 
 async def validate_matching(
-    target_short_name: str,
-    target_nation: str,
+    acquiror_short_name: str,
+    acquiror_nation: str,
     abstract: str,
     invention_name: str,
     applicant: str,
     semaphore: asyncio.Semaphore
 ) -> dict:
-    """OpenAI API를 사용하여 target과 applicant 매칭 검증"""
+    """OpenAI API를 사용하여 acquiror(인수 기업)과 applicant 매칭 검증"""
     
     prompt = f"""당신은 특허 데이터의 매칭 검증 전문가입니다.
 
-아래 정보를 분석하여 'applicant(출원인)'가 'target(대상 기업)'과 올바르게 매칭되었는지 판단해주세요.
+아래 정보를 분석하여 'applicant(출원인)'가 'acquiror(인수 기업)'과 올바르게 매칭되었는지 판단해주세요.
 
 단, 명확하게 true(일치)/false(불일치)로 판단이 어려울 경우, "불확실(uncertain)"을 선택할 수 있습니다. 즉, 총 3가지 선택지를 고려하여 판단해주세요.
 
 ## 입력 정보
-- **Target 기업명**: {target_short_name}
-- **Target 국가**: {target_nation}
+- **Acquiror 기업명**: {acquiror_short_name}
+- **Acquiror 국가**: {acquiror_nation}
 - **특허 초록**: {abstract[:300] if abstract else "없음"}...
 - **Invention Name**: {invention_name}
 - **출원인(Applicant)**: {applicant}
 
 ## 판단 기준
-1. Target 기업명과 Applicant가 동일한 기업을 가리키는지 확인
+1. Acquiror 기업명과 Applicant가 동일한 기업을 가리키는지 확인
 2. 기업명이 영어/한국어/일본어 등 다른 언어로 표기되었을 수 있음을 고려
 3. 음차 표기(예: Sony → 소니), 약어, 또는 법인 형태(Inc, Ltd, 주식회사 등)의 차이 고려
 4. 음차 표기가 일치하지 않더라도, 특허 초록과 Invention Name의 기술 분야가 해당 기업의 사업 분야와 연관성이 있는지 참고
-5. 다만 일부 데이터에서는 실제로는 불일치한 매칭이지만, 우연히 표기명과 음차명이 동일할 수 있기 때문에 반드시 Target 기업의 국적과 출원인의 국적 및 사업분야을 고려하여 판단 
+5. 다만 일부 데이터에서는 실제로는 불일치한 매칭이지만, 우연히 표기명과 음차명이 동일할 수 있기 때문에 반드시 Acquiror 기업의 국적과 출원인의 국적 및 사업분야을 고려하여 판단 
 6. 실제 True 데이터를 모델이 False로 판단하는 리스크가 더 크기 때문에 애매한 경우에는 True로 판단하는 것을 권장
 
 ## 응답 형식 (JSON)
@@ -91,8 +91,8 @@ async def validate_matching(
 - uncertain: 정보가 불충분하거나 판단이 어려움
 
 ## 예시
-- Target 기업명: 'Prometheus Biosciences Inc'인 기업은 출원인 '프로메테우스 바이오사이언시즈, 인크.'와 일치(true)한다고 판단
-- Target 기업명: 'Samsung Electronics', Applicant: 'OO반도체 회사',  특허 초록: '반도체 장치 및 반도체 장치의 제조 방법' -> 이 경우 회사명은 다르지만, 사업분야가 유사하므로 일치(true)한다고 판단
+- Acquiror 기업명: 'Prometheus Biosciences Inc'인 기업은 출원인 '프로메테우스 바이오사이언시즈, 인크.'와 일치(true)한다고 판단
+- Acquiror 기업명: 'Samsung Electronics', Applicant: 'OO반도체 회사',  특허 초록: '반도체 장치 및 반도체 장치의 제조 방법' -> 이 경우 회사명은 다르지만, 사업분야가 유사하므로 일치(true)한다고 판단
 
 {{
     "is_valid": "True", "False", 또는 "Uncertain",
@@ -162,8 +162,8 @@ async def validate_matching(
 async def process_row(row: dict, semaphore: asyncio.Semaphore) -> dict:
     """단일 행 처리"""
     validation_result = await validate_matching(
-        target_short_name=row.get('target_short_name', ''),
-        target_nation=row.get('target_nation', ''),
+        acquiror_short_name=row.get('acquiror_short_name', ''),
+        acquiror_nation=row.get('acquiror_nation', ''),
         abstract=row.get('abstract', ''),
         invention_name=row.get('invention_name', ''),
         applicant=row.get('applicant', ''),
