@@ -102,14 +102,14 @@ def search_target_patents(
     
     # 2. IPC 코드 파싱
     ipc_classes = []
-    if ipc_code and use_ipc_filter:
+    if ipc_code:
         ipc_classes = parse_ipc_codes(ipc_code)
         print(f"[정보] 입력 IPC 클래스: {ipc_classes}")
     
-    # 3. Pinecone 검색
+    # 3. Pinecone 검색 (상위 5개 고정)
     results = index.query(
         vector=query_embedding,
-        top_k=top_k,
+        top_k=5,
         include_metadata=True
     )
     
@@ -212,7 +212,6 @@ def print_target_results(patents: List[Dict], scores: List[float] = None):
         print(f"    IPC: {patent.get('ipc_code', '')[:50]}...")
         print(f"    초록: {patent.get('abstract', '')[:150]}...")
         print(f"    출원번호: {patent.get('application_number', '')}")
-        print(f"    출원인: {patent.get('applicant', '')}")
         print()
 
 
@@ -237,7 +236,6 @@ def print_acquiror_results(patents: List[Dict], scores: List[float] = None):
         print(f"    IPC: {patent.get('ipc_code', '')[:50]}...")
         print(f"    초록: {patent.get('abstract', '')[:150]}...")
         print(f"    출원번호: {patent.get('application_number', '')}")
-        print(f"    출원인: {patent.get('applicant', '')}")
         print()
 
 
