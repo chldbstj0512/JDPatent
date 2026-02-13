@@ -39,8 +39,244 @@
   - 예)Delta X Co Ltd → 주식회사 델타엑스|나노인텍 주식회사, 주식회사 델타엑스, 나노인텍 주식회사|주식회사 델타엑스
 - `pronounce_based.py`참고
 
-### 방법 2. OpenAI API 로 쿼리
+### 방법 2. OpenAI API로 쿼리
 
-- `target_short_name` + `abstract`(혹은 `invention_name`) -> `applicant` 가 올바르게 매칭되었는지 확인
+- `target_short_name` + `abstract`(혹은 `invention_name`) -> `applicant`가 올바르게 매칭되었는지 확인
+- LLM을 활용하여 회사명 매칭의 정확도를 높임
 
-**프롬프트**
+## 스크립트 설명
+
+### 1. 비동기 방식 (실시간 처리)
+
+#### `llm_query_basic_acquiror.py`
+
+- Acquiror 기업과 출원인 매칭 검증
+- AsyncOpenAI를 사용한 비동기 처리
+- 중소규모 데이터셋에 적합
+- 실시간 응답이 필요한 경우 사용
+
+#### `llm_query_basic_target.py`
+
+- Target 기업과 출원인 매칭 검증
+- AsyncOpenAI를 사용한 비동기 처리
+- 중소규모 데이터셋에 적합
+
+### 2. 배치 방식 (대용량 처리)
+
+#### `llm_query_batch_acquiror.py`
+
+- **OpenAI Batch API** 사용으로 **50% 비용 절감**
+- 대량 데이터 처리 최적화 (20,000개씩 배치 분할)
+- 24시간 내 처리 완료
+- 배치 상태 모니터링 및 재개 기능
+- 200만 건 이상의 데이터 처리 가능
+
+**주요 설정:**
+
+```python
+MODEL = "gpt-5-mini"           # 모델 선택
+BATCH_SIZE = 20000             # 배치 크기
+MAX_BATCHES = None             # None: 전체 실행, 숫자: 테스트용
+ERROR_THRESHOLD = 10           # 에러 임계값
+```
+
+**사용 예시:**
+
+```bash
+python llm_query_batch_acquiror.py
+```
+
+#### `llm_query_batch_target.py`
+
+- Target 기업 매칭을 위한 Batch API 스크립트
+- `llm_query_batch_acquiror.py`와 동일한 구조 및 기능
+
+### 3. 배치 재개 스크립트
+
+#### `resume_batch.py`
+
+- 중단된 배치 작업을 재개
+- 저장된 `batch_ids.json` 파일을 읽어 진행 상황 확인
+- 완료되지 않은 배치만 처리
+
+## 프롬프트 관리
+
+### 중앙화된 규칙 관리
+
+모든 매칭 검증 스크립트는 공통 규칙을 사용합니다:
+
+```
+prompts/
+└── matching_rules.py    # 회사명 매칭 규칙 정의
+```
+
+**`matching_rules.py` 구조:**
+
+- 규칙 1: 음역 또는 표준 표기의 합리성
+- 규칙 2: 의미적 내용의 추가/누락 금지
+- 규칙 3: 법인 형태 접미사 유연 처리
+- 규칙 4: 브랜드 확장/약어 재해석 금지
+- 규칙 5: 기호/숫자/특수 문자 합리적 반영
+
+**사용 방법:**
+
+```python
+from prompts.matching_rules import RULES
+
+PROMPT_TEMPLATE = f"""당신은 회사명 매칭 검증 전문가입니다.
+...
+{RULES}
+...
+"""
+```
+
+**장점:**
+
+- ✅ 규칙 수정 시 한 곳만 변경하면 모든 스크립트에 반영
+- ✅ 일관된 검증 기준 유지
+- ✅ 유지보수 용이
+
+## 비용 최적화
+
+### OpenAI Batch API 활용
+
+| 방식           | 비용         | 처리 시간   | 적합한 경우                |
+| -------------- | ------------ | ----------- | -------------------------- |
+| **실시간 API** | 기본 요금    | 즉시        | 소규모 데이터, 실시간 필요 |
+| **Batch API**  | **50% 할인** | 24시간 이내 | 대량 데이터, 비용 중요     |
+
+### 모델 선택 가이드
+
+| 모델          | 상대적 비용 | 성능 | 추천 용도                |
+| ------------- | ----------- | ---- | ------------------------ |
+| `gpt-5-nano`  | 매우 낮음   | 낮음 | 간단한 매칭              |
+| `gpt-5-mini`  | 낮음        | 중간 | **일반적인 매칭 (권장)** |
+| `gpt-4o-mini` | 중간        | 중상 | 복잡한 매칭              |
+| `gpt-5.2`     | 높음        | 최고 | 매우 복잡한 매칭         |
+
+### 비용 추정 예시
+
+**200만 건 데이터 처리 (gpt-5-mini + Batch API 기준):**
+
+- 예상 비용: 약 $XXX (50% 할인 적용)
+- 처리 시간: 24시간 이내
+- 배치 개수: 100개 (20,000건씩)
+
+## 유사 특허 검색
+
+### `find_similar_patents.py`
+
+Pinecone 벡터 DB를 활용한 유사 특허 검색 스크립트입니다.
+
+**주요 기능:**
+- Target/Acquiror 인덱스에서 유사 특허 검색
+- OpenAI 임베딩 기반 의미적 유사도 검색
+- IPC 코드 기반 필터링 (optional)
+- 상위 5개 결과 반환
+
+**사용 예시:**
+
+```bash
+# Target 인덱스 검색
+python find_similar_patents.py \
+  --index target \
+  --query "온라인 쇼핑몰 관련 특허"
+
+# IPC 필터와 함께 검색
+python find_similar_patents.py \
+  --index acquiror \
+  --query "전자상거래 시스템" \
+  --ipc "G06Q 30/02"
+```
+
+**CLI 옵션:**
+- `--index`: 검색할 인덱스 (target 또는 acquiror) - 필수
+- `--query`: 검색 쿼리 텍스트 - 필수
+- `--ipc`: IPC 코드 필터 (선택)
+
+## 환경 설정
+
+### 필수 환경 변수 (.env)
+
+```bash
+OPENAI_API_KEY=your_openai_api_key_here
+PINECONE_API_KEY=your_pinecone_api_key_here
+```
+
+`.env.example` 파일을 복사하여 `.env` 파일을 생성하고 API 키를 설정하세요.
+
+### 의존성 설치
+
+```bash
+pip install openai python-dotenv pandas openpyxl tqdm pinecone-client
+```
+
+## 사용 워크플로우
+
+### 1. 소규모 테스트 (실시간)
+
+```bash
+# Acquiror 매칭
+python llm_query_basic_acquiror.py
+
+# Target 매칭
+python llm_query_basic_target.py
+```
+
+### 2. 대규모 처리 (배치)
+
+```bash
+# 1. 배치 제출 및 실행
+python llm_query_batch_acquiror.py
+
+# 2. (선택) 중단된 경우 재개
+python resume_batch.py
+```
+
+### 3. 결과 확인
+
+- 출력 파일: `data/output/validated_acquiror_YYYYMMDD_HHMMSS.xlsx`
+- 컬럼: `id`, `acquiror_short_name`, `applicant`, `is_valid`, `confidence`
+
+## 주요 특징
+
+### ✅ 비용 효율성
+
+- Batch API 활용으로 50% 비용 절감
+- 필요에 따라 모델 선택 가능
+
+### ✅ 확장성
+
+- 20,000개씩 배치 분할로 대용량 처리
+- 200만 건 이상 데이터 처리 가능
+
+### ✅ 안정성
+
+- 배치 상태 자동 모니터링
+- 에러 임계값 설정으로 자동 취소
+- 중단 시 재개 기능
+
+### ✅ 유지보수성
+
+- 중앙화된 프롬프트 관리
+- 명확한 코드 구조
+- 상세한 로그 출력
+
+## 파일 구조
+
+```
+filtering_dummy/
+├── README.md
+├── .env.example
+├── prompts/
+│   └── matching_rules.py          # 공통 매칭 규칙
+├── llm_query_basic_acquiror.py    # 실시간 Acquiror 매칭
+├── llm_query_basic_target.py      # 실시간 Target 매칭
+├── llm_query_batch_acquiror.py    # 배치 Acquiror 매칭
+├── llm_query_batch_target.py      # 배치 Target 매칭
+├── resume_batch.py                # 배치 재개
+├── find_similar_patents.py        # Pinecone 유사 특허 검색
+├── pronouce_based.py              # 음차 기반 매칭
+├── extract_acquiror.py            # Acquiror 데이터 추출
+└── extract_target.py              # Target 데이터 추출
+```
