@@ -1,0 +1,36 @@
+[
+  {
+    "pdf_name": "yunseo",
+    "country": "US",
+    "title": "PROPIONIBACTERIUM ACNES PROPHYLACTIC AND THERAPEUTIC IMMUNE TREATMENT",
+    "applicant_name": "Origimm Biotechnology GmbH",
+    "applicant_number": "17/801,099",
+    "applicant_date": "2021-02-22",
+    "grant_number": null,
+    "grant_date": null,
+    "naics_code": [
+      "325414"
+    ],
+    "abstract": "The present invention discloses a vaccine comprising one or more of Dermatan sulfate-binding adhesin 1 of P. acnes (DsA1 polypeptide), Dermatan sulfate-binding adhesin 2 of P. acnes (DsA2 polypeptide), and putative iron-transport protein (PITP) polypeptide of P acnes, and/or a fragment and/or derivative of DsAl and/or DsA2 and/or PITP, wherein the DsAl polypeptide and the DsA2 polypeptide comprise from N- to C-terminus an N-terminal swapping region (“NSR”), a first conserved sub-domain (“CSD1”), a first swapping region (“SR1”), a second conserved sub-domain (“CSD2”), a second swapping region (“SR2”), a third conserved sub-domain (“CSD3”), a Pro-Thr repeat containing region (“PT repeat region”), and a C-terminal region (“CTR”), and wherein the PITP polypeptide comprises from N- to C-terminus an extended neocarzinostatin family domain (““ENFD”), a first swapping region (“SR1”), a heme-binding domain (“HbD”), a second swapping region (“SR2”) including the C-terminal LPXTG motif, and a hydrophobic C-terminal region (““hLAR”). Specification includes a Sequence Listing.",
+    "field": "bio",
+    "ipc_info": [
+      {
+        "code": "A61K 39/05",
+        "short_description": "백신기술",
+        "long_description": "면역 치료용 백신 조성물 관련 기술"
+      },
+      {
+        "code": "A61P 31/04",
+        "short_description": "피부 질환",
+        "long_description": "피부 질환 치료를 위한 약리학적 조성물 관련 기술"
+      }
+    ],
+    "naics_info": [
+      {
+        "code": "325414",
+        "title": "Biological Product (except Diagnostic) Manufacturing",
+        "description": "This industry comprises establishments primarily engaged in manufacturing vaccines, toxoids, blood fractions, and culture media of plant or animal origin (except diagnostic)."
+      }
+    ]
+  }
+]
