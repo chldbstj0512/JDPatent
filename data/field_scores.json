@@ -1,0 +1,32 @@
+{
+  "bio": {
+    "recent_growth": 0.008,
+    "recovery_ratio": 1.065,
+    "recent_trend_slope": 12.0,
+    "final_score": 0.43
+  },
+  "comm": {
+    "recent_growth": -0.149,
+    "recovery_ratio": 1.165,
+    "recent_trend_slope": -526.0,
+    "final_score": 0.39
+  },
+  "compu": {
+    "recent_growth": -0.154,
+    "recovery_ratio": 1.035,
+    "recent_trend_slope": -689.0,
+    "final_score": 0.336
+  },
+  "elec": {
+    "recent_growth": 0.278,
+    "recovery_ratio": 1.376,
+    "recent_trend_slope": 240.5,
+    "final_score": 0.688
+  },
+  "other": {
+    "recent_growth": 0.296,
+    "recovery_ratio": 1.978,
+    "recent_trend_slope": 219.0,
+    "final_score": 0.941
+  }
+}
