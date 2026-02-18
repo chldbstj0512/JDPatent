@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+celery[redis]
+redis
+pydantic
+pydantic-settings
+python-dotenv
+httpx
+pandas
+numpy
+openai
+pinecone
+tqdm
+langchain-openai
+

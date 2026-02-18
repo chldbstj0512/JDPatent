@@ -3,6 +3,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from openai import OpenAI
 import json
+from pathlib import Path
 
 from extract import run_NAIC_extract
 from score import run_score
@@ -80,6 +81,8 @@ def main(
 
 
 if __name__ == "__main__":
+    BASE_DIR = Path(__file__).resolve().parent
+    DATA_DIR = BASE_DIR / "data"
 
     # 1. 사용자 아이디 (구분자)
     user_id = "yunseo" 
@@ -220,9 +223,7 @@ Immunization antigens
     """
 
     # 3. 사용자 특허청구항 정보 (3~, 청구항 상세내용 및 청구항 개수 등이 포함된 df)
-    patent_df = pd.read_csv(
-        "../data/user_patent.csv"
-    )
+    patent_df = pd.read_csv(DATA_DIR / "user_patent.csv")
     row = patent_df.iloc[0]
 
     # 4. 평가 옵션
@@ -236,19 +237,15 @@ Immunization antigens
     avg_citation_count = 10
 
     # 6. DB 로드
-    acquisitions_df = pd.read_csv(
-        '../data/acquisitions_20260129.csv'
-    )
+    acquisitions_df = pd.read_csv(DATA_DIR / "acquisitions_20260129.csv")
 
     # 7. 이외 사전 데이터 로드
-    naic_df = pd.read_csv(
-        '../data/NAICS_descripition.csv'
-    )
+    naic_df = pd.read_csv(DATA_DIR / "NAICS_descripition.csv")
 
-    with open("../data/field_scores.json", "r", encoding="utf-8") as f:
+    with open(DATA_DIR / "field_scores.json", "r", encoding="utf-8") as f:
         field_scores = json.load(f)
 
-    with open("../data/hightech_list.json", "r", encoding="utf-8") as f:
+    with open(DATA_DIR / "hightech_list.json", "r", encoding="utf-8") as f:
         hightech_list = json.load(f)
 
     ################# main 호출 #################

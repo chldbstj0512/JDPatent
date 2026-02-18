@@ -1,0 +1,2 @@
+"""JDPatent REST wrapper package."""
+
