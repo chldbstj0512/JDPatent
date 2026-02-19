@@ -221,7 +221,7 @@ Immunization antigens
 
     # 3. 사용자 특허청구항 정보 (3~, 청구항 상세내용 및 청구항 개수 등이 포함된 df)
     patent_df = pd.read_csv(
-        "../data/user_patent.csv"
+        "./data/user_patent.csv"
     )
     row = patent_df.iloc[0]
 
@@ -237,18 +237,18 @@ Immunization antigens
 
     # 6. DB 로드
     acquisitions_df = pd.read_csv(
-        '../data/acquisitions_20260129.csv'
+        './data/acquisitions_20260129.csv'
     )
 
     # 7. 이외 사전 데이터 로드
     naic_df = pd.read_csv(
-        '../data/NAICS_descripition.csv'
+        './data/NAICS_descripition.csv'
     )
 
-    with open("../data/field_scores.json", "r", encoding="utf-8") as f:
+    with open("./data/field_scores.json", "r", encoding="utf-8") as f:
         field_scores = json.load(f)
 
-    with open("../data/hightech_list.json", "r", encoding="utf-8") as f:
+    with open("./data/hightech_list.json", "r", encoding="utf-8") as f:
         hightech_list = json.load(f)
 
     ################# main 호출 #################
