@@ -24,15 +24,45 @@ pc = Pinecone(
 index = pc.Index(INDEX_NAME)
 
 def embed_patent_text(text: str) -> list:
-    
-    response = client.embeddings.create(
-        model="text-embedding-3-large",
-        input=text
-    )
-    embedding = response.data[0].embedding
+    if not text or not text.strip():
+        raise ValueError("Empty text for embedding")
 
-    assert len(embedding) == 3072
-    return embedding
+    # Conservative first cut to avoid 8192-token limit overflow.
+    embedding_input = text.strip()
+    if len(embedding_input) > 24000:
+        print(f"[EMBED_TRUNCATE] initial chars={len(embedding_input)} -> 24000")
+        embedding_input = embedding_input[:24000]
+
+    for _ in range(5):
+        try:
+            response = client.embeddings.create(
+                model="text-embedding-3-large",
+                input=embedding_input
+            )
+            embedding = response.data[0].embedding
+            assert len(embedding) == 3072
+            return embedding
+        except Exception as e:
+            msg = str(e)
+            if "maximum context length" in msg and "requested" in msg:
+                requested_match = re.search(r"requested\s+(\d+)\s+tokens", msg)
+                if requested_match:
+                    requested_tokens = int(requested_match.group(1))
+                    shrink_ratio = (8192 / max(requested_tokens, 1)) * 0.8
+                    new_len = int(len(embedding_input) * shrink_ratio)
+                else:
+                    new_len = int(len(embedding_input) * 0.7)
+
+                new_len = max(1200, min(new_len, len(embedding_input) - 200))
+                if new_len >= len(embedding_input):
+                    new_len = max(1200, len(embedding_input) - 500)
+
+                print(f"[EMBED_RETRY_TRUNCATE] chars={len(embedding_input)} -> {new_len}")
+                embedding_input = embedding_input[:new_len]
+                continue
+            raise
+
+    raise RuntimeError("Failed to create embedding after truncation retries")
 
 def retrieve_top_naics(
     query_vector: list,

@@ -3,6 +3,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from openai import OpenAI
 import json
+import argparse
 
 from extract import run_NAIC_extract
 from score import run_score
@@ -81,16 +82,54 @@ def main(
 
     return final_result
 
-if __name__ == "__main__":
 
-    user_id = "yunseo"
+def run_from_raw_text(
+    *,
+    user_id: str,
+    raw_text: str,
+    acquisitions_df: pd.DataFrame,
+    naic_df: pd.DataFrame,
+    field_scores: dict,
+    hightech_list: dict,
+    user_prefer: str,
+    user_prefer_nation: str,
+    user_prefer_area: str | None,
+    avg_claim_count: float,
+    avg_ipc_count: float,
+    avg_citation_count: float,
+):
+    """Single-entry helper: convert raw OCR text into front/back and run pipeline."""
+    front_ocr, back_ocr = split_ocr_text(raw_text)
+    return main(
+        user_id=user_id,
+        front_ocr=front_ocr,
+        back_ocr=back_ocr,
+        acquisitions_df=acquisitions_df,
+        naic_df=naic_df,
+        field_scores=field_scores,
+        hightech_list=hightech_list,
+        user_prefer=user_prefer,
+        user_prefer_nation=user_prefer_nation,
+        user_prefer_area=user_prefer_area,
+        avg_claim_count=avg_claim_count,
+        avg_ipc_count=avg_ipc_count,
+        avg_citation_count=avg_citation_count,
+    )
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run JDPatent pipeline with raw OCR text")
+    parser.add_argument("--user-id", default="yunseo")
+    parser.add_argument("--raw-text", default=None, help="Raw OCR text string")
+    args = parser.parse_args()
+
+    user_id = args.user_id
 
     # ----------------------------
     # OCR
     # ----------------------------
-    text = open("./util/ocr_text.txt", "r", encoding="utf-8").read()
-
-    front_ocr, back_ocr = split_ocr_text(text)
+    text = args.raw_text or os.getenv("OCR_RAW_TEXT")
+    if not text:
+        raise ValueError("Provide raw OCR text via --raw-text or OCR_RAW_TEXT env var.")
     # ----------------------------
     # 평가 옵션
     # ----------------------------
@@ -122,10 +161,9 @@ if __name__ == "__main__":
     # ----------------------------
     # main 호출
     # ----------------------------
-    result = main(
+    result = run_from_raw_text(
         user_id=user_id,
-        front_ocr=front_ocr,
-        back_ocr=back_ocr,
+        raw_text=text,
         acquisitions_df=acquisitions_df,
         naic_df=naic_df,
         field_scores=field_scores,

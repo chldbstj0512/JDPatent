@@ -5,7 +5,7 @@ from typing import Any
 
 import pandas as pd
 
-from main import main as legacy_main
+from main import run_from_raw_text
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -41,14 +41,12 @@ def run_legacy_analysis(
     user_prefer_nation: str | None = "South Korea",
     user_prefer_area: str | None = None,
 ) -> dict[str, Any]:
-    """Adapt REST payload to legacy main() signature."""
+    """Adapt REST payload to pipeline execution."""
     bundle = _load_data_bundle()
-    row = bundle["patent_df"].iloc[0]
 
-    return legacy_main(
+    return run_from_raw_text(
         user_id=user_id,
-        user_ocr=raw_text,
-        row=row,
+        raw_text=raw_text,
         acquisitions_df=bundle["acquisitions_df"],
         naic_df=bundle["naic_df"],
         field_scores=bundle["field_scores"],
