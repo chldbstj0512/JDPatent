@@ -235,10 +235,257 @@ OCR TEXT
 
     return json.loads(content[start:end])
 
-def run_NAIC_extract(naic_df, user_id, user_ocr):
-    results = []
+def extract_patent_claims(text_front: str, text_back: str = None):
+    """
+    - 50페이지 미만: text_front 에 전체 OCR 텍스트 입력, text_back = None
+    - 53페이지 이상: text_front = 앞 3페이지 OCR
+                     text_back  = 뒤 50페이지 OCR
+    """
 
-    patent_text = user_ocr
+    if text_back:
+        combined_text = f"""
+        [FRONT_PART_OCR]
+        {text_front}
+
+        [BACK_PART_OCR]
+        {text_back}
+        """
+    else:
+        combined_text = text_front
+
+    prompt = f"""
+You are a patent claim extraction and structural analysis system.
+
+You will be given:
+1) OCR text extracted from a patent publication.
+   - If the patent has fewer than 50 pages: full text is provided.
+   - If the patent has 53 pages or more: 
+     the first 3 pages and the last 50 pages are provided separately.
+
+The OCR text may contain:
+- OCR noise
+- line break errors
+- duplicated lines
+- broken numbering
+
+You must strictly extract structured claim information according to the rules below.
+
+----------------------------------------
+YOUR TASKS
+----------------------------------------
+
+(A) Extract IPC codes (INID 51)
+(B) Count forward citations (INID 56)
+(C) Extract full claim section
+(D) Count total claims (excluding deleted claims)
+(E) Count dependent claims
+(F) Extract independent claims and compute:
+    - independent claim count
+    - independent claim word count
+(G) Compute claim family count (technical category count)
+
+----------------------------------------
+CRITICAL RULES (VERY IMPORTANT)
+----------------------------------------
+
+- Do NOT hallucinate.
+- Do NOT infer beyond text.
+- Do NOT rewrite claims.
+- Preserve original language (Korean or English).
+- Output MUST be valid JSON.
+- Output ONLY the JSON object.
+- If uncertain, return null (NOT empty string).
+
+----------------------------------------
+1. IPC EXTRACTION RULE
+----------------------------------------
+
+- Extract ALL IPC codes under INID (51).
+- Count them.
+- Do NOT return the individual IPC code list.
+- Return ONLY the total count as ipc_count.
+
+----------------------------------------
+2. FORWARD CITATION COUNT RULE
+----------------------------------------
+
+Find citation section:
+- English: "References Cited"
+- Korean: "선행기술조사문헌"
+
+Count ALL listed references.
+If none exist, return 0.
+forward_citation_count must exactly match visible entries.
+
+If the citation section includes indications such as "(Continued)", 
+you MUST also examine subsequent pages and include all additional listed references 
+in the total count.
+
+----------------------------------------
+3. CLAIM SECTION EXTRACTION RULE
+----------------------------------------
+
+Locate claim section start:
+- English likely indicators:
+  - "What is claimed is:"
+  - "The invention claimed is:"
+  - "Claims"
+- Korean likely indicator:
+  - "청구범위"
+
+Extract entire claim section.
+Exclude deleted claims.
+Deleted claim indicators:
+- English: "(canceled)"
+- Korean: "삭제"
+
+Extract entire claim section to analyze.
+Do NOT return the full claim section in the output.
+
+----------------------------------------
+4. TOTAL CLAIM COUNT RULE
+----------------------------------------
+
+Count numbered claims in claim section.
+Exclude deleted claims.
+
+Cross-check:
+- English front text may state: "N claims"
+- Korean front text may state: "총 N 항"
+
+If mismatch occurs, prioritize actual visible claims.
+
+You MUST carefully read each claim individually and explicitly determine whether it is independent or dependent based on its full textual content.
+Do NOT rely only on pattern matching.
+Analyze the legal structure of each claim before classifying it.
+Only after identifying all independent claims, determine independent_claim_count.
+
+Return:
+claim_count
+
+----------------------------------------
+5. DEPENDENT CLAIM RULE
+----------------------------------------
+
+Dependent claim indicators:
+
+English:
+- "according to claim"
+- "of claim"
+
+Korean:
+- "제 n항에 있어서"
+
+Count them strictly.
+
+Return:
+dependent_claim_count
+
+----------------------------------------
+6. INDEPENDENT CLAIM RULE
+----------------------------------------
+
+A claim is independent if it does NOT refer to any other claim.
+
+A claim is dependent if it explicitly refers to another claim.
+
+You MUST read all claims up to the total claim_count and review them completely before providing the final answer.
+
+Step 1:
+Read EVERY numbered claim in the claim section from 1 to claim_count.
+
+Step 2:
+For each claim:
+- If it refers to another claim → classify as dependent.
+- If it does NOT refer to any other claim → classify as independent.
+
+Step 3:
+Extract the FULL TEXT of all independent claims.
+Include the original claim number (e.g., "1.", "12.", "제1항").
+Do NOT remove numbering.
+Do NOT summarize.
+
+Step 4:
+Set independent_claim_count equal to the actual number of independent claims extracted above.
+
+Step 5:
+Calculate independent_claim_word_count from the extracted independent_claim text.
+Use whitespace splitting for both English and Korean.
+
+----------------------------------------
+7. CLAIM FAMILY COUNT RULE
+----------------------------------------
+
+Claim family count means:
+Number of technically distinct independent claim categories
+(e.g., apparatus, method, system, composition, etc.)
+
+This may be equal to independent_claim_count but may differ.
+
+Analyze independent claims based on technical entity type.
+Return:
+claim_family_count
+
+----------------------------------------
+OUTPUT FORMAT (JSON ONLY)
+----------------------------------------
+
+Return EXACTLY:
+
+{{
+  "claim_count": 0,
+  "independent_claim_count": 0,
+  "independent_claim_word_count": 0,
+  "dependent_claim_count": 0,
+  "claim_family_count": 0,
+  "independent_claim": "full independent claim text",
+  "ipc_count": 0,
+  "forward_citation_count": 0
+}}
+
+----------------------------------------
+OCR TEXT
+----------------------------------------
+{combined_text}
+"""
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {
+                "role": "system",
+                "content": "You extract structured patent claim information with strict rule-based accuracy."
+            },
+            {
+                "role": "user",
+                "content": prompt
+            },
+        ],
+        temperature=0,
+        max_tokens=10000,
+    )
+
+    content = response.choices[0].message.content.strip()
+    match = re.search(r'\{.*\}', content, re.DOTALL)
+    if not match:
+        raise ValueError("No valid JSON object found in model response")
+
+    json_str = match.group(0)
+    return json.loads(json_str)
+
+def run_NAIC_extract(
+    naic_df,
+    user_id,
+    user_ocr,      # front OCR (기존 NAICS/metadata용)
+    back_ocr=None  # claim 추출용
+):
+    results = []
+    claims = None
+
+    # ---------------------------------
+    # 1. NAICS / Metadata (기존 구조 유지)
+    # ---------------------------------
+    patent_text = user_ocr  # front OCR만 사용
 
     query_vector = embed_patent_text(patent_text)
 
@@ -250,6 +497,9 @@ def run_NAIC_extract(naic_df, user_id, user_ocr):
         naics_context=naics_context
     )
 
+    # ---------------------------------
+    # 2. NAICS 코드 매핑
+    # ---------------------------------
     naic_map = {
         str(code): {
             "title": title,
@@ -267,6 +517,9 @@ def run_NAIC_extract(naic_df, user_id, user_ocr):
         **patent_meta
     }
 
+    # ---------------------------------
+    # 3. NAICS fallback 처리
+    # ---------------------------------
     codes = result_item.get("naics_code", [])
 
     if not codes and naics_candidates:
@@ -297,4 +550,25 @@ def run_NAIC_extract(naic_df, user_id, user_ocr):
 
     results.append(result_item)
 
-    return results
+    # ---------------------------------
+    # 4. Claim 추출 (별도 반환)
+    # ---------------------------------
+    try:
+        claims = extract_patent_claims(
+            text_front=user_ocr,
+            text_back=back_ocr
+        )
+    except Exception as e:
+        print(f"[CLAIM EXTRACTION ERROR] {e}")
+        claims = {
+        "claim_count": 0,
+        "independent_claim_count": 0,
+        "independent_claim_word_count": 0,
+        "dependent_claim_count": 0,
+        "claim_family_count": 0,
+        "independent_claim": "",
+        "ipc_count": 0,
+        "forward_citation_count": 0,
+        }
+
+    return results, claims
