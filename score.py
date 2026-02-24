@@ -334,7 +334,7 @@ def get_one_prompt(
     df,                 # 전체 M&A df
     field_scores,
     hightech_list,
-    user_prefer,
+    user_prefer = 'nation',
     user_prefer_nation=None,
     user_prefer_area=None
 ):
@@ -346,6 +346,11 @@ def get_one_prompt(
     user_abstract = user_info.get("abstract")
     user_field = user_info.get("field")
 
+    if user_nation == "KR":
+        user_prefer_nation = "South Korea"
+    else:
+        user_prefer_nation = "United States"
+        
     # NAICS는 리스트 구조
     user_code = user_info.get("primary_naic_info", {}).get("code")
 
