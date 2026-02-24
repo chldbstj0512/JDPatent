@@ -11,13 +11,16 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def get_field(field_scores, user_field):
-    field_score = field_scores.get(user_field)
+    # Extraction 단계에서 field가 비어올 수 있으므로 기본값을 사용한다.
+    field_key = (user_field or "etc").strip().lower()
+
+    field_score = field_scores.get(field_key)
 
     if field_score is None:
         raise ValueError(f"Unknown field: {user_field}")
 
     llm_payload = {
-        "field": user_field,
+        "field": field_key,
         "trend_metrics": field_score,
         "field_metric_definition": {
             "recent_growth": "최근 N년간 M&A 성장률",
