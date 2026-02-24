@@ -103,7 +103,7 @@ if __name__ == "__main__":
     # 평가 옵션
     # ----------------------------
     user_prefer = "nation"
-    user_prefer_nation = "South Korea"
+    user_prefer_nation = None
     user_prefer_area = None
 
     avg_claim_count = 7
