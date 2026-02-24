@@ -3,6 +3,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from openai import OpenAI
 import json
+import time
 
 from extract import run_NAIC_extract
 from score import run_score
@@ -82,6 +83,7 @@ def main(
     return final_result
 
 if __name__ == "__main__":
+    start = time.time()
 
     user_id = "yunseo"
 
@@ -137,5 +139,8 @@ if __name__ == "__main__":
         avg_ipc_count=avg_ipc_count,
         avg_citation_count=avg_citation_count
     )
+    end = time.time()
 
     print(json.dumps(result, indent=2, ensure_ascii=False))
+    print(f"Execution time: {end - start:.4f} seconds")
+
