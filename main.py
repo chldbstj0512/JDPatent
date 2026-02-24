@@ -39,6 +39,12 @@ def main(
         back_ocr
     )
 
+    if isinstance(claims, dict) and "error" in claims:
+        return {
+            "status": "error",
+            "reason": claims["error"]
+        }
+
     # ---------------------------
     # 2. 점수 평가 (row → claims)
     # ---------------------------
