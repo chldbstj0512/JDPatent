@@ -105,6 +105,9 @@ You will be given:
 1) Raw OCR text extracted from a patent publication.
 2) A list of candidate NAICS industry codes (with descriptions).
 
+If the document is not identified as a patent publication, 
+return only {{"error": "not_a_patent_document"}} in JSON format without any additional explanation.
+
 The OCR text may contain OCR errors, duplicated lines, broken line breaks,
 or reading-order issues. Do NOT attempt to fix or rewrite the text.
 
@@ -291,6 +294,9 @@ You will be given:
    - If the patent has fewer than 50 pages: full text is provided.
    - If the patent has 53 pages or more: 
      the first 3 pages and the last 50 pages are provided separately.
+
+If patent claims cannot be identified or extracted from the document, 
+return only {{"error": "claims_not_found"}} in JSON format without any additional explanation.
 
 The OCR text may contain:
 - OCR noise
@@ -522,10 +528,20 @@ def run_NAIC_extract(
     naics_candidates = retrieve_top_naics(query_vector, top_k=15)
     naics_context = build_naics_context_text(naics_candidates)
 
-    patent_meta = extract_patent_metadata(
-        text=patent_text,
-        naics_context=naics_context
-    )
+    try:
+        patent_meta = extract_patent_metadata(
+            text=patent_text,
+            naics_context=naics_context
+        )
+        if isinstance(patent_meta, str):
+            patent_meta = json.loads(patent_meta)
+            
+        if isinstance(patent_meta, dict) and "error" in patent_meta:
+            return [], patent_meta
+
+    except Exception as e:
+        print(f"[METADATA EXTRACTION ERROR] {e}")
+        return [], {"error": "metadata_extraction_failed"}
 
     # ---------------------------------
     # 2. NAICS 코드 매핑
@@ -588,17 +604,14 @@ def run_NAIC_extract(
             text_front=user_ocr,
             text_back=back_ocr
         )
+        if isinstance(claims, str):
+            claims = json.loads(claims)
+        
+        if isinstance(claims, dict) and "error" in claims:
+            return results, claims
+        
     except Exception as e:
         print(f"[CLAIM EXTRACTION ERROR] {e}")
-        claims = {
-        "claim_count": 0,
-        "independent_claim_count": 0,
-        "independent_claim_word_count": 0,
-        "dependent_claim_count": 0,
-        "claim_family_count": 0,
-        "independent_claim": "",
-        "ipc_count": 0,
-        "forward_citation_count": 0,
-        }
+        return results, {"error": "claim_extraction_failed"}
 
     return results, claims

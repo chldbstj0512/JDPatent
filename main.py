@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from openai import OpenAI
 import json
 import argparse
+import time
+
 
 from extract import run_NAIC_extract
 from score import run_score
@@ -38,6 +40,12 @@ def main(
         front_ocr,
         back_ocr
     )
+
+    if isinstance(claims, dict) and "error" in claims:
+        return {
+            "status": "error",
+            "reason": claims["error"]
+        }
 
     # ---------------------------
     # 2. 점수 평가 (row → claims)
@@ -82,6 +90,8 @@ def main(
 
     return final_result
 
+if __name__ == "__main__":
+    start = time.time()
 
 def run_from_raw_text(
     *,
@@ -134,7 +144,7 @@ if __name__ == "__main__":
     # 평가 옵션
     # ----------------------------
     user_prefer = "nation"
-    user_prefer_nation = "South Korea"
+    user_prefer_nation = None
     user_prefer_area = None
 
     avg_claim_count = 7
@@ -175,5 +185,8 @@ if __name__ == "__main__":
         avg_ipc_count=avg_ipc_count,
         avg_citation_count=avg_citation_count
     )
+    end = time.time()
 
     print(json.dumps(result, indent=2, ensure_ascii=False))
+    print(f"Execution time: {end - start:.4f} seconds")
+
