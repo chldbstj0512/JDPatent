@@ -105,8 +105,20 @@ You will be given:
 1) Raw OCR text extracted from a patent publication.
 2) A list of candidate NAICS industry codes (with descriptions).
 
-If the document is not identified as a patent publication, 
-return only {{"error": "not_a_patent_document"}} in JSON format without any additional explanation.
+You must first determine whether the provided document is an official patent publication.
+
+A document qualifies as a patent publication ONLY if it clearly contains at least one of the following:
+- A patent publication number (e.g., US 2023/0123456 A1, EP 1234567 B1, KR 10-2023-0123456, WO 2023/123456)
+- An explicit label such as "Patent", "Patent Application", "Patent Publication", "공개특허", "특허공보", "公開特許", etc.
+- A structured patent format including sections such as Abstract, Claims, Description, Inventors, Assignee, Filing Date, Publication Date.
+
+If the document does NOT clearly satisfy these conditions,
+OR if there is any uncertainty,
+OR if the format does not match an official patent publication structure,
+
+you MUST return exactly the following JSON and nothing else:
+
+{{"error": "not_a_patent_document"}}
 
 The OCR text may contain OCR errors, duplicated lines, broken line breaks,
 or reading-order issues. Do NOT attempt to fix or rewrite the text.
