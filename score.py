@@ -609,6 +609,6 @@ def run_score(
         avg_citation_count=avg_citation_count
     )
 
-    return final_result
+    return final_result, payload
 
 
