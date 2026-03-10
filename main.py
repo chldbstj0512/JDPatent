@@ -48,7 +48,7 @@ def main(
     # ---------------------------
     # 2. 점수 평가 (row → claims)
     # ---------------------------
-    user_score = run_score(
+    user_score, payload = run_score(
         user_info_list=user_info_list,
         df=acquisitions_df,
         field_scores=field_scores,
@@ -62,6 +62,7 @@ def main(
         user_prefer_area=user_prefer_area
     )
 
+    print(">>>>>>>>payload>>>>>>>>", payload)
     # ---------------------------
     # 3. 유사 기업 추천
     # ---------------------------
