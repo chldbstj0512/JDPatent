@@ -47,6 +47,9 @@ def get_acquiror_payload(
             * 100
     )
 
+    # top_k 기준으로만 비율 근거를 사용/반환한다.
+    naic_ratio_topk = naic_ratio.head(top_k)
+
     user_naic_title_series = naic_df.loc[
         naic_df['naics_code'].astype(str) == str(user_naic),
         'naics_title'
@@ -58,7 +61,7 @@ def get_acquiror_payload(
         else None
     )
 
-    top_naic_codes = naic_ratio.head(top_k).index.astype(str).tolist()
+    top_naic_codes = naic_ratio_topk.index.astype(str).tolist()
 
     naic_title_dict = dict(
         zip(
@@ -80,7 +83,7 @@ def get_acquiror_payload(
     return {
         "user_naic": str(user_naic),
         "user_naic_title": user_naic_title,
-        "naic_ratio": naic_ratio.to_dict(),
+        "naic_ratio": naic_ratio_topk.to_dict(),
         "top_naic_codes": top_naic_codes,
         "top_naic_titles": top_naic_titles,
         "acquirer_list": acquirer_list
@@ -197,9 +200,36 @@ def run_pattern(
         acquirer_list=acquirer_list
     )
 
+    # LLM 추론 이전에 사용된 정량 근거를 코드별로 매핑해 둔다.
+    ratio_map = {
+        str(code): float(ratio)
+        for code, ratio in payload.get("naic_ratio", {}).items()
+    }
+    title_map = {
+        str(code): title
+        for code, title in zip(
+            payload.get("top_naic_codes", []),
+            payload.get("top_naic_titles", [])
+        )
+    }
+
+    enriched_relation_result = []
+    for item in relation_result:
+        acquirer_naic = str(item.get("acquirer_naic", ""))
+        evidence = {
+            "target_naic": str(user_naic) if user_naic is not None else None,
+            "target_naic_title": user_naic_title,
+            "acquirer_naic": acquirer_naic,
+            "acquirer_naic_title": title_map.get(acquirer_naic),
+            "acquirer_ratio_percent": ratio_map.get(acquirer_naic)
+        }
+        enriched_item = dict(item)
+        enriched_item["evidence"] = evidence
+        enriched_relation_result.append(enriched_item)
+
     return {
         "user_naic": user_naic,
         "user_naic_title": user_naic_title,
         "acquirer_statistics": payload,
-        "relation_analysis": relation_result
+        "relation_analysis": enriched_relation_result
     }

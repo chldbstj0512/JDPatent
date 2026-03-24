@@ -521,8 +521,7 @@ def run_NAIC_extract(
         if isinstance(patent_meta, dict) and "error" in patent_meta:
             return [], patent_meta
 
-    except Exception as e:
-        print(f"[METADATA EXTRACTION ERROR] {e}")
+    except Exception:
         return [], {"error": "metadata_extraction_failed"}
 
     # ---------------------------------
@@ -592,8 +591,7 @@ def run_NAIC_extract(
         if isinstance(claims, dict) and "error" in claims:
             return results, claims
         
-    except Exception as e:
-        print(f"[CLAIM EXTRACTION ERROR] {e}")
+    except Exception:
         return results, {"error": "claim_extraction_failed"}
 
     return results, claims
