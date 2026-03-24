@@ -3,7 +3,6 @@ import pandas as pd
 from dotenv import load_dotenv
 from openai import OpenAI
 import json
-import time
 
 from extract import run_NAIC_extract
 from score import run_score
@@ -48,7 +47,7 @@ def main(
     # ---------------------------
     # 2. 점수 평가 (row → claims)
     # ---------------------------
-    user_score, payload = run_score(
+    user_score, _ = run_score(
         user_info_list=user_info_list,
         df=acquisitions_df,
         field_scores=field_scores,
@@ -62,7 +61,6 @@ def main(
         user_prefer_area=user_prefer_area
     )
 
-    print(">>>>>>>>payload>>>>>>>>", payload)
     # ---------------------------
     # 3. 유사 기업 추천
     # ---------------------------
@@ -90,8 +88,6 @@ def main(
     return final_result
 
 if __name__ == "__main__":
-    start = time.time()
-
     user_id = "yunseo"
 
     # ----------------------------
@@ -146,8 +142,5 @@ if __name__ == "__main__":
         avg_ipc_count=avg_ipc_count,
         avg_citation_count=avg_citation_count
     )
-    end = time.time()
-
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    print(f"Execution time: {end - start:.4f} seconds")
 

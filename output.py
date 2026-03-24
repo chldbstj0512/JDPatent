@@ -61,6 +61,13 @@ def build_final_output(
             "rights_evaluation": user_score["evaluation"]["rights_evaluation"]["evaluation"],
             "rights_reason": user_score["evaluation"]["rights_evaluation"]["reason"],
         },
+        "final_result": {
+            "final_score": user_score.get("final_result", {}).get("final_score"),
+            "final_score_comment": user_score.get("final_result", {}).get("final_score_comment"),
+            "final_score_reason": " ".join(
+                user_score.get("final_result", {}).get("final_score_reasoning", [])
+            ),
+        },
     }
 
     # -----------------------------
@@ -113,14 +120,26 @@ def build_final_output(
     # -----------------------------
     # MA PATTERNS
     # -----------------------------
-    ma_patterns = [
+    ma_pattern_items = [
         {
             "acquirer_naics": item["acquirer_naic"],
             "one_line_description": item["one_line_description"],
             "relation_label": item["relation_label"],
+            "reason": item.get("reason"),
         }
         for item in user_pattern.get("relation_analysis", [])
     ]
+
+    ma_patterns = {
+        "top_k_basis": {
+            "target_naic": user_pattern.get("user_naic"),
+            "target_naic_title": user_pattern.get("user_naic_title"),
+            "top_naic_codes": user_pattern.get("acquirer_statistics", {}).get("top_naic_codes", []),
+            "top_naic_titles": user_pattern.get("acquirer_statistics", {}).get("top_naic_titles", []),
+            "naic_ratio_percent": user_pattern.get("acquirer_statistics", {}).get("naic_ratio", {}),
+        },
+        "items": ma_pattern_items
+    }
 
     # -----------------------------
     # FINAL STRUCTURE

@@ -527,6 +527,51 @@ def build_tech_prompt(row, avg_ipc_count, avg_citation_count):
 }}
 """
 
+def build_final_score_prompt(
+    user_title,
+    user_abstract,
+    ma_result,
+    tech_result,
+    rights_result
+):
+    return f"""
+너는 특허 투자/사업화 점수화 전문가이다.
+아래 입력을 종합해 특허의 종합 점수를 0~100 사이 정수로 산출하라.
+
+[특허 정보]
+- 제목: {user_title}
+- 요약: {user_abstract}
+
+[기존 평가 결과]
+- M&A 시장 매력도 평가:
+{json.dumps(ma_result, ensure_ascii=False, indent=2)}
+
+- 기술성 평가:
+{json.dumps(tech_result, ensure_ascii=False, indent=2)}
+
+- 권리성 평가:
+{json.dumps(rights_result, ensure_ascii=False, indent=2)}
+
+[점수 산출 원칙]
+- 기존 3개 평가(시장성/기술성/권리성)를 모두 반영하라.
+- "높음/중간/낮음" 결과와 reason/evaluation의 정성 근거를 함께 고려하라.
+- 점수는 반드시 정수 0~100 범위로 반환하라.
+- 점수가 높아진 핵심 요인과 낮아진 핵심 요인을 균형 있게 제시하라.
+
+[출력 형식]
+반드시 아래 JSON 형식으로만 출력하라.
+
+{{
+  "final_score": 0,
+  "final_score_reasoning": [
+    "점수 근거 1",
+    "점수 근거 2",
+    "점수 근거 3"
+  ],
+  "final_score_comment": "사용자에게 보여줄 종합 점수 설명 (최대 5줄)"
+}}
+"""
+
 def call_llm(prompt, model="gpt-4.1"):
     response = client.chat.completions.create(
         model=model,
@@ -544,6 +589,14 @@ def call_llm(prompt, model="gpt-4.1"):
 
     return json.loads(raw_text)
 
+def _normalize_final_score(value):
+    try:
+        score = int(float(value))
+    except (TypeError, ValueError):
+        score = 0
+
+    return max(0, min(100, score))
+
 def evaluate_patent(
     payload,
     row,
@@ -551,6 +604,10 @@ def evaluate_patent(
     avg_ipc_count,
     avg_citation_count
 ):
+    user_info = payload.get("user_info", {})
+    user_title = user_info.get("title")
+    user_abstract = user_info.get("abstract")
+
     ma_prompt = build_ma_prompt(payload)
     ma_result = call_llm(ma_prompt)
 
@@ -567,11 +624,25 @@ def evaluate_patent(
     )
     rights_result = call_llm(rights_prompt)
 
+    final_score_prompt = build_final_score_prompt(
+        user_title=user_title,
+        user_abstract=user_abstract,
+        ma_result=ma_result,
+        tech_result=tech_result,
+        rights_result=rights_result
+    )
+    final_score_result = call_llm(final_score_prompt)
+
     final_output = {
         "evaluation": {
             "ma_market_evaluation": ma_result,
             "tech_evaluation": tech_result,
             "rights_evaluation": rights_result
+        },
+        "final_result": {
+            "final_score": _normalize_final_score(final_score_result.get("final_score", 0)),
+            "final_score_reasoning": final_score_result.get("final_score_reasoning", []),
+            "final_score_comment": final_score_result.get("final_score_comment", "")
         }
     }
 
