@@ -24,7 +24,9 @@ pc = Pinecone(
 index = pc.Index(INDEX_NAME)
 
 def embed_patent_text(text: str) -> list:
-    
+    # Embedding API에 보내는 입력 길이를 제한해 불필요한 비용/에러를 방지합니다.
+    text = text[:8000]
+
     response = client.embeddings.create(
         model="text-embedding-3-large",
         input=text
