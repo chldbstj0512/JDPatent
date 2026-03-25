@@ -24,8 +24,14 @@ pc = Pinecone(
 index = pc.Index(INDEX_NAME)
 
 def embed_patent_text(text: str) -> list:
-    if not text or not text.strip():
-        raise ValueError("Empty text for embedding")
+    # Embedding API에 보내는 입력 길이를 제한해 불필요한 비용/에러를 방지합니다.
+    text = text[:8000]
+
+    response = client.embeddings.create(
+        model="text-embedding-3-large",
+        input=text
+    )
+    embedding = response.data[0].embedding
 
     # Conservative first cut to avoid 8192-token limit overflow.
     embedding_input = text.strip()
@@ -551,8 +557,7 @@ def run_NAIC_extract(
         if isinstance(patent_meta, dict) and "error" in patent_meta:
             return [], patent_meta
 
-    except Exception as e:
-        print(f"[METADATA EXTRACTION ERROR] {e}")
+    except Exception:
         return [], {"error": "metadata_extraction_failed"}
 
     # ---------------------------------
@@ -622,8 +627,7 @@ def run_NAIC_extract(
         if isinstance(claims, dict) and "error" in claims:
             return results, claims
         
-    except Exception as e:
-        print(f"[CLAIM EXTRACTION ERROR] {e}")
+    except Exception:
         return results, {"error": "claim_extraction_failed"}
 
     return results, claims

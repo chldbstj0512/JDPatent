@@ -3,8 +3,6 @@ import pandas as pd
 from dotenv import load_dotenv
 from openai import OpenAI
 import json
-import argparse
-import time
 
 
 from extract import run_NAIC_extract
@@ -50,7 +48,7 @@ def main(
     # ---------------------------
     # 2. 점수 평가 (row → claims)
     # ---------------------------
-    user_score, payload = run_score(
+    user_score, _ = run_score(
         user_info_list=user_info_list,
         df=acquisitions_df,
         field_scores=field_scores,
@@ -64,7 +62,6 @@ def main(
         user_prefer_area=user_prefer_area
     )
 
-    print(">>>>>>>>payload>>>>>>>>", payload)
     # ---------------------------
     # 3. 유사 기업 추천
     # ---------------------------
@@ -92,48 +89,7 @@ def main(
     return final_result
 
 if __name__ == "__main__":
-    start = time.time()
-
-def run_from_raw_text(
-    *,
-    user_id: str,
-    raw_text: str,
-    acquisitions_df: pd.DataFrame,
-    naic_df: pd.DataFrame,
-    field_scores: dict,
-    hightech_list: dict,
-    user_prefer: str,
-    user_prefer_nation: str,
-    user_prefer_area: str | None,
-    avg_claim_count: float,
-    avg_ipc_count: float,
-    avg_citation_count: float,
-):
-    """Single-entry helper: convert raw OCR text into front/back and run pipeline."""
-    front_ocr, back_ocr = split_ocr_text(raw_text)
-    return main(
-        user_id=user_id,
-        front_ocr=front_ocr,
-        back_ocr=back_ocr,
-        acquisitions_df=acquisitions_df,
-        naic_df=naic_df,
-        field_scores=field_scores,
-        hightech_list=hightech_list,
-        user_prefer=user_prefer,
-        user_prefer_nation=user_prefer_nation,
-        user_prefer_area=user_prefer_area,
-        avg_claim_count=avg_claim_count,
-        avg_ipc_count=avg_ipc_count,
-        avg_citation_count=avg_citation_count,
-    )
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run JDPatent pipeline with raw OCR text")
-    parser.add_argument("--user-id", default="yunseo")
-    parser.add_argument("--raw-text", default=None, help="Raw OCR text string")
-    args = parser.parse_args()
-
-    user_id = args.user_id
+    user_id = "yunseo"
 
     # ----------------------------
     # OCR
@@ -186,8 +142,5 @@ if __name__ == "__main__":
         avg_ipc_count=avg_ipc_count,
         avg_citation_count=avg_citation_count
     )
-    end = time.time()
-
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    print(f"Execution time: {end - start:.4f} seconds")
 
