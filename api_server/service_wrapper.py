@@ -5,7 +5,8 @@ from typing import Any
 
 import pandas as pd
 
-from main import run_from_raw_text
+from main import main as run_pipeline
+from util.ocr import split_ocr_text
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -15,7 +16,6 @@ DATA_DIR = BASE_DIR / "data"
 @lru_cache(maxsize=1)
 def _load_data_bundle() -> dict[str, Any]:
     """Load heavy static artifacts once per process."""
-    patent_df = pd.read_csv(DATA_DIR / "user_patent.csv")
     acquisitions_df = pd.read_csv(DATA_DIR / "acquisitions_20260129.csv", low_memory=False)
     naic_df = pd.read_csv(DATA_DIR / "NAICS_descripition.csv")
 
@@ -25,7 +25,6 @@ def _load_data_bundle() -> dict[str, Any]:
         hightech_list = json.load(f)
 
     return {
-        "patent_df": patent_df,
         "acquisitions_df": acquisitions_df,
         "naic_df": naic_df,
         "field_scores": field_scores,
@@ -41,12 +40,14 @@ def run_legacy_analysis(
     user_prefer_nation: str | None = "South Korea",
     user_prefer_area: str | None = None,
 ) -> dict[str, Any]:
-    """Adapt REST payload to pipeline execution."""
+    """Adapt REST payload to legacy pipeline(main.py)."""
     bundle = _load_data_bundle()
+    front_ocr, back_ocr = split_ocr_text(raw_text)
 
-    return run_from_raw_text(
+    return run_pipeline(
         user_id=user_id,
-        raw_text=raw_text,
+        front_ocr=front_ocr,
+        back_ocr=back_ocr,
         acquisitions_df=bundle["acquisitions_df"],
         naic_df=bundle["naic_df"],
         field_scores=bundle["field_scores"],

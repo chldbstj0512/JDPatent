@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from openai import OpenAI
 import json
 
-
 from extract import run_NAIC_extract
 from score import run_score
 from company import run_company
@@ -94,9 +93,9 @@ if __name__ == "__main__":
     # ----------------------------
     # OCR
     # ----------------------------
-    text = args.raw_text or os.getenv("OCR_RAW_TEXT")
-    if not text:
-        raise ValueError("Provide raw OCR text via --raw-text or OCR_RAW_TEXT env var.")
+    text = open("./util/ocr_text.txt", "r", encoding="utf-8").read()
+
+    front_ocr, back_ocr = split_ocr_text(text)
     # ----------------------------
     # 평가 옵션
     # ----------------------------
@@ -128,9 +127,10 @@ if __name__ == "__main__":
     # ----------------------------
     # main 호출
     # ----------------------------
-    result = run_from_raw_text(
+    result = main(
         user_id=user_id,
-        raw_text=text,
+        front_ocr=front_ocr,
+        back_ocr=back_ocr,
         acquisitions_df=acquisitions_df,
         naic_df=naic_df,
         field_scores=field_scores,
@@ -143,4 +143,3 @@ if __name__ == "__main__":
         avg_citation_count=avg_citation_count
     )
     print(json.dumps(result, indent=2, ensure_ascii=False))
-
