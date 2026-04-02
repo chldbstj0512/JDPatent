@@ -88,7 +88,7 @@ def main(
     return final_result
 
 if __name__ == "__main__":
-    user_id = "yunseo"
+    user_id = "output"
 
     # ----------------------------
     # OCR
@@ -142,5 +142,12 @@ if __name__ == "__main__":
         avg_ipc_count=avg_ipc_count,
         avg_citation_count=avg_citation_count
     )
+
+    _final_dir = os.path.dirname(os.path.abspath(__file__))
+    final_json_path = os.path.join(_final_dir, f"final_output_{user_id}.json")
+    with open(final_json_path, "w", encoding="utf-8") as _f:
+        json.dump(result, _f, ensure_ascii=False, indent=2)
+
     print(json.dumps(result, indent=2, ensure_ascii=False))
+    print(f"[saved] {final_json_path}", flush=True)
 

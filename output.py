@@ -1,4 +1,33 @@
 import json
+import re
+
+# LLM/내부 파이프라인은 compu·bio·comm·elec·etc 를 쓰고, 최종 사용자 노출만 풀네임으로 통일합니다.
+FIELD_CODE_TO_DISPLAY_NAME = {
+    "compu": "computer",
+    "bio": "biotechnology",
+    "comm": "communications",
+    "elec": "electronic",
+    "etc": "other",
+}
+
+
+def field_code_to_display_name(field_code) -> str:
+    if field_code is None:
+        return None
+    key = str(field_code).strip().lower()
+    return FIELD_CODE_TO_DISPLAY_NAME.get(key, str(field_code).strip())
+
+
+def strip_excel_xml_unicode_escapes(text):
+    """
+    Excel/Office sharedStrings 등에서 쓰이는 이스케이프 제거.
+    예: _x000D_(CR), _x000A_(LF)가 초록/제목 뒤에 그대로 붙는 경우.
+    """
+    if text is None or not isinstance(text, str):
+        return text
+    s = re.sub(r"_x[0-9A-Fa-f]{4}_", "", text, flags=re.IGNORECASE)
+    s = s.replace("\r", "")
+    return s.rstrip()
 
 
 def build_final_output(
@@ -15,7 +44,7 @@ def build_final_output(
     basic_info = {
         "pdf_name": user_info.get("pdf_name"),
         "country": user_info.get("country"),
-        "field": user_info.get("field"),
+        "field": field_code_to_display_name(user_info.get("field")),
         "patent": {
             "title": user_info.get("title"),
             "applicant": {
@@ -45,28 +74,27 @@ def build_final_output(
     # -----------------------------
     evaluation = {
         "ma_market_evaluation": {
-            "ma_market_score": user_score["evaluation"]["ma_market_evaluation"]["ma_attractiveness"],
-            "ma_market_evaluation": user_score["evaluation"]["ma_market_evaluation"]["user_report"],
-            "ma_market_reason": " ".join(
-                user_score["evaluation"]["ma_market_evaluation"]["analysis_reasoning"]
+            "ma_market_score": user_score["evaluation"]["ma_market_evaluation"]["ma_attractiveness_score"],
+            "ma_market_evaluation": (
+                user_score["evaluation"]["ma_market_evaluation"].get("evaluation_summary")
+                or user_score["evaluation"]["ma_market_evaluation"].get("user_report")
             ),
+            "ma_market_reason": user_score["evaluation"]["ma_market_evaluation"].get("reason", ""),
         },
         "tech_evaluation": {
             "tech_score": user_score["evaluation"]["tech_evaluation"]["technical_score"],
             "tech_evaluation": user_score["evaluation"]["tech_evaluation"]["evaluation"],
-            "tech_reason": user_score["evaluation"]["tech_evaluation"]["reason"],
+            "tech_reason": user_score["evaluation"]["tech_evaluation"].get("reason", ""),
         },
         "rights_evaluation": {
             "rights_score": user_score["evaluation"]["rights_evaluation"]["rights_score"],
             "rights_evaluation": user_score["evaluation"]["rights_evaluation"]["evaluation"],
-            "rights_reason": user_score["evaluation"]["rights_evaluation"]["reason"],
+            "rights_reason": user_score["evaluation"]["rights_evaluation"].get("reason", ""),
         },
         "final_result": {
             "final_score": user_score.get("final_result", {}).get("final_score"),
-            "final_score_comment": user_score.get("final_result", {}).get("final_score_comment"),
-            "final_score_reason": " ".join(
-                user_score.get("final_result", {}).get("final_score_reasoning", [])
-            ),
+            "evaluation": user_score.get("final_result", {}).get("evaluation"),
+            "reason": user_score.get("final_result", {}).get("reason"),
         },
     }
 
@@ -89,20 +117,27 @@ def build_final_output(
         output = []
         for idx, item in enumerate(similar_list, start=1):
             meta = item["metadata"]
-            ipc_list = meta.get("ipc_code", "").split("|")
+            ipc_raw = meta.get("ipc_code", "") or ""
+            ipc_list = [
+                strip_excel_xml_unicode_escapes(part.strip())
+                for part in ipc_raw.split("|")
+                if part.strip()
+            ]
 
             output.append({
                 "rank": idx,
                 "similarity": round(item["score"], 4),
                 "assignee": {
-                    "name": meta.get("target_short_name") if is_target else meta.get("acquiror_short_name"),
+                    "name": strip_excel_xml_unicode_escapes(
+                        meta.get("target_short_name") if is_target else meta.get("acquiror_short_name")
+                    ),
                     "id": meta.get("target_id") if is_target else meta.get("acquiror_id"),
                 },
-                "title": meta.get("invention_name"),
+                "title": strip_excel_xml_unicode_escapes(meta.get("invention_name")),
                 "ipc": ipc_list,
-                "abstract": meta.get("abstract"),
-                "application_number": meta.get("application_number"),
-                "application_date": meta.get("application_date"),
+                "abstract": strip_excel_xml_unicode_escapes(meta.get("abstract")),
+                "application_number": strip_excel_xml_unicode_escapes(meta.get("application_number")),
+                "application_date": strip_excel_xml_unicode_escapes(meta.get("application_date")),
             })
         return output
 
@@ -119,26 +154,36 @@ def build_final_output(
 
     # -----------------------------
     # MA PATTERNS
+    # target_* 는 패턴 행마다 중복되므로 상위에 한 번만 둔다.
+    # ratio_percent: 해당 피인수 NAIC 거래 전체 중 이 인수자 NAIC 비중(%), 소수 첫째 자리
     # -----------------------------
-    ma_pattern_items = [
-        {
-            "acquirer_naics": item["acquirer_naic"],
-            "one_line_description": item["one_line_description"],
-            "relation_label": item["relation_label"],
-            "reason": item.get("reason"),
-        }
-        for item in user_pattern.get("relation_analysis", [])
-    ]
+    pattern_rows = []
+    for item in user_pattern.get("relation_analysis", []):
+        ev = item.get("evidence") or {}
+        ratio_raw = ev.get("acquirer_ratio_percent")
+        if ratio_raw is not None:
+            try:
+                ratio_percent = round(float(ratio_raw), 1)
+            except (TypeError, ValueError):
+                ratio_percent = None
+        else:
+            ratio_percent = None
+
+        pattern_rows.append(
+            {
+                "acquirer_naic": ev.get("acquirer_naic") or item.get("acquirer_naic"),
+                "acquirer_naic_title": ev.get("acquirer_naic_title"),
+                "ratio_percent": ratio_percent,
+                "relation_label": item.get("relation_label"),
+                "one_line_description": item.get("one_line_description"),
+                "reason": item.get("reason"),
+            }
+        )
 
     ma_patterns = {
-        "top_k_basis": {
-            "target_naic": user_pattern.get("user_naic"),
-            "target_naic_title": user_pattern.get("user_naic_title"),
-            "top_naic_codes": user_pattern.get("acquirer_statistics", {}).get("top_naic_codes", []),
-            "top_naic_titles": user_pattern.get("acquirer_statistics", {}).get("top_naic_titles", []),
-            "naic_ratio_percent": user_pattern.get("acquirer_statistics", {}).get("naic_ratio", {}),
-        },
-        "items": ma_pattern_items
+        "target_naic": user_pattern.get("user_naic"),
+        "target_naic_title": user_pattern.get("user_naic_title"),
+        "patterns": pattern_rows,
     }
 
     # -----------------------------

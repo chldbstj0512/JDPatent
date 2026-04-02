@@ -27,6 +27,8 @@ def get_field(field_scores, user_field):
         }
     }
 
+    # print("payload>>>>", llm_payload)
+
     return llm_payload
 
 def get_naics_trend_payload(
@@ -402,6 +404,7 @@ def get_one_prompt(
     }
 
 def build_ma_prompt(payload):
+    # print(">>>>>> ma 추론 시 활용하는 payload 전문", payload)
     return f"""
 당신은 기술·산업·M&A 분석을 통해 해당 기술의 M&A 시장 매력도를 산출하는 에이전트입니다.
 
@@ -429,19 +432,44 @@ def build_ma_prompt(payload):
 아래 JSON 형식으로만 답변하십시오.
 
 {{
-  "ma_attractiveness": "높음 | 중간 | 낮음",
-  "analysis_reasoning": [
-    "판단 근거 1 (수치 또는 명확한 지표 포함)",
-    "판단 근거 2 (수치 또는 명확한 지표 포함)",
-    "판단 근거 3 (선택, 최대 3개)"
+  "ma_attractiveness_score": 0,
+  "metric_evaluations": [
+    {{
+      "metric_name": "예: 최근 성장률 (recent_growth)",
+      "data_basis": "입력 JSON에서 인용한 원시 값·문자열 (가공·재계산 금지)",
+      "interpretation": "그 수치를 M&A 매력도 관점에서 해석한 한 줄"
+    }}
   ],
-  "user_report": "사용자에게 제공할 M&A 매력도 설명 (최대 5줄)"
+  "evaluation_summary": "전체 판단을 4~7문장으로 보강 요약 (비전문가용, 문장체)",
+  "analysis_reasoning": [
+    "내부용 판단 근거 1 (~임./~함. 종결)",
+    "내부용 판단 근거 2",
+    "내부용 판단 근거 3 (선택, 최대 3개)"
+  ]
 }}
 
+[metric_evaluations 작성 규칙 — 검증 가능하도록]
+- 각 원소는 반드시 "metric_name", "data_basis", "interpretation" 키를 가진다.
+- **data_basis**에는 반드시 [입력 데이터] JSON에 **실제로 존재하는 수치·문자열을 그대로 또는 그대로 인용 가능한 형태로** 적는다.
+  · 임의로 반올림·단위만 바꿔 숫자를 바꾸지 말 것. (예: recent_growth가 0.278이면 data_basis에 0.278 또는 동일 값의 퍼센트 표기만 허용)
+- **interpretation**에는 그 data_basis가 M&A 매력도(성장·회복·국경간·인수유형·하이테크 등)에 어떤 의미인지 짧게 쓴다.
+- **반드시 포함할 항목** (각각 별도 배열 원소로 작성):
+  1) field_analysis.trend_metrics의 **recent_growth** — metric_name에 "최근 성장률" 포함
+  2) field_analysis.trend_metrics의 **recovery_ratio** — metric_name에 "회복 비율" 또는 "회복 정도" 포함
+  3) field_analysis.trend_metrics의 **recent_trend_slope**
+  4) field_analysis.trend_metrics의 **final_score** (분야 M&A 동향 종합)
+  5) naics_trend.time_series에서 **최근 연도 1~2개**의 A(건수)·B_ratio 등 핵심 수치 인용 1~2행
+  6) crossborder_analysis.crossborder_metrics의 **total_deals, cross_border_ratio, direction** 중 최소 2개 수치·값을 data_basis에 명시하는 행 1개 이상
+  7) ma_type_analysis.ma_type_metrics가 비어 있지 않으면 **stake·full 인수 건수** 관련 1행
+  8) 특허와 hightech_categories 관련 **High-Tech 해당 여부** 1행 (data_basis에 판단 근거로 든 입력 요약)
+- 위 항목을 누락하지 말 것. 입력에 해당 블록이 없거나 값이 비어 있으면 data_basis에 "입력 데이터 없음"이라고 적고 interpretation에 그에 따른 한계를 적는다.
+
 [주의 사항]
-- analysis_reasoning은 최대 3개까지만 작성하십시오.
-- 반드시 제공된 수치 및 지표를 근거로 판단하십시오.
-- user_report는 비전문가도 이해할 수 있는 표현으로 작성하십시오.
+- ma_attractiveness_score는 0~50 사이의 정수로 반환하십시오.
+- "높음"에 해당하면 35~50, "중간"에 해당하면 18~34, "낮음"에 해당하면 0~17 범위를 사용하십시오.
+- analysis_reasoning은 최대 3개, 내부 검토용 서술형(~임./~함.)으로 작성하십시오.
+- evaluation_summary는 metric_evaluations와 **수치·표 형태의 반복 나열은 피하고**, 시장·국경간·인수유형·하이테크를 **종합한 서사**로 4~7문장 작성하십시오. "~습니다"체, 비전문가도 이해 가능하게.
+- **reason 필드는 출력하지 마십시오.** 내부용 줄 형식은 metric_evaluations로만 제공합니다.
 - 출력은 반드시 JSON 형식만 사용하십시오.
 """
 
@@ -471,25 +499,40 @@ def build_rights_prompt(
 - 독립항 내용:
 {row['independent_claim']}
 
-[출력 지침]
-1. evaluation
-  - evaluation에는 수치나 항목을 나열하지 말고, 권리 설계의 인상과 전반적인 수준을 유저 친화적으로 설명하라.
-  - 평가 기준이나 내부 판단 로직이 드러나지 않도록 작성하라.
-  - 3~5문장 이내로 작성하라.
-  - "~습니다", "~보입니다" 형태의 설명체로 작성하라.
+[출력 지침 — evaluation]
+- 사용자에게 보이는 본문이다. 수치·항목 나열은 하지 말 것.
+- 권리 설계의 **인상**, **강·약점**, **실무 관점에서의 의미**를 **분석적으로** 풀어쓴다.
+- 다음 각도를 가능한 한 골고루 다룬다 (해당 없으면 생략):
+  · 청구 구조가 권리 범위·회피 난이도에 주는 시사점
+  · 독립항 문구가 구체적인지, 과도하게 좁히지는 않았는지
+  · 방법/시스템/장치 등 청구 유형 구성이 균형적인지
+- **5~8문장**, "~습니다", "~보입니다" 설명체.
+- 평가 기준이나 내부 로직이 직접 드러나지 않게 쓴다.
 
-2. reason
-  - reason에는 정량·정성 평가가 어떻게 반영되었는지 솔직하고 구체적으로 작성하라.
-  - reason의 각 문장은 반드시 "~임.", "~함.", "~존재함."과 같은 서술형으로 끝내라.
+[metric_evaluations] (시스템이 이를 조합해 내부용 reason 문자열로 쓴다)
+- 아래 항목을 각각 별도 원소로 작성한다. data_basis에는 [특허 데이터]의 **실제 수치**를 그대로 넣는다.
+  1) 전체 청구항 수 (평균 {avg_claim_count}과 비교 언급은 interpretation에서)
+  2) 독립항 수·종속항 수·청구 계열 수
+  3) 독립항 단어 수 (권리 범위 명확성과 연결하여 interpretation 작성)
+- interpretation: 각 수치가 권리성에 미치는 영향을 한 줄로.
 
 [출력 형식]
 반드시 JSON 형식으로만 출력하라.
 
 {{
-  "rights_score": "높음 | 중간 | 낮음",
-  "evaluation": "유저에게 제공되는 권리성 평가 요약",
-  "reason": "정량·정성 평가 기준이 어떻게 반영되었는지에 대한 내부 설명"
+  "rights_score": 0,
+  "metric_evaluations": [
+    {{"metric_name": "전체 청구항 수", "data_basis": "...", "interpretation": "..."}},
+    {{"metric_name": "독립항·종속항·계열", "data_basis": "...", "interpretation": "..."}},
+    {{"metric_name": "독립항 분량(단어 수)", "data_basis": "...", "interpretation": "..."}}
+  ],
+  "evaluation": "사용자용 권리성 평가 (5~8문장, 분석적·풍부하게)"
 }}
+
+[추가 조건]
+- rights_score는 0~25 사이의 정수로 반환하라.
+- "높음"에 해당하면 18~25, "중간"에 해당하면 9~17, "낮음"에 해당하면 0~8 범위를 사용하라.
+- **reason 필드는 출력하지 마라.** 내부용 줄은 metric_evaluations만으로 충분하다.
 """
 
 def build_tech_prompt(row, avg_ipc_count, avg_citation_count):
@@ -497,19 +540,22 @@ def build_tech_prompt(row, avg_ipc_count, avg_citation_count):
 너는 특허 기술성 평가 전문가이다.
 아래 특허공보의 기술성을 평가하라.
 
-[작성 지침]
-- evaluation은 일반 사용자에게 보여줄 문장이다.
-  · 특허 내용 요약은 하지 마라.
-  · 평가 기준이나 수치 비교 방식은 직접 언급하지 마라.
-  · 기술 설계의 완성도, 구체성, 신뢰도를 설명하듯 작성하라.
-  · "~습니다", "~보입니다" 형태의 설명체로 작성하라.
-- reason은 내부 확인용이다.
-  · IPC 개수, 인용문헌 수, 청구항 내 정량 정보 등
-    정량·정성 평가 기준이 어떻게 반영되었는지 솔직하게 작성하라.
-    각 문장은 반드시 "~임.", "~함.", "~존재함."과 같은 서술형으로 끝내라.
-- ipc코드는 많을수록, 인용문헌은 적을수록 좋으며 아래 평균값과 비교하라.
-  · ipc코드 개수의 평균은 {avg_ipc_count}
-  · 인용문헌 개수의 평균은 {avg_citation_count}
+[작성 지침 — evaluation (사용자용)]
+- 일반 사용자에게 보이는 본문이다.
+- 특허 **발명의 요지를 한 줄로 요약하는 데 그치지 말고**, 아래를 **분석적으로** 5~8문장으로 쓴다.
+  · 청구항에 드러난 기술 수단·구성의 **구체성**과 **완성도**
+  · 동일 분야에서 흔한 구성 대비 **차별 포인트가 읽히는지**(없다면 그 한계도 서술)
+  · 선행(인용) 부담이 **크게 느껴지는지 여부**를 정성적으로 (수치 직접 인용은 피함)
+  · 기술 설명의 **신뢰도**(논리 전개, 용어 일관성 등)에 대한 인상
+- "~습니다", "~보입니다" 설명체.
+- **IPC 개수·인용 건수 등 숫자는 evaluation 본문에 직접 적지 마라.** (해당 내용은 metric_evaluations에만)
+- 평가 기준이나 채점 로직이 드러나지 않게 쓴다.
+
+[내부 추적용 metric_evaluations]
+- IPC·인용·청구 구조에 대한 **검증 가능한 근거**는 반드시 metric_evaluations에만 둔다.
+- ipc코드는 많을수록, 인용문헌은 적을수록 유리한 경향이 있으며 산업 평균과 비교해 해석하라.
+  · IPC 개수 평균: {avg_ipc_count}
+  · 인용문헌 수 평균: {avg_citation_count}
 
 [특허 정보]
 - IPC 개수: {row['ipc_count']}
@@ -517,26 +563,46 @@ def build_tech_prompt(row, avg_ipc_count, avg_citation_count):
 - 특허청구항:
 {row['independent_claim']}
 
+[metric_evaluations]
+- 반드시 아래 각 항목을 별도 원소로 작성한다. data_basis에는 위 [특허 정보]에 나온 **실제 숫자·문자를 그대로** 인용한다.
+  1) IPC 코드 개수 (ipc_count와 산업 평균 {avg_ipc_count} 병기)
+  2) 인용문헌 수 (forward_citation_count와 산업 평균 {avg_citation_count} 병기)
+  3) 독립항 구조·분량 (독립항 수·단어 수 등 위에 제시된 수치를 data_basis에 포함)
+- interpretation에는 각 data_basis가 기술성 점수에 어떻게 반영되는지 한 줄로 쓴다.
+
 [출력 형식]
 반드시 JSON 형식으로만 출력하라.
 
 {{
-  "technical_score": "높음 | 중간 | 낮음",
-  "evaluation": "최대 5줄 이내의 유저용 기술성 평가",
-  "reason": "정량·정성 평가 기준이 어떻게 반영되었는지에 대한 내부용 설명"
+  "technical_score": 0,
+  "metric_evaluations": [
+    {{"metric_name": "IPC 코드 개수", "data_basis": "...", "interpretation": "..."}},
+    {{"metric_name": "인용문헌 수", "data_basis": "...", "interpretation": "..."}},
+    {{"metric_name": "독립항·청구 구조", "data_basis": "...", "interpretation": "..."}}
+  ],
+  "evaluation": "사용자용 기술성 평가 (5~8문장, 분석적·풍부하게)"
 }}
+
+[추가 조건]
+- technical_score는 0~25 사이의 정수로 반환하라.
+- "높음"에 해당하면 18~25, "중간"에 해당하면 9~17, "낮음"에 해당하면 0~8 범위를 사용하라.
+- **reason 필드는 출력하지 마라.** 내부용 줄은 metric_evaluations만으로 충분하다.
 """
 
 def build_final_score_prompt(
     user_title,
     user_abstract,
+    total_score,
     ma_result,
     tech_result,
     rights_result
 ):
+    ma_score = ma_result.get("ma_attractiveness_score")
+    tech_score = tech_result.get("technical_score")
+    rights_score = rights_result.get("rights_score")
     return f"""
 너는 특허 투자/사업화 점수화 전문가이다.
-아래 입력을 종합해 특허의 종합 점수를 0~100 사이 정수로 산출하라.
+아래 입력을 종합해 **이미 확정된 종합 점수**를 바탕으로 설명만 작성하라.
 
 [특허 정보]
 - 제목: {user_title}
@@ -552,35 +618,46 @@ def build_final_score_prompt(
 - 권리성 평가:
 {json.dumps(rights_result, ensure_ascii=False, indent=2)}
 
-[점수 산출 원칙]
-- 기존 3개 평가(시장성/기술성/권리성)를 모두 반영하라.
-- "높음/중간/낮음" 결과와 reason/evaluation의 정성 근거를 함께 고려하라.
-- 점수는 반드시 정수 0~100 범위로 반환하라.
-- 점수가 높아진 핵심 요인과 낮아진 핵심 요인을 균형 있게 제시하라.
+[점수 산출 원칙 — 반드시 준수]
+- **최종 점수는 이미 아래와 같이 확정되었다. 이 수치를 그대로 전제로 하라.**
+  · 종합 점수: **{total_score}점** (시장 매력도 {ma_score} + 기술성 {tech_score} + 권리성 {rights_score})
+- 점수를 다시 계산하거나 다른 총점을 제시하지 마라.
+- 세부 항목 점수도 위 JSON에 있는 값만 근거로 삼아라.
+
+[작성 지침 — 기술성/권리성 평가와 동일한 역할 분리]
+- **evaluation** (사용자용)
+  · 기술성 평가의 evaluation 필드와 **같은 문체**로 쓴다.
+  · "~습니다", "~보입니다" 형태의 설명체.
+  · 특허 내용 요약은 하지 마라.
+  · 위 세 영역(시장·기술·권리)이 종합 점수({total_score}점)에 어떻게 어우러졌는지 균형 있게 설명하라.
+  · **금지**: "평가를 받았습니다", "~로 평가되었습니다" 등 수동·보고서식 표현.
+  · **권장**: 각 영역의 강점·약점을 직접 서술하는 형태.
+  · 최대 5줄.
+- **reason** (내부 확인용)
+  · 시장·기술·권리 각 점수가 종합 해석에 어떻게 반영되었는지 정량·정성 근거를 솔직히 적는다.
+  · 각 문장은 반드시 "~임.", "~함.", "~존재함." 등 **서술형 종결**로 끝낸다.
 
 [출력 형식]
 반드시 아래 JSON 형식으로만 출력하라.
 
 {{
-  "final_score": 0,
-  "final_score_reasoning": [
-    "점수 근거 1",
-    "점수 근거 2",
-    "점수 근거 3"
-  ],
-  "final_score_comment": "사용자에게 보여줄 종합 점수 설명 (최대 5줄)"
+  "evaluation": "사용자용 종합 설명 (최대 5줄)",
+  "reason": "내부용 근거 설명"
 }}
 """
 
-def call_llm(prompt, model="gpt-4.1"):
-    response = client.chat.completions.create(
+def call_llm(prompt, model="gpt-4.1", max_tokens=None):
+    kwargs = dict(
         model=model,
         messages=[
             {"role": "system", "content": "You are a professional patent analyst."},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": prompt},
         ],
-        temperature=0.3
+        temperature=0.3,
     )
+    if max_tokens is not None:
+        kwargs["max_tokens"] = max_tokens
+    response = client.chat.completions.create(**kwargs)
 
     raw_text = response.choices[0].message.content.strip()
 
@@ -589,13 +666,56 @@ def call_llm(prompt, model="gpt-4.1"):
 
     return json.loads(raw_text)
 
-def _normalize_final_score(value):
+
+def _attach_metric_evaluation_lines(result: dict) -> None:
+    """metric_evaluations → '지표명 : (데이터) -> (해석)' 형식의 표시용 줄."""
+    rows = result.get("metric_evaluations")
+    if not isinstance(rows, list):
+        rows = []
+    lines = []
+    for m in rows:
+        if not isinstance(m, dict):
+            continue
+        name = str(m.get("metric_name") or m.get("metric") or "지표").strip()
+        data_basis = str(m.get("data_basis") or m.get("data") or "").strip()
+        interp = str(m.get("interpretation") or "").strip()
+        lines.append(f"{name} : ({data_basis}) -> ({interp})")
+    result["metric_evaluation_lines"] = lines
+
+
+def _join_analysis_reasoning_list(val):
+    if val is None:
+        return ""
+    if isinstance(val, list):
+        return " ".join(str(x) for x in val)
+    return str(val)
+
+
+def _set_reason_from_metric_lines(result: dict, fallback: str = "") -> None:
+    """최종 reason: '지표 : (데이터) -> (해석)' 줄들. 비어 있으면 fallback."""
+    _attach_metric_evaluation_lines(result)
+    lines = result.get("metric_evaluation_lines") or []
+    result["reason"] = "\n".join(lines) if lines else (fallback or "")
+
+
+def _normalize_component_score(value, max_score):
+    score_map = {
+        "높음": max_score,
+        "중간": max_score // 2,
+        "낮음": 0,
+    }
+
+    if isinstance(value, str):
+        stripped_value = value.strip()
+        if stripped_value in score_map:
+            return score_map[stripped_value]
+
     try:
         score = int(float(value))
     except (TypeError, ValueError):
         score = 0
 
-    return max(0, min(100, score))
+    return max(0, min(max_score, score))
 
 def evaluate_patent(
     payload,
@@ -609,29 +729,63 @@ def evaluate_patent(
     user_abstract = user_info.get("abstract")
 
     ma_prompt = build_ma_prompt(payload)
-    ma_result = call_llm(ma_prompt)
+    ma_result = call_llm(ma_prompt, max_tokens=4096)
+    ma_result["ma_attractiveness_score"] = _normalize_component_score(
+        ma_result.get("ma_attractiveness_score", ma_result.get("ma_attractiveness")),
+        50
+    )
+    if not ma_result.get("evaluation_summary") and ma_result.get("user_report"):
+        ma_result["evaluation_summary"] = ma_result["user_report"]
+    _set_reason_from_metric_lines(
+        ma_result,
+        fallback=_join_analysis_reasoning_list(ma_result.get("analysis_reasoning")),
+    )
 
     tech_prompt = build_tech_prompt(
         row=row,
         avg_ipc_count=avg_ipc_count,
         avg_citation_count=avg_citation_count
     )
-    tech_result = call_llm(tech_prompt)
+    tech_result = call_llm(tech_prompt, max_tokens=3072)
+    tech_result["technical_score"] = _normalize_component_score(
+        tech_result.get("technical_score"),
+        25
+    )
+    _set_reason_from_metric_lines(tech_result)
 
     rights_prompt = build_rights_prompt(
         row=row,
         avg_claim_count=avg_claim_count
     )
-    rights_result = call_llm(rights_prompt)
+    rights_result = call_llm(rights_prompt, max_tokens=3072)
+    rights_result["rights_score"] = _normalize_component_score(
+        rights_result.get("rights_score"),
+        25
+    )
+    _set_reason_from_metric_lines(rights_result)
+
+    total_score = (
+        ma_result["ma_attractiveness_score"] +
+        tech_result["technical_score"] +
+        rights_result["rights_score"]
+    )
 
     final_score_prompt = build_final_score_prompt(
         user_title=user_title,
         user_abstract=user_abstract,
+        total_score=total_score,
         ma_result=ma_result,
         tech_result=tech_result,
         rights_result=rights_result
     )
     final_score_result = call_llm(final_score_prompt)
+
+    evaluation_text = (
+        final_score_result.get("evaluation")
+        or final_score_result.get("final_score_comment")
+        or ""
+    )
+    reason_text = final_score_result.get("reason") or ""
 
     final_output = {
         "evaluation": {
@@ -640,9 +794,9 @@ def evaluate_patent(
             "rights_evaluation": rights_result
         },
         "final_result": {
-            "final_score": _normalize_final_score(final_score_result.get("final_score", 0)),
-            "final_score_reasoning": final_score_result.get("final_score_reasoning", []),
-            "final_score_comment": final_score_result.get("final_score_comment", "")
+            "final_score": total_score,
+            "evaluation": evaluation_text,
+            "reason": reason_text,
         }
     }
 
