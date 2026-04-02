@@ -1,0 +1,332 @@
+{
+  "basic_info": {
+    "pdf_name": "v2",
+    "country": "US",
+    "field": "computer",
+    "patent": {
+      "title": "DEFECT MANAGEMENT POLICIES FOR NAND FLASH MEMORY",
+      "applicant": {
+        "name": "Intel Corporation",
+        "number": "14/087,282",
+        "date": "2013-11-22"
+      },
+      "grant": {
+        "number": "US 9,535,777 B2",
+        "date": "2017-01-03"
+      },
+      "ipc_code": [
+        "G06F 11/00",
+        "G11C 29/00",
+        "G06F 11/07",
+        "G11B 20/18"
+      ],
+      "abstract": "Systems and methods of managing defects in nonvolatile storage systems that can be used to avoid an inadvertent loss of data, while maintaining as much useful memory in the nonvolatile storage systems as possible. The disclosed systems and methods can monitor a plurality of trigger events for detecting possible defects in one or more nonvolatile memory (NVM) devices included in the nonvolatile storage systems, and apply one or more defect management policies to the respective NVM devices based on the types of trigger events that resulted in detection of the possible defects. Such defect management policies can be used proactively to retire memory in the nonvolatile storage systems with increased granularity, focusing the retirement of memory on regions of nonvolatile memory that are likely to contain a defect."
+    }
+  },
+  "naics": {
+    "primary": {
+      "code": "334112",
+      "title": "Computer Storage Device Manufacturing",
+      "description": "This industry comprises establishments primarily engaged in manufacturing computer storage devices that allow the storage and retrieval of data from a phase change, magnetic, optical, or magnetic/optical media. Examples of products made by these establishments are computer disk drives, USB flash drives, and tape storage and backup units."
+    },
+    "candidates": [
+      {
+        "code": "518210",
+        "title": "Computing Infrastructure Providers, Data Processing, Web Hosting, and Related Services",
+        "description": "This industry comprises establishments primarily engaged in providing computing infrastructure, data processing services, Web hosting services (except software publishing), and related services, including streaming support services (except streaming distribution services). Data processing establishments provide complete processing and specialized reports from data supplied by clients or provide automated data processing and data entry services. Illustrative Examples: Application hosting Cloud storage services Computer data storage services Computing platform infrastructure provision Infrastructure as a service (IaaS) Optical scanning services Platform as a service (PaaS) Video and audio technical streaming support services Web hosting"
+      },
+      {
+        "code": "541512",
+        "title": "Computer Systems Design Services",
+        "description": "This industry comprises establishments primarily engaged in planning and designing computer systems that integrate computer hardware, software, and communication technologies. The hardware and software components of the system may be provided by this establishment or company as part of integrated services or may be provided by third parties or vendors. These establishments often install the system and train and support users of the system. Illustrative Examples: Computer systems integration design consulting services Local area network (LAN) computer systems integration design services Information management computer systems integration design services Office automation computer systems integration design services"
+      }
+    ]
+  },
+  "evaluation": {
+    "ma_market_evaluation": {
+      "ma_market_score": 23,
+      "ma_market_evaluation": "이 산업은 최근 몇 년간 M&A 성장률과 추세가 다소 부진하여, 시장의 확장성이나 활발한 거래 분위기는 제한적인 것으로 보입니다. 그러나 전체 거래 중 상당 비율이 국경 간 거래로 이루어져 있어 글로벌 시장에서의 개방성은 유지되고 있습니다. 인수 유형을 보면, 전체 인수(Full Acquisition)가 주를 이루어 전략적 기술 확보 목적의 거래가 많다는 점은 긍정적입니다. 다만, 최근 동종 산업 내 인수 비율이 낮아 내부 결속력은 약한 편입니다. 해당 특허는 반도체 및 데이터 저장장치 분야의 High-Tech 기술로, 기술적 파급력은 높다고 평가됩니다. 종합적으로 볼 때, 성장성은 낮으나 기술적 매력과 글로벌 개방성, 전략적 인수의 존재로 인해 M&A 시장 매력도는 '중간' 수준으로 판단됩니다.",
+      "ma_market_reason": "최근 성장률 (recent_growth) : (-0.154) -> (최근 M&A 성장률이 음수로 나타나 산업의 성장세가 둔화되고 있음을 시사함.)\n회복 비율 (recovery_ratio) : (1.035) -> (과거 최저점 대비 회복은 이루어졌으나, 성장의 강도는 크지 않음을 의미함.)\n최근 추세 기울기 (recent_trend_slope) : (-689.0) -> (최근 연간 추세가 뚜렷하게 하락세임을 보여줌.)\n분야 M&A 동향 종합 점수 (final_score) : (0.336) -> (성장성과 회복성을 종합한 점수가 낮은 편으로, 시장 매력도가 제한적임을 시사함.)\n2024년 M&A 건수 및 내부 인수 비율 : (A: 14, B_ratio: 0.286) -> (2024년 M&A 건수는 중간 수준이나, 동종 산업 내 인수 비율은 낮아 외부 인수자 중심임을 의미함.)\n2025년 M&A 건수 및 내부 인수 비율 : (A: 19, B_ratio: 0.0) -> (2025년 M&A 건수는 증가했으나, 동종 산업 내부 인수는 전무하여 시장 내 결속력이 약함을 시사함.)\n국경 간 M&A 비중 및 방향성 : (total_deals: 87, cross_border_ratio: 0.31, direction: outbound) -> (전체 거래 중 31%가 국경 간 거래로 개방성은 있으나, 미국에서의 기술·자본 유출이 더 많은 구조임.)\n인수 유형별 분포 : (stake_single_target_cnt: 8, stake_multi_target_cnt: 9, full_acquisition_cnt: 57) -> (전체 인수(Full Acquisition)가 대다수로, 시장·기술 확보 목적의 전략적 인수가 주류임.)\nHigh-Tech 해당 여부 : (is_hightech: 1, matched_hightech: [\"Semiconductors\", \"Disk Drives\", \"Data Processing Services\"], explanation: \"비휘발성 메모리(NAND Flash) 결함 관리 기술로, 반도체 및 데이터 저장장치 분야의 High-Tech에 해당함.\") -> (특허 기술이 반도체 및 데이터 저장장치 등 High-Tech 분야에 명확히 해당되어 기술적 파급력이 높음.)"
+    },
+    "tech_evaluation": {
+      "tech_score": 14,
+      "tech_evaluation": "청구항에서 제시된 결함 관리 방법은 NVM 디바이스의 다양한 트리거 이벤트를 모니터링하고, 이벤트 유형에 따라 결함 관리 정책을 적용하는 구조로 구체적으로 설명되어 있습니다. 트리거 이벤트의 유형별로 결함을 예측하고, 사전적으로 메모리 페이지를 리타이어하는 점은 기존 단순 오류 감지 방식과 비교해 한층 정교한 접근임이 보입니다. 다만, 트리거 이벤트(soft bit, hard bit, XOR 등)와 그에 따른 정책 적용은 유사 분야에서 이미 활용되는 개념과 일부 중첩될 여지가 있어, 완전히 새로운 기술적 전환점으로 보기는 어렵습니다. 청구항의 단계별 논리 전개와 용어 사용은 일관적이고 신뢰도 있게 기술되어 있으나, 인용문헌이 많은 점에서 선행기술과의 차별성이 충분히 부각되는지는 다소 아쉬운 부분입니다. 전체적으로 기술적 완성도는 갖추었으나, 근본적 차별화 포인트는 제한적이라는 인상을 줍니다.",
+      "tech_reason": "IPC 코드 개수 : (IPC 개수: 4, 산업 평균: 4.15) -> (평균과 유사한 수준으로, 기술 적용 범위가 특별히 넓거나 좁지 않음을 시사함.)\n인용문헌 수 : (인용문헌 수: 13, 산업 평균: 10) -> (평균보다 다소 많은 인용문헌 수로, 선행기술 부담이 상대적으로 높아 독창성 측면에서 도전이 있음을 의미함.)\n독립항·청구 구조 : (독립항 3개(1, 3, 5번), 각 항목 모두 장문의 method claim으로 구성) -> (다수의 독립항과 구체적 단계 서술로 기술적 완성도는 있으나, 구성의 참신성은 일부 제한될 수 있음.)"
+    },
+    "rights_evaluation": {
+      "rights_score": 15,
+      "rights_evaluation": "청구항 구조가 전체적으로 탄탄하게 설계되어 있어 다양한 변형과 실시예를 포섭할 수 있는 점이 인상적입니다. 다만, 모든 독립항이 방법청구항으로만 구성되어 있어, 시스템이나 장치 측면에서의 보호가 미흡하다는 점은 실무적으로 아쉬운 부분입니다. 독립항의 문구가 상당히 길고 단계별로 세분화되어 있어, 권리 범위가 명확해지는 장점이 있으나, 동시에 회피 설계가 가능할 여지도 일부 존재해 보입니다. 수치 범위나 수학식의 직접적 한정은 없으나, 트리거 이벤트의 구체적 유형 등으로 인해 청구항이 과도하게 좁혀질 가능성도 엿보입니다. 계열이 2개로 나뉘어 있어 일부 보호 범위의 다양성은 확보되었으나, 청구항 유형의 균형 측면에서는 보완 여지가 있습니다. 전반적으로 실무에서 활용 시, 방법에 국한된 권리범위와 구체적 단계의 한정이 강점과 약점으로 동시에 작용할 수 있겠습니다.",
+      "rights_reason": "전체 청구항 수 : (20) -> (평균을 크게 상회하는 청구항 수로, 다양한 실시예와 변형을 폭넓게 포섭할 수 있습니다.)\n독립항·종속항·계열 : (독립항 3개, 종속항 17개, 계열 2개) -> (독립항과 종속항, 계열의 수가 적절하게 분포되어 있어 권리 설계의 유연성이 확보되어 있습니다.)\n독립항 분량(단어 수) : (186) -> (독립항의 문구가 상당히 길어 권리 범위가 다소 구체적으로 한정될 우려가 있습니다.)"
+    },
+    "final_result": {
+      "final_score": 52,
+      "evaluation": "시장 매력도는 글로벌 개방성과 전략적 인수의 존재로 중간 수준을 유지하나, 최근 성장세 둔화와 내부 결속력 약화가 한계로 작용합니다. 기술성 측면에서는 트리거 이벤트 기반의 정교한 결함 관리 방식이 완성도를 높이지만, 선행기술과의 차별성이 뚜렷하게 부각되지는 않습니다. 권리성은 다양한 청구항과 계열로 변형 포섭력이 우수하나, 방법에 한정된 독립항과 긴 문구로 인해 권리 범위가 일부 제한될 수 있습니다. 세 영역 모두 뚜렷한 강점과 약점이 공존하며, 이로 인해 종합 점수는 균형 잡힌 52점으로 귀결된 것으로 보입니다.",
+      "reason": "시장 매력도(23점)는 성장률·추세의 부진과 내부 인수 결속력 약화로 제한적임. 기술성(14점)은 구체적 방법론과 완성도는 높으나, 인용문헌 다수 및 참신성 부족으로 점수가 낮게 반영됨. 권리성(15점)은 청구항 수와 계열의 다양성으로 강점이 있으나, 방법에 한정된 보호범위와 긴 독립항으로 일부 한계 존재함. 세 영역의 점수가 모두 중간 수준에 머물러 종합 점수 52점에 직접적으로 반영됨."
+    }
+  },
+  "ipc_descriptions": [
+    {
+      "ipc_code": "G06F 11/00",
+      "short_description": "컴퓨터 시스템",
+      "long_description": "컴퓨터 시스템의 운영 및 관리와 관련된 기술"
+    },
+    {
+      "ipc_code": "G11C 29/00",
+      "short_description": "비휘발성 메모리",
+      "long_description": "비휘발성 메모리 장치의 구조 및 작동에 관한 기술"
+    },
+    {
+      "ipc_code": "G06F 11/07",
+      "short_description": "데이터 처리",
+      "long_description": "데이터 처리 및 관리 시스템에 관한 기술"
+    },
+    {
+      "ipc_code": "G11B 20/18",
+      "short_description": "메모리 관리",
+      "long_description": "메모리 관리 및 결함 감지 기술"
+    }
+  ],
+  "recommend_companies": {
+    "target_similar_patents": [
+      {
+        "rank": 1,
+        "similarity": 0.6385,
+        "assignee": {
+          "name": "Netlist Inc",
+          "id": "38346"
+        },
+        "title": "Hybrid memory system with configurable error thresholds and failure analysis capability",
+        "ipc": [
+          "G06F11/00",
+          "G06F11/14",
+          "G06F11/07",
+          "G11C16/34",
+          "G11C29/42",
+          "G11C29/44",
+          "G11C29/04"
+        ],
+        "abstract": " A system and method for configuring fault tolerance in nonvolatile memory (NVM) are operative to set a first threshold value, declare one or more portions of NVM invalid based on an error criterion, track the number of declared invalid NVM portions, determine if the tracked number exceeds the first threshold value, and if the tracked number exceeds the first threshold value, perform one or more remediation actions, such as issue a warning or prevent backup of volatile memory data in a hybrid memory system. In the event of backup failure, an extent of the backup can still be assessed by determining the amount of erased NVM that has remained erased after the backup, or by comparing a predicted backup end point with an actual endpoint.",
+        "application_number": "16517210",
+        "application_date": "20190719"
+      },
+      {
+        "rank": 2,
+        "similarity": 0.6377,
+        "assignee": {
+          "name": "Netlist Inc",
+          "id": "38346"
+        },
+        "title": "Hybrid memory system with configurable error thresholds and failure analysis capability",
+        "ipc": [
+          "G06F11/00",
+          "G06F11/14",
+          "G06F11/07",
+          "G11C16/34",
+          "G11C29/42",
+          "G11C29/44",
+          "G11C29/04"
+        ],
+        "abstract": " A system and method for configuring fault tolerance in nonvolatile memory (NVM) are operative to set a first threshold value, declare one or more portions of NVM invalid based on an error criterion, track the number of declared invalid NVM portions, determine if the tracked number exceeds the first threshold value, and if the tracked number exceeds the first threshold value, perform one or more remediation actions, such as issue a warning or prevent backup of volatile memory data in a hybrid memory system. In the event of backup failure, an extent of the backup can still be assessed by determining the amount of erased NVM that has remained erased after the backup, or by comparing a predicted backup end point with an actual endpoint.",
+        "application_number": "18154500",
+        "application_date": "20230113"
+      },
+      {
+        "rank": 3,
+        "similarity": 0.6377,
+        "assignee": {
+          "name": "Netlist Inc",
+          "id": "38346"
+        },
+        "title": "Hybrid memory system with configurable error thresholds and failure analysis capability",
+        "ipc": [
+          "G06F11/00",
+          "G06F11/14",
+          "G06F11/07",
+          "G11C16/34",
+          "G11C29/42",
+          "G11C29/44",
+          "G11C29/04"
+        ],
+        "abstract": " A system and method for configuring fault tolerance in nonvolatile memory (NVM) are operative to set a first threshold value, declare one or more portions of NVM invalid based on an error criterion, track the number of declared invalid NVM portions, determine if the tracked number exceeds the first threshold value, and if the tracked number exceeds the first threshold value, perform one or more remediation actions, such as issue a warning or prevent backup of volatile memory data in a hybrid memory system. In the event of backup failure, an extent of the backup can still be assessed by determining the amount of erased NVM that has remained erased after the backup, or by comparing a predicted backup end point with an actual endpoint.",
+        "application_number": "14214652",
+        "application_date": "20140314"
+      },
+      {
+        "rank": 4,
+        "similarity": 0.6239,
+        "assignee": {
+          "name": "Intel Corp",
+          "id": "28505"
+        },
+        "title": "NAND 플래시 메모리를 위한 결함 관리 정책들",
+        "ipc": [
+          "G06F 11/07",
+          "G06F 11/20"
+        ],
+        "abstract": "비휘발성 스토리지 시스템들에서 유용한 메모리를 가능한 한 많이 유지하면서, 데이터의 우발적인 손실을 회피하기 위해 사용될 수 있는, 비휘발성 스토리지 시스템들에서의 결함들을 관리하는 시스템들 및 방법들이 개시되어 있다. 개시된 시스템들 및 방법들은 비휘발성 스토리지 시스템들에 포함되는 하나 이상의 비휘발성 메모리(NVM) 디바이스들에서의 가능한 결함들을 검출하기 위해 복수의 트리거 이벤트들을 모니터링하고, 가능한 결함들의 검출을 초래한 트리거 이벤트들의 타입들에 기초하여 하나 이상의 결함 관리 정책들을 각각의 NVM 디바이스들에 적용할 수 있다. 그러한 결함 관리 정책들은 증가된 그래뉼러티로 비휘발성 스토리지 시스템들에서 메모리를 리타이어링하는데 선행적으로 사용되어, 결함을 포함할 가능성이 있는 비휘발성 메모리의 영역들에 대해 메모리의 리타이어먼트를 포커싱할 수 있다.",
+        "application_number": "1020167010692",
+        "application_date": "20141021"
+      },
+      {
+        "rank": 5,
+        "similarity": 0.5902,
+        "assignee": {
+          "name": "Hewlett Packard Enterprise",
+          "id": "25443"
+        },
+        "title": "Method and Apparatus for Selective Erase of Persistent and Non-Volatile Memory Devices",
+        "ipc": [
+          "G06F3/06",
+          "G06F21/44",
+          "G06F12/02"
+        ],
+        "abstract": " Various aspects of the subject technology relate to methods, systems, and machine-readable media for selective erase of persistent and non-volatile memory (NVM) devices. The method includes receiving a notification of a deleted block, the deleted block including sensitive data located in a memory block of an NVM device. The method also includes marking an address of the deleted block as read protected to prevent reading of the deleted block. The method also includes assigning a criticality ranking and a wear out level to the deleted block. The method also includes prioritizing write commands to the deleted block based on the criticality ranking and the wear out level of the deleted block. The method also includes overwriting the deleted block with zeroes or a specific pattern to permanently erase the sensitive data.",
+        "application_number": "16685498",
+        "application_date": "20191115"
+      }
+    ],
+    "acquiror_similar_patents": [
+      {
+        "rank": 1,
+        "similarity": 0.6921,
+        "assignee": {
+          "name": "Micron Technology Inc",
+          "id": "24758"
+        },
+        "title": "Defective memory unit screening in a memory system",
+        "ipc": [
+          "G06F11/00",
+          "G11C29/44",
+          "G11C29/38",
+          "G06F3/06",
+          "G06F11/07"
+        ],
+        "abstract": " A memory system having non-volatile media and a controller configured to process requests from a host system to store data in the non-volatile media or retrieve data from the non-volatile media. The non-volatile media has a set of memory units. The memory system stores an indicator indicating whether the memory system is operating in a user mode or a manufacturing mode. A defect manager of the memory system identifies a threshold based on the indicator, monitors an error rate in reading data from the non-volatile media and, in response to the error rate reaching the threshold, screens the non-volatile media for defective memory units.",
+        "application_number": "17018063",
+        "application_date": "20200911"
+      },
+      {
+        "rank": 2,
+        "similarity": 0.6921,
+        "assignee": {
+          "name": "Micron Technology Inc",
+          "id": "24758"
+        },
+        "title": "Defective memory unit screening in a memory system",
+        "ipc": [
+          "G06F11/00",
+          "G11C29/44",
+          "G11C29/38",
+          "G06F3/06",
+          "G06F11/07"
+        ],
+        "abstract": " A memory system having non-volatile media and a controller configured to process requests from a host system to store data in the non-volatile media or retrieve data from the non-volatile media. The non-volatile media has a set of memory units. The memory system stores an indicator indicating whether the memory system is operating in a user mode or a manufacturing mode. A defect manager of the memory system identifies a threshold based on the indicator, monitors an error rate in reading data from the non-volatile media and, in response to the error rate reaching the threshold, screens the non-volatile media for defective memory units.",
+        "application_number": "15952166",
+        "application_date": "20180412"
+      },
+      {
+        "rank": 3,
+        "similarity": 0.6429,
+        "assignee": {
+          "name": "Micron Technology Inc",
+          "id": "24758"
+        },
+        "title": "End of life performance throttling to prevent data loss",
+        "ipc": [
+          "G11C16/34",
+          "G01R31/3193",
+          "G11C29/52",
+          "G11C29/44",
+          "G11C29/56"
+        ],
+        "abstract": " Disclosed in some examples are methods, systems, memory devices, machine readable mediums configured to intentionally degrade NAND performance when a value of a NAND health metric indicates a potential for failure to encourage users to replace or backup their devices before data loss occurs. For example, the system may track a NAND health metric and when that metric reaches a predetermined threshold or state, the system may intentionally degrade performance. This performance degradation may be more effective than a warning to effect device backup or replacement.",
+        "application_number": "15799577",
+        "application_date": "20171031"
+      },
+      {
+        "rank": 4,
+        "similarity": 0.6428,
+        "assignee": {
+          "name": "Micron Technology Inc",
+          "id": "24758"
+        },
+        "title": "End of life performance throttling to prevent data loss",
+        "ipc": [
+          "G11C16/34",
+          "G01R31/3193",
+          "G11C29/52",
+          "G11C29/44",
+          "G11C29/56"
+        ],
+        "abstract": " Disclosed in some examples are methods, systems, memory devices, machine readable mediums configured to intentionally degrade NAND performance when a value of a NAND health metric indicates a potential for failure to encourage users to replace or backup their devices before data loss occurs. For example, the system may track a NAND health metric and when that metric reaches a predetermined threshold or state, the system may intentionally degrade performance. This performance degradation may be more effective than a warning to effect device backup or replacement.",
+        "application_number": "17232804",
+        "application_date": "20210416"
+      },
+      {
+        "rank": 5,
+        "similarity": 0.6427,
+        "assignee": {
+          "name": "Micron Technology Inc",
+          "id": "24758"
+        },
+        "title": "End of life performance throttling to prevent data loss",
+        "ipc": [
+          "G11C16/34",
+          "G11C29/52",
+          "G01R31/3193",
+          "G11C29/44",
+          "G11C29/56"
+        ],
+        "abstract": " Disclosed in some examples are methods, systems, memory devices, machine readable mediums configured to intentionally degrade NAND performance when a value of a NAND health metric indicates a potential for failure to encourage users to replace or backup their devices before data loss occurs. For example, the system may track a NAND health metric and when that metric reaches a predetermined threshold or state, the system may intentionally degrade performance. This performance degradation may be more effective than a warning to effect device backup or replacement.",
+        "application_number": "16589956",
+        "application_date": "20191001"
+      }
+    ]
+  },
+  "ma_patterns": {
+    "target_naic": "334112",
+    "target_naic_title": "Computer Storage Device Manufacturing",
+    "patterns": [
+      {
+        "acquirer_naic": "334112",
+        "acquirer_naic_title": "Computer Storage Device Manufacturing",
+        "ratio_percent": 21.1,
+        "relation_label": "수평확장",
+        "one_line_description": "같은 산업 내 경쟁력 강화",
+        "reason": "같은 산업인 컴퓨터 저장 장치 제조업체 간의 인수합병은 시장 점유율을 높이고 경쟁력을 강화하는 데 도움이 됩니다. 두 회사가 비슷한 기술과 고객을 공유하기 때문에, 이를 통해 더 나은 제품과 서비스를 제공할 수 있습니다."
+      },
+      {
+        "acquirer_naic": "523910",
+        "acquirer_naic_title": "Miscellaneous Intermediation",
+        "ratio_percent": 15.5,
+        "relation_label": "금융지원",
+        "one_line_description": "자금 조달 및 투자 지원",
+        "reason": "다양한 중개 서비스 제공업체는 피인수 기업에 필요한 자금을 지원할 수 있습니다. 이들은 투자자와 기업 간의 연결을 통해 자본을 조달하고, 기업의 성장 가능성을 높이는 데 기여할 수 있습니다."
+      },
+      {
+        "acquirer_naic": "541512",
+        "acquirer_naic_title": "Computer Systems Design Services",
+        "ratio_percent": 8.5,
+        "relation_label": "기술흡수",
+        "one_line_description": "기술력 강화 및 혁신",
+        "reason": "컴퓨터 시스템 설계 서비스는 피인수 기업의 기술을 흡수하여 혁신을 촉진할 수 있습니다. 이를 통해 더 나은 시스템과 솔루션을 개발하고, 고객의 요구에 맞춘 서비스를 제공할 수 있습니다."
+      },
+      {
+        "acquirer_naic": "334413",
+        "acquirer_naic_title": "Semiconductor and Related Device Manufacturing",
+        "ratio_percent": 8.5,
+        "relation_label": "수직통합",
+        "one_line_description": "공급망 통합으로 효율성 증가",
+        "reason": "반도체 및 관련 장치 제조업체는 컴퓨터 저장 장치 제조업체와의 인수합병을 통해 공급망을 통합할 수 있습니다. 이렇게 되면 원자재 조달과 생산 과정에서의 효율성을 높일 수 있습니다."
+      },
+      {
+        "acquirer_naic": "523999",
+        "acquirer_naic_title": "Miscellaneous Financial Investment Activities",
+        "ratio_percent": 4.2,
+        "relation_label": "다각화",
+        "one_line_description": "투자 포트폴리오 확장",
+        "reason": "기타 금융 투자 활동을 하는 기업은 컴퓨터 저장 장치 제조업체에 투자하여 포트폴리오를 다각화할 수 있습니다. 이는 새로운 시장에 진입하고, 다양한 수익원을 확보하는 데 도움이 됩니다."
+      }
+    ]
+  }
+}

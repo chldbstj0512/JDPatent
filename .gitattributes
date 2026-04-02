@@ -1,0 +1,2 @@
+/home/ys0660/JDProject/final/data/bayesian_df.csv filter=lfs diff=lfs merge=lfs -text
+data/bayesian_df.csv filter=lfs diff=lfs merge=lfs -text

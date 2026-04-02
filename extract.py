@@ -2,6 +2,8 @@ import os
 import re
 import json
 import time
+import ast
+from typing import Optional
 import pandas as pd
 from pprint import pprint
 from dotenv import load_dotenv
@@ -22,6 +24,8 @@ pc = Pinecone(
 )
 
 index = pc.Index(INDEX_NAME)
+
+_BAYESIAN_PROB_TABLE = None
 
 def embed_patent_text(text: str) -> list:
     # Embedding API에 보내는 입력 길이를 제한해 불필요한 비용/에러를 방지합니다.
@@ -59,6 +63,143 @@ def retrieve_top_naics(
 
     return naics_candidates
 
+def normalize_ipc_code(ipc: str) -> str:
+    """
+    IPC 코드를 공백 없이 표준 형태로 정규화합니다.
+    예) "A61B 3/00" -> "A61B3/00"
+        "a 61 b 3 / 00" -> "A61B3/00"
+    """
+    if ipc is None:
+        return ""
+    s = str(ipc).upper()
+    s = re.sub(r"\s+", "", s)  # remove all whitespace
+    # keep only plausible IPC characters
+    s = re.sub(r"[^A-Z0-9/]", "", s)
+    return s
+
+def extract_ipc_codes_from_text(text: str) -> list[str]:
+    """
+    OCR 텍스트에서 IPC 코드를 최대한 보수적으로 추출합니다.
+    - 예: "A61B 3/00", "A61B3/00" 모두 대응
+    """
+    # group: section(A-H) + class(2d) + subclass(1A-Z) + main/subgroup(d+/d+)
+    # OCR에서 중간중간 공백이 섞이는 경우가 많아 토큰 단위로 분리해서 잡습니다.
+    pattern = re.compile(
+        r"\b([A-H])\s*(\d{2})\s*([A-Z])\s*([0-9]{1,4})\s*/\s*([0-9]{1,4})\b"
+    )
+    seen = set()
+    out: list[str] = []
+    for m in pattern.finditer(text.upper()):
+        code = normalize_ipc_code(f"{m.group(1)}{m.group(2)}{m.group(3)}{m.group(4)}/{m.group(5)}")
+        if code and code not in seen:
+            seen.add(code)
+            out.append(code)
+    return out
+
+def _build_bayesian_prob_table(bayesian_df: pd.DataFrame) -> dict[str, list[tuple[str, float]]]:
+    """
+    bayesian_df columns expected:
+    - ipc_list: list[str] (or string repr of list)
+    - naic_list: list[str/int] (or string repr of list)
+    Returns: { ipc_code: [(naics_code, P(naics|ipc)), ...sorted desc...] }
+    """
+    from collections import Counter
+
+    pair_counts: Counter[tuple[str, str]] = Counter()
+    ipc_counts: Counter[str] = Counter()
+
+    for _, row in bayesian_df.iterrows():
+        ipc_list = row.get("ipc_list", [])
+        naic_list = row.get("naic_list", [])
+
+        if isinstance(ipc_list, str):
+            try:
+                ipc_list = ast.literal_eval(ipc_list)
+            except Exception:
+                ipc_list = []
+        if isinstance(naic_list, str):
+            try:
+                naic_list = ast.literal_eval(naic_list)
+            except Exception:
+                naic_list = []
+
+        # normalize
+        ipc_list = [normalize_ipc_code(x) for x in ipc_list if str(x).strip()]
+        naic_list = [str(x).strip().split(".")[0] for x in naic_list if str(x).strip()]
+
+        for ipc in ipc_list:
+            ipc_counts[ipc] += 1
+            for naic in naic_list:
+                pair_counts[(ipc, naic)] += 1
+
+    prob_table: dict[str, list[tuple[str, float]]] = {}
+    for (ipc, naic), cnt in pair_counts.items():
+        denom = ipc_counts.get(ipc, 0)
+        if denom <= 0:
+            continue
+        prob = cnt / denom
+        prob_table.setdefault(ipc, []).append((naic, prob))
+
+    for ipc in list(prob_table.keys()):
+        prob_table[ipc] = sorted(prob_table[ipc], key=lambda x: -x[1])
+
+    return prob_table
+
+def get_bayesian_prob_table(
+    bayesian_csv_path: str = None,
+) -> dict[str, list[tuple[str, float]]]:
+    global _BAYESIAN_PROB_TABLE
+    if _BAYESIAN_PROB_TABLE is not None:
+        return _BAYESIAN_PROB_TABLE
+
+    if bayesian_csv_path is None:
+        bayesian_csv_path = os.path.join(os.path.dirname(__file__), "data", "bayesian_df.csv")
+
+    bayesian_df = pd.read_csv(bayesian_csv_path)
+    _BAYESIAN_PROB_TABLE = _build_bayesian_prob_table(bayesian_df)
+    return _BAYESIAN_PROB_TABLE
+
+def recommend_naics_from_ipcs(
+    ipc_input: list[str],
+    prob_table: dict[str, list[tuple[str, float]]],
+    top_k: int = 15,
+) -> list[tuple[str, float]]:
+    from collections import Counter
+
+    scores: Counter[str] = Counter()
+    for ipc in ipc_input:
+        ipc_norm = normalize_ipc_code(ipc)
+        if ipc_norm in prob_table:
+            for naic, prob in prob_table[ipc_norm]:
+                scores[naic] += prob
+    return scores.most_common(top_k)
+
+def build_naics_candidates_from_bayesian(
+    patent_text: str,
+    naic_map: dict,
+    top_k: int = 15,
+    bayesian_csv_path: str = None,
+) -> list[dict]:
+    ipcs = extract_ipc_codes_from_text(patent_text)
+    if not ipcs:
+        return []
+
+    prob_table = get_bayesian_prob_table(bayesian_csv_path=bayesian_csv_path)
+    ranked = recommend_naics_from_ipcs(ipcs, prob_table=prob_table, top_k=top_k)
+
+    candidates: list[dict] = []
+    for code, score in ranked:
+        info = naic_map.get(str(code), {})
+        candidates.append(
+            {
+                "code": str(code),
+                "title": info.get("title"),
+                "desc": info.get("description"),
+                "score": float(score),
+            }
+        )
+    return candidates
+
 def build_naics_context_text(naics_candidates: list) -> str:
     naics_text = "\n".join(
         [
@@ -68,6 +209,80 @@ def build_naics_context_text(naics_candidates: list) -> str:
     )
 
     return naics_text
+
+
+def parse_naics_codes_from_context_block(naics_context: str) -> list[str]:
+    """
+    build_naics_context_text()가 만든 블록에서 NAICS 코드만 순서대로 추출합니다.
+    (프롬프트의 NAICS CANDIDATES 섹션에 동일 문자열이 삽입됨)
+    """
+    codes: list[str] = []
+    for line in naics_context.splitlines():
+        s = line.strip()
+        if not s.startswith("-"):
+            continue
+        m = re.match(r"^\s*-\s*([0-9]+(?:\.[0-9]+)?)\s*:", s)
+        if m:
+            codes.append(m.group(1).split(".")[0])
+    return codes
+
+
+def verify_naics_candidates_vs_context(
+    naics_candidates: list,
+    naics_context: str,
+    log_path: Optional[str] = None,
+    candidate_source: Optional[str] = None,
+    candidate_source_detail: Optional[dict] = None,
+) -> dict:
+    """
+    naics_candidates 리스트와 naics_context(프롬프트에 들어가는 후보 블록)의 코드 목록이
+    동일한지 검증합니다. 터미널이 잘릴 수 있어 결과를 파일로도 남길 수 있습니다.
+
+    candidate_source:
+      - "bayesian_ipc": bayesian_df 기반 P(NAICS|IPC) 합산 후 상위 후보
+      - "embedding_pinecone": OCR 임베딩 + Pinecone 유사 벡터 검색 후보
+    """
+    from_candidates = [str(c["code"]).split(".")[0] for c in naics_candidates]
+    from_context = parse_naics_codes_from_context_block(naics_context)
+    ok = from_candidates == from_context
+
+    source_labels = {
+        "bayesian_ipc": {
+            "label_ko": "베이지안(IPC→NAICS, bayesian_df 공출현)",
+            "label_en": "Bayesian co-occurrence (IPC -> NAICS) from bayesian_df.csv",
+        },
+        "embedding_pinecone": {
+            "label_ko": "임베딩 비교(Pinecone 유사 벡터 검색)",
+            "label_en": "text-embedding-3-large + Pinecone vector similarity",
+        },
+    }
+
+    report = {
+        "ok": ok,
+        "candidate_source": candidate_source,
+        "candidate_source_labels": source_labels.get(candidate_source or "", {}),
+        "codes_from_candidates": from_candidates,
+        "codes_from_context_block": from_context,
+        "n_candidates": len(from_candidates),
+        "n_parsed": len(from_context),
+    }
+    if candidate_source_detail:
+        report["candidate_source_detail"] = candidate_source_detail
+    if not ok:
+        for i, (a, b) in enumerate(zip(from_candidates, from_context)):
+            if a != b:
+                report["first_mismatch_index"] = i
+                report["first_mismatch"] = {"candidate": a, "parsed_from_context": b}
+                break
+        else:
+            if len(from_candidates) != len(from_context):
+                report["reason"] = "length_mismatch"
+
+    if log_path:
+        with open(log_path, "w", encoding="utf-8") as f:
+            f.write(json.dumps(report, ensure_ascii=False, indent=2))
+
+    return report
 
 def extract_patent_metadata(text: str, naics_context: str):
     prompt = f"""
@@ -243,7 +458,6 @@ OCR TEXT
     )
 
     content = response.choices[0].message.content.strip()
-
     # JSON 안전 추출
     start = content.find("{")
     end = content.rfind("}") + 1
@@ -501,33 +715,10 @@ def run_NAIC_extract(
 ):
     results = []
     claims = None
+    patent_meta = None
 
     # ---------------------------------
-    # 1. NAICS / Metadata (기존 구조 유지)
-    # ---------------------------------
-    patent_text = user_ocr  # front OCR만 사용
-
-    query_vector = embed_patent_text(patent_text)
-
-    naics_candidates = retrieve_top_naics(query_vector, top_k=15)
-    naics_context = build_naics_context_text(naics_candidates)
-
-    try:
-        patent_meta = extract_patent_metadata(
-            text=patent_text,
-            naics_context=naics_context
-        )
-        if isinstance(patent_meta, str):
-            patent_meta = json.loads(patent_meta)
-            
-        if isinstance(patent_meta, dict) and "error" in patent_meta:
-            return [], patent_meta
-
-    except Exception:
-        return [], {"error": "metadata_extraction_failed"}
-
-    # ---------------------------------
-    # 2. NAICS 코드 매핑
+    # 0. NAICS 코드 매핑 (후보 생성에도 사용)
     # ---------------------------------
     naic_map = {
         str(code): {
@@ -541,59 +732,137 @@ def run_NAIC_extract(
         )
     }
 
-    result_item = {
-        "pdf_name": user_id,
-        **patent_meta
+    # ---------------------------------
+    # 1. NAICS / Metadata (기존 구조 유지)
+    # ---------------------------------
+    patent_text = user_ocr  # front OCR만 사용
+
+    # 후보 생성: 베이지안 기반 (IPC -> NAICS)
+    naics_candidates = build_naics_candidates_from_bayesian(
+        patent_text=patent_text,
+        naic_map=naic_map,
+        top_k=15,
+    )
+    naics_candidate_source = "bayesian_ipc"
+    verify_detail: dict = {
+        "bayesian_attempted": True,
+        "ipc_codes_used_for_bayesian": extract_ipc_codes_from_text(patent_text),
     }
 
-    # ---------------------------------
-    # 3. NAICS fallback 처리
-    # ---------------------------------
-    codes = result_item.get("naics_code", [])
-
-    if not codes and naics_candidates:
-        fallback_code = str(naics_candidates[0]["code"])
-        codes = [fallback_code]
-        result_item["naics_code"] = codes
-
-    primary_code = codes[0] if codes else None
-    candidate_codes = codes[1:] if len(codes) > 1 else []
-
-    result_item["primary_naic_info"] = (
-        {
-            "code": str(primary_code),
-            "title": naic_map.get(str(primary_code), {}).get("title"),
-            "description": naic_map.get(str(primary_code), {}).get("description")
-        }
-        if primary_code else None
-    )
-
-    result_item["candidate_naic_info"] = [
-        {
-            "code": str(code),
-            "title": naic_map.get(str(code), {}).get("title"),
-            "description": naic_map.get(str(code), {}).get("description")
-        }
-        for code in candidate_codes
-    ]
-
-    results.append(result_item)
-
-    # ---------------------------------
-    # 4. Claim 추출 (별도 반환)
-    # ---------------------------------
-    try:
-        claims = extract_patent_claims(
-            text_front=user_ocr,
-            text_back=back_ocr
+    # IPC 추출 실패 등으로 후보가 없으면 기존 임베딩/Pinecone 방식으로 fallback
+    if not naics_candidates:
+        verify_detail["bayesian_yielded_candidates"] = False
+        verify_detail["fallback_reason"] = (
+            "no_ipc_extracted_from_ocr_or_no_hits_in_prob_table"
+            if not verify_detail["ipc_codes_used_for_bayesian"]
+            else "bayesian_ranking_empty"
         )
-        if isinstance(claims, str):
-            claims = json.loads(claims)
-        
-        if isinstance(claims, dict) and "error" in claims:
-            return results, claims
-        
+        query_vector = embed_patent_text(patent_text)
+        naics_candidates = retrieve_top_naics(query_vector, top_k=15)
+        naics_candidate_source = "embedding_pinecone"
+        verify_detail["embedding_model"] = "text-embedding-3-large"
+        verify_detail["pinecone_index"] = INDEX_NAME
+    else:
+        verify_detail["bayesian_yielded_candidates"] = True
+
+    naics_context = build_naics_context_text(naics_candidates)
+
+    if naics_candidates:
+        verify_path = os.path.join(os.path.dirname(__file__), "naics_candidate_verify.json")
+        vrep = verify_naics_candidates_vs_context(
+            naics_candidates,
+            naics_context,
+            log_path=verify_path,
+            candidate_source=naics_candidate_source,
+            candidate_source_detail=verify_detail,
+        )
+        if vrep["ok"]:
+            print(
+                f"[NAICS verify] OK: {vrep['n_candidates']} codes "
+                f"({naics_candidate_source}) — "
+                f"prompt NAICS block matches candidates (log: {verify_path})",
+                flush=True,
+            )
+        else:
+            print(
+                f"[NAICS verify] FAIL ({naics_candidate_source}): "
+                f"prompt block != candidates — see {verify_path}",
+                flush=True,
+            )
+
+    try:
+        patent_meta = extract_patent_metadata(
+            text=patent_text,
+            naics_context=naics_context
+        )
+        if isinstance(patent_meta, str):
+            patent_meta = json.loads(patent_meta)
     except Exception:
-        return results, {"error": "claim_extraction_failed"}
+        # return [], {"error": "metadata_extraction_failed"}
+        results = []
+        claims = {"error": "metadata_extraction_failed"}
+        patent_meta = None
+
+    if patent_meta is not None and isinstance(patent_meta, dict) and "error" in patent_meta:
+        # return [], patent_meta
+        results = []
+        claims = patent_meta
+        patent_meta = None
+
+    if patent_meta is not None:
+        result_item = {
+            "pdf_name": user_id,
+            **patent_meta
+        }
+
+        # ---------------------------------
+        # 3. NAICS fallback 처리
+        # ---------------------------------
+        codes = result_item.get("naics_code", [])
+
+        if not codes and naics_candidates:
+            fallback_code = str(naics_candidates[0]["code"])
+            codes = [fallback_code]
+            result_item["naics_code"] = codes
+
+        primary_code = codes[0] if codes else None
+        candidate_codes = codes[1:] if len(codes) > 1 else []
+
+        result_item["primary_naic_info"] = (
+            {
+                "code": str(primary_code),
+                "title": naic_map.get(str(primary_code), {}).get("title"),
+                "description": naic_map.get(str(primary_code), {}).get("description")
+            }
+            if primary_code else None
+        )
+
+        result_item["candidate_naic_info"] = [
+            {
+                "code": str(code),
+                "title": naic_map.get(str(code), {}).get("title"),
+                "description": naic_map.get(str(code), {}).get("description")
+            }
+            for code in candidate_codes
+        ]
+
+        results.append(result_item)
+
+        # ---------------------------------
+        # 4. Claim 추출 (별도 반환)
+        # ---------------------------------
+        try:
+            claims = extract_patent_claims(
+                text_front=user_ocr,
+                text_back=back_ocr
+            )
+            if isinstance(claims, str):
+                claims = json.loads(claims)
+        except Exception:
+            # return results, {"error": "claim_extraction_failed"}
+            claims = {"error": "claim_extraction_failed"}
+
+        # if isinstance(claims, dict) and "error" in claims:
+        #     return results, claims
 
     return results, claims

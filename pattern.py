@@ -116,7 +116,7 @@ JSON 형식:
     "acquirer_naic": "인수자 산업 코드",
     "relation_label": "관계라벨",
     "one_line_description": "한 줄 설명",
-    "reason": "이 관계가 도출된 배경 및 이유 설명"
+    "reason": "사용자가 이해하기 쉬운 상세 설명"
   }}
 ]
 
@@ -130,9 +130,17 @@ JSON 형식:
 one_line_description 조건:
 - 1문장
 - 30자 이내
+- 비전문가도 한눈에 관계를 알 수 있게
 
-reason 조건:
-- 산업 간 가치사슬, 기술, 시장, 고객, 기능 관점 중 하나 이상 활용
+reason (상세 설명) 조건 — 매우 중요:
+- **비전문가·일반 사용자**가 읽어도 이해할 수 있는 한국어로 작성한다.
+- 내부 보고서 톤이 아니라, **짧은 설명문**처럼 자연스럽게 쓴다.
+- 아래를 **2~4문장** 안에 녹인다.
+  (1) 두 산업이 M&A에서 자주 엮이는 **이유를 일상어로** 설명
+  (2) 가치사슬·기술·시장·고객·기능 중 **무엇이 연결되는지** 한 가지 이상 구체적으로 짚기
+- 어려운 용어는 **괄호 안에 쉬운 말**을 덧붙인다. (예: 수직통합(공급·판매 단계를 한 회사로 묶는 것))
+- 추측이나 데이터에 없는 숫자·사실을 **지어내지 말 것**.
+- 불릿 기호나 번호 목록은 쓰지 말고 **문장만** 사용한다.
 
 주의:
 - JSON 이외의 텍스트 출력 금지
@@ -145,7 +153,11 @@ reason 조건:
         messages=[
             {
                 "role": "system",
-                "content": "You analyze M&A industry relationships and return strictly valid JSON."
+                "content": (
+                    "You analyze M&A industry relationships for a general audience. "
+                    "Return strictly valid JSON only. "
+                    "The 'reason' field must be plain, easy-to-read Korean for non-experts."
+                )
             },
             {
                 "role": "user",
@@ -153,7 +165,7 @@ reason 조건:
             },
         ],
         temperature=0,
-        max_tokens=2000,
+        max_tokens=2800,
     )
 
     content = response.choices[0].message.content.strip()
