@@ -111,44 +111,50 @@ def build_final_output(
     ]
 
     # -----------------------------
-    # RECOMMEND COMPANIES
+    # RECOMMEND COMPANIES (기업 단위)
     # -----------------------------
-    def transform_similar_list(similar_list, is_target=True):
-        output = []
-        for idx, item in enumerate(similar_list, start=1):
-            meta = item["metadata"]
-            ipc_raw = meta.get("ipc_code", "") or ""
-            ipc_list = [
-                strip_excel_xml_unicode_escapes(part.strip())
-                for part in ipc_raw.split("|")
-                if part.strip()
-            ]
+    def _transform_patent(meta, is_target):
+        ipc_raw = meta.get("ipc_code", "") or ""
+        ipc_list = [
+            strip_excel_xml_unicode_escapes(part.strip())
+            for part in ipc_raw.split("|")
+            if part.strip()
+        ]
+        return {
+            "title": strip_excel_xml_unicode_escapes(meta.get("invention_name")),
+            "ipc": ipc_list,
+            "abstract": strip_excel_xml_unicode_escapes(meta.get("abstract")),
+            "application_number": strip_excel_xml_unicode_escapes(meta.get("application_number")),
+            "application_date": strip_excel_xml_unicode_escapes(meta.get("application_date")),
+        }
 
+    def transform_company_list(company_list, is_target=True):
+        output = []
+        for idx, company in enumerate(company_list, start=1):
             output.append({
                 "rank": idx,
-                "similarity": round(item["score"], 4),
-                "assignee": {
-                    "name": strip_excel_xml_unicode_escapes(
-                        meta.get("target_short_name") if is_target else meta.get("acquiror_short_name")
-                    ),
-                    "id": meta.get("target_id") if is_target else meta.get("acquiror_id"),
-                },
-                "title": strip_excel_xml_unicode_escapes(meta.get("invention_name")),
-                "ipc": ipc_list,
-                "abstract": strip_excel_xml_unicode_escapes(meta.get("abstract")),
-                "application_number": strip_excel_xml_unicode_escapes(meta.get("application_number")),
-                "application_date": strip_excel_xml_unicode_escapes(meta.get("application_date")),
+                "company_name": strip_excel_xml_unicode_escapes(company.get("company_name")),
+                "company_id": company.get("company_id"),
+                "avg_similarity": round(company.get("avg_score", 0), 4),
+                "matched_patent_count": company.get("matched_patent_count", 0),
+                "patents": [
+                    {
+                        "similarity": round(p.get("score", 0), 4),
+                        **_transform_patent(p.get("metadata", {}), is_target),
+                    }
+                    for p in company.get("patents", [])
+                ],
             })
         return output
 
     recommend_companies = {
-        "target_similar_patents": transform_similar_list(
-            user_similar_company.get("target_similar_patents", []),
-            is_target=True
+        "target_similar_companies": transform_company_list(
+            user_similar_company.get("target_similar_companies", []),
+            is_target=True,
         ),
-        "acquiror_similar_patents": transform_similar_list(
-            user_similar_company.get("acquiror_similar_patents", []),
-            is_target=False
+        "acquiror_similar_companies": transform_company_list(
+            user_similar_company.get("acquiror_similar_companies", []),
+            is_target=False,
         ),
     }
 
