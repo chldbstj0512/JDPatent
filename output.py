@@ -30,6 +30,64 @@ def strip_excel_xml_unicode_escapes(text):
     return s.rstrip()
 
 
+def _normalize_country_for_output(value):
+    if value is None:
+        return None
+    s = str(value).strip().upper()
+    if not s:
+        return None
+    alias = {
+        "KOREA": "KR",
+        "SOUTH KOREA": "KR",
+        "REPUBLIC OF KOREA": "KR",
+        "대한민국": "KR",
+        "한국": "KR",
+        "USA": "US",
+        "U.S.": "US",
+        "U.S.A.": "US",
+        "UNITED STATES": "US",
+    }
+    if s in alias:
+        return alias[s]
+    if re.fullmatch(r"[A-Z]{2}", s):
+        return s
+    return None
+
+
+def _extract_patent_country(meta: dict) -> str | None:
+    if not isinstance(meta, dict):
+        return None
+    for key in ("country", "country_code", "patent_country", "publication_country", "nation", "origin_country"):
+        v = _normalize_country_for_output(meta.get(key))
+        if v:
+            return v
+
+    for key in ("publication_number", "patent_number", "application_number", "grant_number", "doc_number"):
+        raw = meta.get(key)
+        if not raw:
+            continue
+        raw_s = str(raw).strip()
+        m = re.search(r"\b([A-Z]{2})\s*[\d/\-]", raw_s.upper())
+        if m:
+            v = _normalize_country_for_output(m.group(1))
+            if v:
+                return v
+        compact = re.sub(r"\s+", "", raw_s)
+        if key == "application_number":
+            if compact.startswith(("10", "20")) and re.fullmatch(r"\d{10,14}", compact):
+                return "KR"
+            if re.fullmatch(r"\d{2}/\d{3},\d{3}", compact) or re.fullmatch(r"\d{2}/\d{6}", compact):
+                return "US"
+            # US application/publication number가 숫자만 있는 형태인 경우(예: 15343948, 17184433)
+            if re.fullmatch(r"\d{7,9}", compact) and not compact.startswith(("10", "20")):
+                return "US"
+        if key in ("patent_number", "grant_number", "doc_number"):
+            # US grant number가 숫자만으로 저장되는 경우(예: 12115176)
+            if re.fullmatch(r"\d{7,9}", compact) and not compact.startswith(("10", "20")):
+                return "US"
+    return None
+
+
 def build_final_output(
     user_info_list,
     user_score,
@@ -111,44 +169,51 @@ def build_final_output(
     ]
 
     # -----------------------------
-    # RECOMMEND COMPANIES
+    # RECOMMEND COMPANIES (기업 단위)
     # -----------------------------
-    def transform_similar_list(similar_list, is_target=True):
-        output = []
-        for idx, item in enumerate(similar_list, start=1):
-            meta = item["metadata"]
-            ipc_raw = meta.get("ipc_code", "") or ""
-            ipc_list = [
-                strip_excel_xml_unicode_escapes(part.strip())
-                for part in ipc_raw.split("|")
-                if part.strip()
-            ]
+    def _transform_patent(meta, is_target):
+        ipc_raw = meta.get("ipc_code", "") or ""
+        ipc_list = [
+            strip_excel_xml_unicode_escapes(part.strip())
+            for part in ipc_raw.split("|")
+            if part.strip()
+        ]
+        return {
+            "title": strip_excel_xml_unicode_escapes(meta.get("invention_name")),
+            "ipc": ipc_list,
+            "abstract": strip_excel_xml_unicode_escapes(meta.get("abstract")),
+            "application_number": strip_excel_xml_unicode_escapes(meta.get("application_number")),
+            "application_date": strip_excel_xml_unicode_escapes(meta.get("application_date")),
+            "patent_country": _extract_patent_country(meta),
+        }
 
+    def transform_company_list(company_list, is_target=True):
+        output = []
+        for idx, company in enumerate(company_list, start=1):
             output.append({
                 "rank": idx,
-                "similarity": round(item["score"], 4),
-                "assignee": {
-                    "name": strip_excel_xml_unicode_escapes(
-                        meta.get("target_short_name") if is_target else meta.get("acquiror_short_name")
-                    ),
-                    "id": meta.get("target_id") if is_target else meta.get("acquiror_id"),
-                },
-                "title": strip_excel_xml_unicode_escapes(meta.get("invention_name")),
-                "ipc": ipc_list,
-                "abstract": strip_excel_xml_unicode_escapes(meta.get("abstract")),
-                "application_number": strip_excel_xml_unicode_escapes(meta.get("application_number")),
-                "application_date": strip_excel_xml_unicode_escapes(meta.get("application_date")),
+                "company_name": strip_excel_xml_unicode_escapes(company.get("company_name")),
+                "company_id": company.get("company_id"),
+                "avg_similarity": round(company.get("avg_score", 0), 4),
+                "matched_patent_count": company.get("matched_patent_count", 0),
+                "patents": [
+                    {
+                        "similarity": round(p.get("score", 0), 4),
+                        **_transform_patent(p.get("metadata", {}), is_target),
+                    }
+                    for p in company.get("patents", [])
+                ],
             })
         return output
 
     recommend_companies = {
-        "target_similar_patents": transform_similar_list(
-            user_similar_company.get("target_similar_patents", []),
-            is_target=True
+        "target_similar_companies": transform_company_list(
+            user_similar_company.get("target_similar_companies", []),
+            is_target=True,
         ),
-        "acquiror_similar_patents": transform_similar_list(
-            user_similar_company.get("acquiror_similar_patents", []),
-            is_target=False
+        "acquiror_similar_companies": transform_company_list(
+            user_similar_company.get("acquiror_similar_companies", []),
+            is_target=False,
         ),
     }
 
