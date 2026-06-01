@@ -2,8 +2,7 @@ import os
 import re
 import json
 import time
-import ast
-from typing import Optional
+import unicodedata
 import pandas as pd
 from pprint import pprint
 from dotenv import load_dotenv
@@ -25,20 +24,92 @@ pc = Pinecone(
 
 index = pc.Index(INDEX_NAME)
 
-_BAYESIAN_PROB_TABLE = None
+_CONTROL_CHAR_PATTERN = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
+_IMAGE_MARKDOWN_PATTERN = re.compile(r"!\[[^\]]*\]\([^)]+\)")
+_PAGE_SPLIT_PATTERN = re.compile(r"<---\s*Page\s+\d+\s+Split\s*--->\\?", re.IGNORECASE)
+_INVALID_JSON_ESCAPE_PATTERN = re.compile(r'\\(?!["\\/bfnrtu])')
+
+
+def _sanitize_ocr_text(text: str) -> str:
+    if text is None:
+        return ""
+
+    cleaned = str(text)
+    cleaned = cleaned.replace("\r\n", "\n").replace("\r", "\n")
+    cleaned = unicodedata.normalize("NFKC", cleaned)
+    cleaned = "".join(ch for ch in cleaned if not 0xD800 <= ord(ch) <= 0xDFFF)
+
+    cleaned = _IMAGE_MARKDOWN_PATTERN.sub(" ", cleaned)
+    cleaned = _PAGE_SPLIT_PATTERN.sub(" ", cleaned)
+    cleaned = re.sub(r"\\([()\[\]{}])", r"\1", cleaned)
+    cleaned = _CONTROL_CHAR_PATTERN.sub(" ", cleaned)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned.strip()
+
+
+def _parse_metadata_json(content: str) -> dict:
+    source = (content or "").strip()
+    if source.startswith("```"):
+        source = source.strip("`").strip()
+        if source.startswith("json"):
+            source = source[4:].strip()
+
+    start = source.find("{")
+    end = source.rfind("}") + 1
+    if start == -1 or end <= 0:
+        raise ValueError("No valid JSON object found in model response")
+
+    candidate = source[start:end]
+    try:
+        return json.loads(candidate)
+    except json.JSONDecodeError:
+        repaired = _INVALID_JSON_ESCAPE_PATTERN.sub(r"\\\\", candidate)
+        return json.loads(repaired)
+
 
 def embed_patent_text(text: str) -> list:
-    # Embedding API에 보내는 입력 길이를 제한해 불필요한 비용/에러를 방지합니다.
-    text = text[:8000]
+    if not text or not text.strip():
+        raise ValueError("Empty text for embedding")
 
-    response = client.embeddings.create(
-        model="text-embedding-3-large",
-        input=text
-    )
-    embedding = response.data[0].embedding
+    # Conservative first cut to reduce 8192-token overflow risk.
+    embedding_input = text.strip()
+    if len(embedding_input) > 18000:
+        print(f"[EMBED_TRUNCATE] initial chars={len(embedding_input)} -> 18000")
+        embedding_input = embedding_input[:18000]
 
-    assert len(embedding) == 3072
-    return embedding
+    for _ in range(5):
+        try:
+            response = client.embeddings.create(
+                model="text-embedding-3-large",
+                input=embedding_input
+            )
+            embedding = response.data[0].embedding
+            assert len(embedding) == 3072
+            return embedding
+        except Exception as e:
+            msg = str(e)
+            if "maximum context length" in msg:
+                requested_match = re.search(r"requested\s+(\d+)\s+tokens", msg)
+                if requested_match:
+                    requested_tokens = int(requested_match.group(1))
+                    shrink_ratio = (8192 / max(requested_tokens, 1)) * 0.8
+                    new_len = int(len(embedding_input) * shrink_ratio)
+                else:
+                    # Fallback when token count is not included in error text.
+                    new_len = int(len(embedding_input) * 0.65)
+
+                new_len = max(1200, min(new_len, len(embedding_input) - 200))
+                if new_len >= len(embedding_input):
+                    new_len = max(1200, len(embedding_input) - 500)
+                if new_len >= len(embedding_input):
+                    raise
+
+                print(f"[EMBED_RETRY_TRUNCATE] chars={len(embedding_input)} -> {new_len}")
+                embedding_input = embedding_input[:new_len]
+                continue
+            raise
+
+    raise RuntimeError("Failed to create embedding after truncation retries")
 
 def retrieve_top_naics(
     query_vector: list,
@@ -63,143 +134,6 @@ def retrieve_top_naics(
 
     return naics_candidates
 
-def normalize_ipc_code(ipc: str) -> str:
-    """
-    IPC 코드를 공백 없이 표준 형태로 정규화합니다.
-    예) "A61B 3/00" -> "A61B3/00"
-        "a 61 b 3 / 00" -> "A61B3/00"
-    """
-    if ipc is None:
-        return ""
-    s = str(ipc).upper()
-    s = re.sub(r"\s+", "", s)  # remove all whitespace
-    # keep only plausible IPC characters
-    s = re.sub(r"[^A-Z0-9/]", "", s)
-    return s
-
-def extract_ipc_codes_from_text(text: str) -> list[str]:
-    """
-    OCR 텍스트에서 IPC 코드를 최대한 보수적으로 추출합니다.
-    - 예: "A61B 3/00", "A61B3/00" 모두 대응
-    """
-    # group: section(A-H) + class(2d) + subclass(1A-Z) + main/subgroup(d+/d+)
-    # OCR에서 중간중간 공백이 섞이는 경우가 많아 토큰 단위로 분리해서 잡습니다.
-    pattern = re.compile(
-        r"\b([A-H])\s*(\d{2})\s*([A-Z])\s*([0-9]{1,4})\s*/\s*([0-9]{1,4})\b"
-    )
-    seen = set()
-    out: list[str] = []
-    for m in pattern.finditer(text.upper()):
-        code = normalize_ipc_code(f"{m.group(1)}{m.group(2)}{m.group(3)}{m.group(4)}/{m.group(5)}")
-        if code and code not in seen:
-            seen.add(code)
-            out.append(code)
-    return out
-
-def _build_bayesian_prob_table(bayesian_df: pd.DataFrame) -> dict[str, list[tuple[str, float]]]:
-    """
-    bayesian_df columns expected:
-    - ipc_list: list[str] (or string repr of list)
-    - naic_list: list[str/int] (or string repr of list)
-    Returns: { ipc_code: [(naics_code, P(naics|ipc)), ...sorted desc...] }
-    """
-    from collections import Counter
-
-    pair_counts: Counter[tuple[str, str]] = Counter()
-    ipc_counts: Counter[str] = Counter()
-
-    for _, row in bayesian_df.iterrows():
-        ipc_list = row.get("ipc_list", [])
-        naic_list = row.get("naic_list", [])
-
-        if isinstance(ipc_list, str):
-            try:
-                ipc_list = ast.literal_eval(ipc_list)
-            except Exception:
-                ipc_list = []
-        if isinstance(naic_list, str):
-            try:
-                naic_list = ast.literal_eval(naic_list)
-            except Exception:
-                naic_list = []
-
-        # normalize
-        ipc_list = [normalize_ipc_code(x) for x in ipc_list if str(x).strip()]
-        naic_list = [str(x).strip().split(".")[0] for x in naic_list if str(x).strip()]
-
-        for ipc in ipc_list:
-            ipc_counts[ipc] += 1
-            for naic in naic_list:
-                pair_counts[(ipc, naic)] += 1
-
-    prob_table: dict[str, list[tuple[str, float]]] = {}
-    for (ipc, naic), cnt in pair_counts.items():
-        denom = ipc_counts.get(ipc, 0)
-        if denom <= 0:
-            continue
-        prob = cnt / denom
-        prob_table.setdefault(ipc, []).append((naic, prob))
-
-    for ipc in list(prob_table.keys()):
-        prob_table[ipc] = sorted(prob_table[ipc], key=lambda x: -x[1])
-
-    return prob_table
-
-def get_bayesian_prob_table(
-    bayesian_csv_path: str = None,
-) -> dict[str, list[tuple[str, float]]]:
-    global _BAYESIAN_PROB_TABLE
-    if _BAYESIAN_PROB_TABLE is not None:
-        return _BAYESIAN_PROB_TABLE
-
-    if bayesian_csv_path is None:
-        bayesian_csv_path = os.path.join(os.path.dirname(__file__), "data", "bayesian_df.csv")
-
-    bayesian_df = pd.read_csv(bayesian_csv_path)
-    _BAYESIAN_PROB_TABLE = _build_bayesian_prob_table(bayesian_df)
-    return _BAYESIAN_PROB_TABLE
-
-def recommend_naics_from_ipcs(
-    ipc_input: list[str],
-    prob_table: dict[str, list[tuple[str, float]]],
-    top_k: int = 15,
-) -> list[tuple[str, float]]:
-    from collections import Counter
-
-    scores: Counter[str] = Counter()
-    for ipc in ipc_input:
-        ipc_norm = normalize_ipc_code(ipc)
-        if ipc_norm in prob_table:
-            for naic, prob in prob_table[ipc_norm]:
-                scores[naic] += prob
-    return scores.most_common(top_k)
-
-def build_naics_candidates_from_bayesian(
-    patent_text: str,
-    naic_map: dict,
-    top_k: int = 15,
-    bayesian_csv_path: str = None,
-) -> list[dict]:
-    ipcs = extract_ipc_codes_from_text(patent_text)
-    if not ipcs:
-        return []
-
-    prob_table = get_bayesian_prob_table(bayesian_csv_path=bayesian_csv_path)
-    ranked = recommend_naics_from_ipcs(ipcs, prob_table=prob_table, top_k=top_k)
-
-    candidates: list[dict] = []
-    for code, score in ranked:
-        info = naic_map.get(str(code), {})
-        candidates.append(
-            {
-                "code": str(code),
-                "title": info.get("title"),
-                "desc": info.get("description"),
-                "score": float(score),
-            }
-        )
-    return candidates
-
 def build_naics_context_text(naics_candidates: list) -> str:
     naics_text = "\n".join(
         [
@@ -210,81 +144,9 @@ def build_naics_context_text(naics_candidates: list) -> str:
 
     return naics_text
 
-
-def parse_naics_codes_from_context_block(naics_context: str) -> list[str]:
-    """
-    build_naics_context_text()가 만든 블록에서 NAICS 코드만 순서대로 추출합니다.
-    (프롬프트의 NAICS CANDIDATES 섹션에 동일 문자열이 삽입됨)
-    """
-    codes: list[str] = []
-    for line in naics_context.splitlines():
-        s = line.strip()
-        if not s.startswith("-"):
-            continue
-        m = re.match(r"^\s*-\s*([0-9]+(?:\.[0-9]+)?)\s*:", s)
-        if m:
-            codes.append(m.group(1).split(".")[0])
-    return codes
-
-
-def verify_naics_candidates_vs_context(
-    naics_candidates: list,
-    naics_context: str,
-    log_path: Optional[str] = None,
-    candidate_source: Optional[str] = None,
-    candidate_source_detail: Optional[dict] = None,
-) -> dict:
-    """
-    naics_candidates 리스트와 naics_context(프롬프트에 들어가는 후보 블록)의 코드 목록이
-    동일한지 검증합니다. 터미널이 잘릴 수 있어 결과를 파일로도 남길 수 있습니다.
-
-    candidate_source:
-      - "bayesian_ipc": bayesian_df 기반 P(NAICS|IPC) 합산 후 상위 후보
-      - "embedding_pinecone": OCR 임베딩 + Pinecone 유사 벡터 검색 후보
-    """
-    from_candidates = [str(c["code"]).split(".")[0] for c in naics_candidates]
-    from_context = parse_naics_codes_from_context_block(naics_context)
-    ok = from_candidates == from_context
-
-    source_labels = {
-        "bayesian_ipc": {
-            "label_ko": "베이지안(IPC→NAICS, bayesian_df 공출현)",
-            "label_en": "Bayesian co-occurrence (IPC -> NAICS) from bayesian_df.csv",
-        },
-        "embedding_pinecone": {
-            "label_ko": "임베딩 비교(Pinecone 유사 벡터 검색)",
-            "label_en": "text-embedding-3-large + Pinecone vector similarity",
-        },
-    }
-
-    report = {
-        "ok": ok,
-        "candidate_source": candidate_source,
-        "candidate_source_labels": source_labels.get(candidate_source or "", {}),
-        "codes_from_candidates": from_candidates,
-        "codes_from_context_block": from_context,
-        "n_candidates": len(from_candidates),
-        "n_parsed": len(from_context),
-    }
-    if candidate_source_detail:
-        report["candidate_source_detail"] = candidate_source_detail
-    if not ok:
-        for i, (a, b) in enumerate(zip(from_candidates, from_context)):
-            if a != b:
-                report["first_mismatch_index"] = i
-                report["first_mismatch"] = {"candidate": a, "parsed_from_context": b}
-                break
-        else:
-            if len(from_candidates) != len(from_context):
-                report["reason"] = "length_mismatch"
-
-    if log_path:
-        with open(log_path, "w", encoding="utf-8") as f:
-            f.write(json.dumps(report, ensure_ascii=False, indent=2))
-
-    return report
-
 def extract_patent_metadata(text: str, naics_context: str):
+    text = _sanitize_ocr_text(text)
+
     prompt = f"""
 You are a patent classification and information extraction system.
 
@@ -441,9 +303,9 @@ OCR TEXT
 {text}
 """
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
+    request_kwargs = {
+        "model": "gpt-4o-mini",
+        "messages": [
             {
                 "role": "system",
                 "content": "You extract patent metadata and select the most appropriate NAICS codes from provided candidates."
@@ -453,36 +315,147 @@ OCR TEXT
                 "content": prompt
             },
         ],
-        temperature=0,
-        max_tokens=3000,
-    )
+        "temperature": 0,
+        "max_tokens": 3000,
+    }
 
-    content = response.choices[0].message.content.strip()
-    # JSON 안전 추출
-    start = content.find("{")
-    end = content.rfind("}") + 1
-    if start == -1 or end == -1:
-        raise ValueError("No valid JSON object found in model response")
+    try:
+        response = client.chat.completions.create(
+            **request_kwargs,
+            response_format={"type": "json_object"},
+        )
+    except Exception as e:
+        # Fallback for environments where json_object response_format is not accepted.
+        if "response_format" not in str(e):
+            raise
+        response = client.chat.completions.create(**request_kwargs)
 
-    return json.loads(content[start:end])
+    content = (response.choices[0].message.content or "").strip()
+    return _parse_metadata_json(content)
 
-def extract_patent_claims(text_front: str, text_back: str = None):
-    """
-    - 50페이지 미만: text_front 에 전체 OCR 텍스트 입력, text_back = None
-    - 53페이지 이상: text_front = 앞 3페이지 OCR
-                     text_back  = 뒤 50페이지 OCR
-    """
+_CLAIM_START_PATTERNS = [
+    (
+        "en_the_invention_claimed",
+        re.compile(r"\bthe\s+invention\s+claimed\s+is\s*[:;]?", re.IGNORECASE),
+    ),
+    (
+        "en_what_is_claimed",
+        re.compile(r"\bwhat\s+is\s+claimed\s+is\s*[:;]?", re.IGNORECASE),
+    ),
+    (
+        "ko_청구범위",
+        re.compile(r"청\s*구\s*범\s*위\s*[:：]?", re.IGNORECASE),
+    ),
+]
 
+_CLAIM_HEADING_WITH_NUMBER_PATTERN = re.compile(
+    r"(?is)\bclaims?\b\s*[:：]?\s*(?:\n|\r|\s){0,20}(?:\(?\d+\)?\s*[\.\)])"
+)
+_CLAIM_FOCUS_CONTEXT_BEFORE_CHARS = 1200
+_CLAIM_FOCUS_MAX_CHARS = 120000
+_CLAIM_PROMPT_MAX_CHARS = 42000
+_CLAIM_FRONT_PROMPT_MAX_CHARS = 18000
+_CLAIM_FOCUS_PROMPT_MAX_CHARS = 28000
+_CLAIM_FOCUS_BLOCK_MAX_CHARS = 12000
+
+
+def _build_combined_claim_text(text_front: str, text_back: str | None = None) -> str:
     if text_back:
-        combined_text = f"""
+        return f"""
         [FRONT_PART_OCR]
         {text_front}
 
         [BACK_PART_OCR]
         {text_back}
         """
-    else:
-        combined_text = text_front
+    return text_front
+
+
+def _find_claim_start_hint(text: str):
+    source = text or ""
+    for hint_name, pattern in _CLAIM_START_PATTERNS:
+        m = pattern.search(source)
+        if m:
+            return {
+                "hint_name": hint_name,
+                "matched_text": m.group(0).strip(),
+                "start_idx": m.start(),
+            }
+
+    fallback = _CLAIM_HEADING_WITH_NUMBER_PATTERN.search(source)
+    if fallback:
+        return {
+            "hint_name": "heading_claims_with_number",
+            "matched_text": fallback.group(0).strip(),
+            "start_idx": fallback.start(),
+        }
+
+    return None
+
+
+def _build_claim_focus_text(text: str, start_idx: int) -> str:
+    begin = max(0, start_idx - _CLAIM_FOCUS_CONTEXT_BEFORE_CHARS)
+    focused = (text or "")[begin:]
+    if len(focused) > _CLAIM_FOCUS_MAX_CHARS:
+        focused = focused[:_CLAIM_FOCUS_MAX_CHARS]
+    return focused
+
+
+def _build_claim_prompt_text(
+    combined_text: str,
+    text_front: str,
+    claim_focus_text: str | None,
+) -> str:
+    """
+    Claim 추출 프롬프트의 OCR 입력 길이를 제한해 context overflow를 방지합니다.
+    """
+    if claim_focus_text:
+        front_part = (text_front or "")[:_CLAIM_FRONT_PROMPT_MAX_CHARS]
+        focus_part = claim_focus_text[:_CLAIM_FOCUS_PROMPT_MAX_CHARS]
+        return f"""
+        [FRONT_PART_OCR]
+        {front_part}
+
+        [CLAIM_SECTION_CANDIDATE]
+        {focus_part}
+        """
+
+    source = (combined_text or "").strip()
+    if len(source) > _CLAIM_PROMPT_MAX_CHARS:
+        source = source[:_CLAIM_PROMPT_MAX_CHARS]
+    return source
+
+
+def _request_patent_claims(
+    combined_text: str,
+    claim_start_hint: dict | None = None,
+    claim_focus_text: str | None = None,
+):
+    hint_block = ""
+    if claim_start_hint:
+        hint_block = f"""
+----------------------------------------
+CLAIM START HINT (REGEX PRE-DETECTED)
+----------------------------------------
+- start_found: true
+- hint_name: {claim_start_hint.get("hint_name")}
+- matched_text: {claim_start_hint.get("matched_text")}
+- start_idx: {claim_start_hint.get("start_idx")}
+
+IMPORTANT:
+- A regex-based pre-detector already found this claim-start indicator.
+- You MUST use this location as the primary anchor when locating the claim section.
+"""
+
+    focus_block = ""
+    if claim_focus_text:
+        compact_focus = claim_focus_text[:_CLAIM_FOCUS_BLOCK_MAX_CHARS]
+        focus_block = f"""
+----------------------------------------
+CLAIM-FOCUSED OCR WINDOW (FROM START HINT)
+----------------------------------------
+{compact_focus}
+"""
 
     prompt = f"""
 You are a patent claim extraction and structural analysis system.
@@ -676,11 +649,12 @@ Return EXACTLY:
   "ipc_count": 0,
   "forward_citation_count": 0
 }}
-
+{hint_block}
 ----------------------------------------
 OCR TEXT
 ----------------------------------------
 {combined_text}
+{focus_block}
 """
 
     response = client.chat.completions.create(
@@ -696,7 +670,7 @@ OCR TEXT
             },
         ],
         temperature=0,
-        max_tokens=10000,
+        max_tokens=2500,
     )
 
     content = response.choices[0].message.content.strip()
@@ -707,6 +681,53 @@ OCR TEXT
     json_str = match.group(0)
     return json.loads(json_str)
 
+
+def extract_patent_claims(text_front: str, text_back: str = None):
+    """
+    - 50페이지 미만: text_front 에 전체 OCR 텍스트 입력, text_back = None
+    - 53페이지 이상: text_front = 앞 3페이지 OCR
+                     text_back  = 뒤 50페이지 OCR
+    """
+
+    combined_text = _build_combined_claim_text(text_front, text_back)
+    claim_start_hint = _find_claim_start_hint(combined_text)
+    claim_focus_text = None
+    if claim_start_hint:
+        claim_focus_text = _build_claim_focus_text(
+            combined_text,
+            claim_start_hint["start_idx"],
+        )
+    prompt_ocr_text = _build_claim_prompt_text(
+        combined_text=combined_text,
+        text_front=text_front,
+        claim_focus_text=claim_focus_text,
+    )
+
+    result = _request_patent_claims(
+        combined_text=prompt_ocr_text,
+        claim_start_hint=claim_start_hint,
+        claim_focus_text=claim_focus_text,
+    )
+
+    # 1차에서 claims_not_found가 나와도, 실제 시작 힌트가 있다면 claim window만으로 재시도.
+    if (
+        isinstance(result, dict)
+        and result.get("error") == "claims_not_found"
+        and claim_start_hint
+        and claim_focus_text
+    ):
+        focused_combined_text = f"""
+        [CLAIM_SECTION_CANDIDATE]
+        {claim_focus_text[:_CLAIM_FOCUS_PROMPT_MAX_CHARS]}
+        """
+        return _request_patent_claims(
+            combined_text=focused_combined_text,
+            claim_start_hint=claim_start_hint,
+            claim_focus_text=claim_focus_text,
+        )
+
+    return result
+
 def run_NAIC_extract(
     naic_df,
     user_id,
@@ -715,10 +736,36 @@ def run_NAIC_extract(
 ):
     results = []
     claims = None
-    patent_meta = None
 
     # ---------------------------------
-    # 0. NAICS 코드 매핑 (후보 생성에도 사용)
+    # 1. NAICS / Metadata (기존 구조 유지)
+    # ---------------------------------
+    patent_text = _sanitize_ocr_text(user_ocr)  # front OCR만 사용
+    if not patent_text:
+        return [], {"error": "metadata_extraction_failed"}
+
+    query_vector = embed_patent_text(patent_text)
+
+    naics_candidates = retrieve_top_naics(query_vector, top_k=15)
+    naics_context = build_naics_context_text(naics_candidates)
+
+    try:
+        patent_meta = extract_patent_metadata(
+            text=patent_text,
+            naics_context=naics_context
+        )
+        if isinstance(patent_meta, str):
+            patent_meta = json.loads(patent_meta)
+            
+        if isinstance(patent_meta, dict) and "error" in patent_meta:
+            return [], patent_meta
+
+    except Exception as e:
+        print(f"[METADATA EXTRACTION ERROR] type={type(e).__name__} detail={e}")
+        return [], {"error": "metadata_extraction_failed"}
+
+    # ---------------------------------
+    # 2. NAICS 코드 매핑
     # ---------------------------------
     naic_map = {
         str(code): {
@@ -732,137 +779,60 @@ def run_NAIC_extract(
         )
     }
 
-    # ---------------------------------
-    # 1. NAICS / Metadata (기존 구조 유지)
-    # ---------------------------------
-    patent_text = user_ocr  # front OCR만 사용
-
-    # 후보 생성: 베이지안 기반 (IPC -> NAICS)
-    naics_candidates = build_naics_candidates_from_bayesian(
-        patent_text=patent_text,
-        naic_map=naic_map,
-        top_k=15,
-    )
-    naics_candidate_source = "bayesian_ipc"
-    verify_detail: dict = {
-        "bayesian_attempted": True,
-        "ipc_codes_used_for_bayesian": extract_ipc_codes_from_text(patent_text),
+    result_item = {
+        "pdf_name": user_id,
+        **patent_meta
     }
 
-    # IPC 추출 실패 등으로 후보가 없으면 기존 임베딩/Pinecone 방식으로 fallback
-    if not naics_candidates:
-        verify_detail["bayesian_yielded_candidates"] = False
-        verify_detail["fallback_reason"] = (
-            "no_ipc_extracted_from_ocr_or_no_hits_in_prob_table"
-            if not verify_detail["ipc_codes_used_for_bayesian"]
-            else "bayesian_ranking_empty"
-        )
-        query_vector = embed_patent_text(patent_text)
-        naics_candidates = retrieve_top_naics(query_vector, top_k=15)
-        naics_candidate_source = "embedding_pinecone"
-        verify_detail["embedding_model"] = "text-embedding-3-large"
-        verify_detail["pinecone_index"] = INDEX_NAME
-    else:
-        verify_detail["bayesian_yielded_candidates"] = True
+    # ---------------------------------
+    # 3. NAICS fallback 처리
+    # ---------------------------------
+    codes = result_item.get("naics_code", [])
 
-    naics_context = build_naics_context_text(naics_candidates)
+    if not codes and naics_candidates:
+        fallback_code = str(naics_candidates[0]["code"])
+        codes = [fallback_code]
+        result_item["naics_code"] = codes
 
-    if naics_candidates:
-        verify_path = os.path.join(os.path.dirname(__file__), "naics_candidate_verify.json")
-        vrep = verify_naics_candidates_vs_context(
-            naics_candidates,
-            naics_context,
-            log_path=verify_path,
-            candidate_source=naics_candidate_source,
-            candidate_source_detail=verify_detail,
-        )
-        if vrep["ok"]:
-            print(
-                f"[NAICS verify] OK: {vrep['n_candidates']} codes "
-                f"({naics_candidate_source}) — "
-                f"prompt NAICS block matches candidates (log: {verify_path})",
-                flush=True,
-            )
-        else:
-            print(
-                f"[NAICS verify] FAIL ({naics_candidate_source}): "
-                f"prompt block != candidates — see {verify_path}",
-                flush=True,
-            )
+    primary_code = codes[0] if codes else None
+    candidate_codes = codes[1:] if len(codes) > 1 else []
 
-    try:
-        patent_meta = extract_patent_metadata(
-            text=patent_text,
-            naics_context=naics_context
-        )
-        if isinstance(patent_meta, str):
-            patent_meta = json.loads(patent_meta)
-    except Exception:
-        # return [], {"error": "metadata_extraction_failed"}
-        results = []
-        claims = {"error": "metadata_extraction_failed"}
-        patent_meta = None
-
-    if patent_meta is not None and isinstance(patent_meta, dict) and "error" in patent_meta:
-        # return [], patent_meta
-        results = []
-        claims = patent_meta
-        patent_meta = None
-
-    if patent_meta is not None:
-        result_item = {
-            "pdf_name": user_id,
-            **patent_meta
+    result_item["primary_naic_info"] = (
+        {
+            "code": str(primary_code),
+            "title": naic_map.get(str(primary_code), {}).get("title"),
+            "description": naic_map.get(str(primary_code), {}).get("description")
         }
+        if primary_code else None
+    )
 
-        # ---------------------------------
-        # 3. NAICS fallback 처리
-        # ---------------------------------
-        codes = result_item.get("naics_code", [])
+    result_item["candidate_naic_info"] = [
+        {
+            "code": str(code),
+            "title": naic_map.get(str(code), {}).get("title"),
+            "description": naic_map.get(str(code), {}).get("description")
+        }
+        for code in candidate_codes
+    ]
 
-        if not codes and naics_candidates:
-            fallback_code = str(naics_candidates[0]["code"])
-            codes = [fallback_code]
-            result_item["naics_code"] = codes
+    results.append(result_item)
 
-        primary_code = codes[0] if codes else None
-        candidate_codes = codes[1:] if len(codes) > 1 else []
-
-        result_item["primary_naic_info"] = (
-            {
-                "code": str(primary_code),
-                "title": naic_map.get(str(primary_code), {}).get("title"),
-                "description": naic_map.get(str(primary_code), {}).get("description")
-            }
-            if primary_code else None
+    # ---------------------------------
+    # 4. Claim 추출 (별도 반환)
+    # ---------------------------------
+    try:
+        claims = extract_patent_claims(
+            text_front=user_ocr,
+            text_back=back_ocr
         )
-
-        result_item["candidate_naic_info"] = [
-            {
-                "code": str(code),
-                "title": naic_map.get(str(code), {}).get("title"),
-                "description": naic_map.get(str(code), {}).get("description")
-            }
-            for code in candidate_codes
-        ]
-
-        results.append(result_item)
-
-        # ---------------------------------
-        # 4. Claim 추출 (별도 반환)
-        # ---------------------------------
-        try:
-            claims = extract_patent_claims(
-                text_front=user_ocr,
-                text_back=back_ocr
-            )
-            if isinstance(claims, str):
-                claims = json.loads(claims)
-        except Exception:
-            # return results, {"error": "claim_extraction_failed"}
-            claims = {"error": "claim_extraction_failed"}
-
-        # if isinstance(claims, dict) and "error" in claims:
-        #     return results, claims
+        if isinstance(claims, str):
+            claims = json.loads(claims)
+        
+        if isinstance(claims, dict) and "error" in claims:
+            return results, claims
+        
+    except Exception as e:
+        print(f"[CLAIM EXTRACTION ERROR] {e}")
+        return results, {"error": "claim_extraction_failed"}
 
     return results, claims
