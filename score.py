@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import ast
 import json
+import re
 
 from dotenv import load_dotenv
 from openai import OpenAI 
@@ -16,38 +17,94 @@ def get_field(field_scores, user_field):
     if field_score is None:
         raise ValueError(f"Unknown field: {user_field}")
 
+    metrics_flat = [
+        {
+            "metric_key": k,
+            "value": field_score[k],
+            "definition": {
+                "recent_growth": "최근 5개년 기준 산출된 분야 M&A 성장률(입력값)",
+                "recovery_ratio": "과거 최저점 대비 회복 수준(입력값)",
+                "recent_trend_slope": "최근 추세의 연간 기울기(입력값)",
+                "final_score": "성장성과 회복성을 가중 결합한 분야 종합 지표(입력값)",
+            }.get(k, ""),
+        }
+        for k in ("recent_growth", "recovery_ratio", "recent_trend_slope", "final_score")
+        if k in field_score
+    ]
+
     llm_payload = {
-        "field": user_field,
+        "field_code": user_field,
         "trend_metrics": field_score,
+        "metrics_flat": metrics_flat,
         "field_metric_definition": {
-            "recent_growth": "최근 N년간 M&A 성장률",
+            "recent_growth": "최근 5개년간 M&A 성장률(분야 집계 입력값)",
             "recovery_ratio": "과거 최저점 대비 회복 수준",
             "recent_trend_slope": "최근 추세의 연간 기울기",
-            "final_score": "성장성과 회복성을 가중 결합한 종합 점수"
-        }
+            "final_score": "성장성과 회복성을 가중 결합한 종합 점수",
+        },
     }
 
-    # print("payload>>>>", llm_payload)
-
     return llm_payload
+
+def _acquiror_naics_concentration(df_slice: pd.DataFrame, acq_col: str = "Acquiror Primary NAIC Code 2022") -> dict:
+    """피인수 동일 NAICS 거래 집합에서 인수자 NAICS 분포의 산업집중도(HHI 등)."""
+    if df_slice is None or len(df_slice) == 0:
+        return {
+            "hhi_acquiror_naics": None,
+            "top3_acquiror_share": None,
+            "n_distinct_acquiror_naics": 0,
+        }
+    s = (
+        df_slice[acq_col]
+        .dropna()
+        .astype(str)
+        .str.split(",")
+        .explode()
+        .str.strip()
+    )
+    s = s[(s != "") & (s != "-")]
+    if len(s) == 0:
+        return {
+            "hhi_acquiror_naics": None,
+            "top3_acquiror_share": None,
+            "n_distinct_acquiror_naics": 0,
+        }
+    counts = s.value_counts()
+    sh = counts / counts.sum()
+    hhi = float((sh ** 2).sum())
+    top3 = float(sh.head(3).sum()) if len(sh) >= 1 else 0.0
+    return {
+        "hhi_acquiror_naics": round(hhi, 5),
+        "top3_acquiror_share": round(top3, 4),
+        "n_distinct_acquiror_naics": int(len(counts)),
+    }
+
 
 def get_naics_trend_payload(
     acquisitions_df,
     user_code,
-    start_year=2020,
-    end_year=2025,
+    n_years: int = 5,
+    end_year: int | None = None,
     year_col="Year",
     tgt_col="Target Primary NAIC Code 2022",
-    acq_col="Acquiror Primary NAIC Code 2022"
+    acq_col="Acquiror Primary NAIC Code 2022",
 ):
-
+    """
+    수정요구: 3개년 → 5개년 동향. end_year 미지정 시 데이터 최대 연도 사용.
+    요약: 전체 건수, 연도별 최저·최고 A, 2년 전 A 등.
+    """
     user_code = str(user_code)
     user_prefix = user_code[:4]
-    years = list(range(start_year, end_year + 1))
+
+    if end_year is None:
+        y = pd.to_numeric(acquisitions_df[year_col], errors="coerce").dropna()
+        end_year = int(y.max()) if len(y) else 2025
+    start_year = int(end_year) - int(n_years) + 1
+    years = list(range(start_year, int(end_year) + 1))
 
     df_tgt = acquisitions_df[
-        acquisitions_df[tgt_col].astype(str).eq(user_code) &
-        acquisitions_df[year_col].isin(years)
+        acquisitions_df[tgt_col].astype(str).eq(user_code)
+        & acquisitions_df[year_col].isin(years)
     ].copy()
 
     df_tgt["is_internal"] = (
@@ -58,18 +115,17 @@ def get_naics_trend_payload(
     )
 
     result = (
-        df_tgt
-        .groupby(year_col)
+        df_tgt.groupby(year_col)
         .agg(
             A_target_cnt=(tgt_col, "count"),
-            B_internal_cnt=("is_internal", "sum")
+            B_internal_cnt=("is_internal", "sum"),
         )
         .reset_index()
     )
 
     result["B_ratio"] = (
-        result["B_internal_cnt"] / result["A_target_cnt"]
-    ).round(3)
+        result["B_internal_cnt"] / result["A_target_cnt"].replace(0, np.nan)
+    ).fillna(0).round(3)
 
     result = (
         pd.DataFrame({year_col: years})
@@ -77,25 +133,81 @@ def get_naics_trend_payload(
         .fillna(0)
     )
 
+    a_series = result["A_target_cnt"].astype(float)
+    total_a = int(a_series.sum())
+    min_idx = int(a_series.idxmin()) if len(a_series) else None
+    max_idx = int(a_series.idxmax()) if len(a_series) else None
+    min_year = int(result.loc[min_idx, year_col]) if min_idx is not None and min_idx >= 0 else None
+    max_year = int(result.loc[max_idx, year_col]) if max_idx is not None and max_idx >= 0 else None
+    two_years_ago = int(end_year) - 2
+    row_2ya = result[result[year_col] == two_years_ago]
+    a_two_years_ago = int(row_2ya["A_target_cnt"].iloc[0]) if len(row_2ya) else 0
+
+    conc = _acquiror_naics_concentration(df_tgt.drop(columns=["is_internal"], errors="ignore"))
+
     payload = {
         "naics_code": user_code,
+        "window_years": n_years,
+        "year_range": {"start": start_year, "end": int(end_year)},
         "naics_trend_metric_definition": {
             "A_target_cnt": "연도별 Target NAICS 기업 M&A 건수",
             "B_internal_cnt": "동종 산업군 인수자의 인수 건수",
-            "B_ratio": "동종 산업 내부 인수 비중 (B/A)"
+            "B_ratio": "동종 산업 내부 인수 비중 (B/A)",
         },
         "time_series": [
             {
                 "year": int(row[year_col]),
                 "A": int(row["A_target_cnt"]),
                 "B": int(row["B_internal_cnt"]),
-                "B_ratio": round(float(row["B_ratio"]), 3)
+                "B_ratio": round(float(row["B_ratio"]), 3),
             }
             for _, row in result.iterrows()
-        ]
+        ],
+        "trend_summary": {
+            "total_A_target_cnt_window": total_a,
+            "min_A": int(a_series.min()) if len(a_series) else 0,
+            "min_A_year": min_year,
+            "max_A": int(a_series.max()) if len(a_series) else 0,
+            "max_A_year": max_year,
+            "A_target_cnt_two_years_ago": a_two_years_ago,
+            "two_years_ago_label_year": two_years_ago,
+        },
+        "industry_concentration_acquiror_naics": conc,
     }
 
     return payload
+
+def _crossborder_counts_by_year(df: pd.DataFrame, user_prefer: str, year_col: str = "Year") -> dict:
+    """수정요구: M&A cross border 년 단위 건수 (국경/지역 플래그 기준)."""
+    if df is None or len(df) == 0:
+        return {}
+    flag = "Cross_Border_Deal_Flag_Nation" if user_prefer == "nation" else "Cross_Border_Deal_Flag_Area"
+    if flag not in df.columns:
+        return {}
+    m = df[df[flag].fillna(0).astype(int) == 1]
+    if len(m) == 0:
+        return {}
+    g = m.groupby(year_col).size()
+    return {str(int(k)): int(v) for k, v in g.items()}
+
+
+def _filter_hightech_categories_remove_other(categories) -> list:
+    """수정요구: High-Tech 'Other(s)' 계열 제거 — 모델이 잘못 매칭하는 것을 줄임."""
+    if not isinstance(categories, list):
+        return []
+    out = []
+    for c in categories:
+        s = str(c).strip()
+        if not s:
+            continue
+        low = s.lower()
+        if low == "others" or low == "other":
+            continue
+        if re.match(r"^other\b", low):
+            continue
+        out.append(c)
+    return out
+
 
 def get_hightech(user_title, user_abstract, hightech_list):
 
@@ -116,7 +228,7 @@ def get_hightech(user_title, user_abstract, hightech_list):
             "abstract": user_abstract
         },
 
-        "hightech_categories": hightech_list,
+        "hightech_categories": _filter_hightech_categories_remove_other(hightech_list),
 
         "output_schema": {
             "is_hightech": {
@@ -156,26 +268,31 @@ def analyze_user_preference_ma( # 여기에서의 df는 사용자 코드에 대�
         raise ValueError("입력 df에 데이터가 없습니다.")
 
     if user_prefer == "nation":
-        cross_border_cnt = df["Cross_Border_Deal_Flag_Nation"].sum()
+        flag_series = df["Cross_Border_Deal_Flag_Nation"].fillna(0).astype(int) == 1
+        cross_border_cnt = int(flag_series.sum())
     elif user_prefer == "area":
-        cross_border_cnt = df["Cross_Border_Deal_Flag_Area"].sum()
+        flag_series = df["Cross_Border_Deal_Flag_Area"].fillna(0).astype(int) == 1
+        cross_border_cnt = int(flag_series.sum())
     else:
         raise ValueError("user_prefer는 'nation' 또는 'area'여야 합니다.")
 
     cross_border_majority = cross_border_cnt / total_cnt > 0.5
 
+    # 수정요구: inbound/outbound는 국경·지역 간 거래(플래그=1) 부분집합에서만 집계
     if user_prefer == "nation":
         if user_prefer_nation is None:
             raise ValueError("user_prefer_nation이 필요합니다.")
 
         outbound_cnt = (
-            (df["Acquiror Nation"] == user_prefer_nation) &
-            (df["Target Nation"] != user_prefer_nation)
+            flag_series
+            & (df["Acquiror Nation"] == user_prefer_nation)
+            & (df["Target Nation"] != user_prefer_nation)
         ).sum()
 
         inbound_cnt = (
-            (df["Acquiror Nation"] != user_prefer_nation) &
-            (df["Target Nation"] == user_prefer_nation)
+            flag_series
+            & (df["Acquiror Nation"] != user_prefer_nation)
+            & (df["Target Nation"] == user_prefer_nation)
         ).sum()
 
     else:  # area
@@ -183,13 +300,15 @@ def analyze_user_preference_ma( # 여기에서의 df는 사용자 코드에 대�
             raise ValueError("user_prefer_area가 필요합니다.")
 
         outbound_cnt = (
-            (df["Acquiror Primary Nation Region"] == user_prefer_area) &
-            (df["Target Primary Nation Region"] != user_prefer_area)
+            flag_series
+            & (df["Acquiror Primary Nation Region"] == user_prefer_area)
+            & (df["Target Primary Nation Region"] != user_prefer_area)
         ).sum()
 
         inbound_cnt = (
-            (df["Acquiror Primary Nation Region"] != user_prefer_area) &
-            (df["Target Primary Nation Region"] == user_prefer_area)
+            flag_series
+            & (df["Acquiror Primary Nation Region"] != user_prefer_area)
+            & (df["Target Primary Nation Region"] == user_prefer_area)
         ).sum()
 
     if outbound_cnt > inbound_cnt:
@@ -239,13 +358,15 @@ def get_crossborder(
             ),
 
             "outbound_cnt": (
+                "Cross_Border_Deal_Flag가 1인 거래만 대상으로, "
                 "사용자 선호 국가/지역이 인수자(Acquiror)인 cross-border 거래 건수 "
-                "(기술·자본 유출)"
+                "(선호지가 비선호지 기업을 인수 → 유출)"
             ),
 
             "inbound_cnt": (
+                "Cross_Border_Deal_Flag가 1인 거래만 대상으로, "
                 "사용자 선호 국가/지역이 피인수자(Target)인 cross-border 거래 건수 "
-                "(기술·자본 유입)"
+                "(비선호지가 선호지 기업을 인수 → 유입)"
             ),
 
             "direction": (
@@ -265,7 +386,8 @@ def get_crossborder(
             "outbound_cnt": int(crossborder_result["outbound_cnt"]),
             "inbound_cnt": int(crossborder_result["inbound_cnt"]),
             "direction": crossborder_result["direction"],
-            "prefer_acquiror_ratio": float(crossborder_result["prefer_acquiror_ratio"])
+            "prefer_acquiror_ratio": float(crossborder_result["prefer_acquiror_ratio"]),
+            "crossborder_deal_count_by_year": crossborder_result.get("crossborder_deal_count_by_year") or {},
         }
     }
 
@@ -299,6 +421,7 @@ def get_MAtype(
     stake_single_target_cnt = int((stake_target_counts == 1).sum())
     stake_multi_target_cnt = int((stake_target_counts >= 2).sum())
     full_acquisition_cnt = int(len(full_df))
+    stake_total = int(len(stake_df))
 
     payload = {
         "naics_code": str(user_code),
@@ -318,14 +441,25 @@ def get_MAtype(
                 "주식 전체 인수(Full Acquisition) 건수 "
                 "(기술·시장 즉시 확보 목적)"
             ),
-            "total_deals": "해당 NAICS 코드의 전체 M&A 건수"
+            "total_deals": "해당 NAICS 코드의 전체 M&A 건수",
+            "stake_multi_over_stake_ratio": (
+                "Stake 거래 중 동일 타깃 다회(멀티) 비중 = stake_multi_target_cnt / max(1, stake 총건)"
+            ),
+            "full_over_all_ratio": (
+                "전체 거래 대비 Full 인수 비중 = full_acquisition_cnt / total_deals"
+            ),
         },
 
         "ma_type_metrics": {
             "total_deals": total_deals,
             "stake_single_target_cnt": stake_single_target_cnt,
             "stake_multi_target_cnt": stake_multi_target_cnt,
-            "full_acquisition_cnt": full_acquisition_cnt
+            "full_acquisition_cnt": full_acquisition_cnt,
+            "stake_deals_overall": stake_total,
+            "stake_multi_over_stake_ratio": round(
+                stake_multi_target_cnt / max(1, stake_total), 4
+            ),
+            "full_over_all_ratio": round(full_acquisition_cnt / max(1, total_deals), 4),
         }
     }
 
@@ -348,10 +482,11 @@ def get_one_prompt(
     user_abstract = user_info.get("abstract")
     user_field = user_info.get("field")
 
-    if user_nation == "KR":
-        user_prefer_nation = "South Korea"
-    else:
-        user_prefer_nation = "United States"
+    if user_prefer == "nation" and user_prefer_nation is None:
+        if user_nation == "KR":
+            user_prefer_nation = "South Korea"
+        else:
+            user_prefer_nation = "United States"
         
     # NAICS는 리스트 구조
     user_code = user_info.get("primary_naic_info", {}).get("code")
@@ -382,6 +517,9 @@ def get_one_prompt(
         user_prefer_nation=user_prefer_nation,
         user_prefer_area=user_prefer_area
     )
+    crossborder_result["crossborder_deal_count_by_year"] = _crossborder_counts_by_year(
+        df_tgt, user_prefer
+    )
 
     crossborder_payload = get_crossborder(
         naics_code=user_code,
@@ -403,75 +541,320 @@ def get_one_prompt(
         "ma_type_analysis": ma_type_payload
     }
 
-def build_ma_prompt(payload):
-    # print(">>>>>> ma 추론 시 활용하는 payload 전문", payload)
+def _compute_ma_attractiveness_anchor_detail(payload: dict) -> dict:
+    """
+    M&A 매력도 앵커(정량 근거 0~50): 사용자용 한 줄 + 내부용 근거 줄.
+    LLM 4관점 합산과 별도 파이프라인으로 유지한다.
+    """
+    try:
+        fa = payload.get("field_analysis") or {}
+        tm = fa.get("trend_metrics") or {}
+        fs = float(tm.get("final_score", 0.0))
+        part_field = min(22.0, max(0.0, fs * 22.0))
+
+        tr = payload.get("naics_trend") or {}
+        ts = tr.get("time_series") or []
+        last_br = [float(r.get("B_ratio", 0.0)) for r in ts[-3:] if isinstance(r, dict)]
+        mean_br = sum(last_br) / max(1, len(last_br))
+        part_naics = min(16.0, max(0.0, mean_br * 16.0))
+
+        cb = (payload.get("crossborder_analysis") or {}).get("crossborder_metrics") or {}
+        cbr = float(cb.get("cross_border_ratio", 0.0))
+        part_cb = min(12.0, max(0.0, cbr * 12.0))
+
+        mt = (payload.get("ma_type_analysis") or {}).get("ma_type_metrics") or {}
+        tot = int(mt.get("total_deals") or 0)
+        full = int(mt.get("full_acquisition_cnt") or 0)
+        full_ratio = full / max(1, tot)
+        part_ma = min(10.0, max(0.0, full_ratio * 10.0))
+
+        score = int(round(part_field + part_naics + part_cb + part_ma))
+        score = max(0, min(50, score))
+
+        lines = [
+            f"분야 M&A 종합(final_score×22, 캡22) : ({fs:.4f}) -> (기여 {part_field:.2f}점)",
+            f"최근 3년 평균 동종 인수비중 B_ratio×16, 캡16 : ({mean_br:.4f}) -> (기여 {part_naics:.2f}점)",
+            f"국경간 거래비중×12, 캡12 : ({cbr:.4f}) -> (기여 {part_cb:.2f}점)",
+            f"완전인수 비율 full/total×10, 캡10 : (full={full}, total={tot}, 비율={full_ratio:.4f}) -> (기여 {part_ma:.2f}점)",
+        ]
+        anchor_reason = "\n".join(lines)
+        ma_market_anchor_evaluation = (
+            f"정량 앵커는 분야 동향·NAICS 동종 비중·국경간 개방성·완전 인수 비율을 반영해 {score}점"
+            f"(50점 만점)으로 산출되었습니다. 이 값은 LLM 네 관점 합산 점수와 가중 블렌딩되어 최종 시장 매력도에 반영됩니다."
+        )
+        return {
+            "ma_anchor_score": score,
+            "anchor_reason": anchor_reason,
+            "ma_market_anchor_evaluation": ma_market_anchor_evaluation,
+        }
+    except Exception:
+        return {
+            "ma_anchor_score": 25,
+            "anchor_reason": "앵커 산출 중 예외로 기본값 25점 적용됨.",
+            "ma_market_anchor_evaluation": "정량 앵커는 기본값으로 처리되었습니다.",
+        }
+
+
+def _compute_ma_attractiveness_anchor(payload: dict) -> int:
+    """앵커 점수만 필요할 때."""
+    return int(_compute_ma_attractiveness_anchor_detail(payload)["ma_anchor_score"])
+
+
+def _ma_segment_json_schema(max_segment_score: int) -> str:
     return f"""
-당신은 기술·산업·M&A 분석을 통해 해당 기술의 M&A 시장 매력도를 산출하는 에이전트입니다.
-
-아래 JSON 데이터는 특정 특허와 해당 산업의
-기술적 특성, M&A 동향, 국경 간 거래 구조, 인수 전략 유형을 포함합니다.
-
-[입력 데이터]
-{json.dumps(payload, ensure_ascii=False, indent=2)}
-
-[판단 기준 가이드]
-- M&A 매력도는 다음 요소를 종합적으로 고려하여 판단하십시오.
-  1. 산업의 최근 M&A 성장성 및 회복성
-  2. 국경 간 M&A 구조의 개방성 및 확장성
-  3. 인수 전략 유형(지분 인수 vs 전체 인수)의 전략적 의미
-  4. 기술의 High-Tech 여부 및 기술적 파급력
-
-- "높음":
-  성장성 또는 회복성이 명확하고 전략적 인수가 활발한 경우
-- "중간":
-  긍정적 신호와 부정적 신호가 혼재된 경우
-- "낮음":
-  산업 확장성 또는 전략적 매력도가 낮은 경우
-
-[출력 형식]
-아래 JSON 형식으로만 답변하십시오.
+반드시 아래 JSON만 출력하십시오.
 
 {{
-  "ma_attractiveness_score": 0,
+  "segment_score": 0,
   "metric_evaluations": [
-    {{
-      "metric_name": "예: 최근 성장률 (recent_growth)",
-      "data_basis": "입력 JSON에서 인용한 원시 값·문자열 (가공·재계산 금지)",
-      "interpretation": "그 수치를 M&A 매력도 관점에서 해석한 한 줄"
-    }}
+    {{"metric_name": "...", "data_basis": "입력 JSON의 원시 값", "interpretation": "..."}}
   ],
-  "evaluation_summary": "전체 판단을 4~7문장으로 보강 요약 (비전문가용, 문장체)",
-  "analysis_reasoning": [
-    "내부용 판단 근거 1 (~임./~함. 종결)",
-    "내부용 판단 근거 2",
-    "내부용 판단 근거 3 (선택, 최대 3개)"
-  ]
+  "evaluation_paragraphs": [
+    "사용자용 첫 번째 단락 (2~3문장, ~습니다체, 비전문가용, 이번 관점만)",
+    "사용자용 두 번째 단락 (2~3문장)",
+    "사용자용 세 번째 단락 (2~3문장)"
+  ],
+  "analysis_reasoning": ["내부용 ~임./~함. 종결 문장 1~2개"]
 }}
 
-[metric_evaluations 작성 규칙 — 검증 가능하도록]
-- 각 원소는 반드시 "metric_name", "data_basis", "interpretation" 키를 가진다.
-- **data_basis**에는 반드시 [입력 데이터] JSON에 **실제로 존재하는 수치·문자열을 그대로 또는 그대로 인용 가능한 형태로** 적는다.
-  · 임의로 반올림·단위만 바꿔 숫자를 바꾸지 말 것. (예: recent_growth가 0.278이면 data_basis에 0.278 또는 동일 값의 퍼센트 표기만 허용)
-- **interpretation**에는 그 data_basis가 M&A 매력도(성장·회복·국경간·인수유형·하이테크 등)에 어떤 의미인지 짧게 쓴다.
-- **반드시 포함할 항목** (각각 별도 배열 원소로 작성):
-  1) field_analysis.trend_metrics의 **recent_growth** — metric_name에 "최근 성장률" 포함
-  2) field_analysis.trend_metrics의 **recovery_ratio** — metric_name에 "회복 비율" 또는 "회복 정도" 포함
-  3) field_analysis.trend_metrics의 **recent_trend_slope**
-  4) field_analysis.trend_metrics의 **final_score** (분야 M&A 동향 종합)
-  5) naics_trend.time_series에서 **최근 연도 1~2개**의 A(건수)·B_ratio 등 핵심 수치 인용 1~2행
-  6) crossborder_analysis.crossborder_metrics의 **total_deals, cross_border_ratio, direction** 중 최소 2개 수치·값을 data_basis에 명시하는 행 1개 이상
-  7) ma_type_analysis.ma_type_metrics가 비어 있지 않으면 **stake·full 인수 건수** 관련 1행
-  8) 특허와 hightech_categories 관련 **High-Tech 해당 여부** 1행 (data_basis에 판단 근거로 든 입력 요약)
-- 위 항목을 누락하지 말 것. 입력에 해당 블록이 없거나 값이 비어 있으면 data_basis에 "입력 데이터 없음"이라고 적고 interpretation에 그에 따른 한계를 적는다.
-
-[주의 사항]
-- ma_attractiveness_score는 0~50 사이의 정수로 반환하십시오.
-- "높음"에 해당하면 35~50, "중간"에 해당하면 18~34, "낮음"에 해당하면 0~17 범위를 사용하십시오.
-- analysis_reasoning은 최대 3개, 내부 검토용 서술형(~임./~함.)으로 작성하십시오.
-- evaluation_summary는 metric_evaluations와 **수치·표 형태의 반복 나열은 피하고**, 시장·국경간·인수유형·하이테크를 **종합한 서사**로 4~7문장 작성하십시오. "~습니다"체, 비전문가도 이해 가능하게.
-- **reason 필드는 출력하지 마십시오.** 내부용 줄 형식은 metric_evaluations로만 제공합니다.
-- 출력은 반드시 JSON 형식만 사용하십시오.
+- segment_score: 0~{max_segment_score} 정수. **이번 관점만** 근거로 부여한다.
+- evaluation_paragraphs: **정확히 3개** 문자열. 각 단락은 서로 다른 측면을 다룬다.
+- reason 필드는 출력하지 마십시오.
 """
+
+
+def _normalize_ma_segment_evaluation_paragraphs(part: dict) -> list[str]:
+    """LLM 출력을 길이 3의 단락 리스트로 맞춘다. 구형 evaluation_paragraph도 허용."""
+    raw = part.get("evaluation_paragraphs")
+    out: list[str] = []
+    if isinstance(raw, list):
+        for x in raw[:3]:
+            s = str(x).strip() if x is not None else ""
+            out.append(s)
+    while len(out) < 3:
+        out.append("")
+    legacy = part.get("evaluation_paragraph")
+    if isinstance(legacy, str) and legacy.strip():
+        if not any(out):
+            chunks = [c.strip() for c in legacy.split("\n\n") if c.strip()]
+            if len(chunks) >= 3:
+                out = chunks[:3]
+            elif len(chunks) == 2:
+                out = [chunks[0], chunks[1], ""]
+            elif len(chunks) == 1:
+                out = [chunks[0], "", ""]
+            else:
+                out = [legacy.strip(), "", ""]
+    return out[:3]
+
+
+def _segment_internal_reason(part: dict) -> str:
+    sub = {
+        "metric_evaluations": part.get("metric_evaluations")
+        if isinstance(part.get("metric_evaluations"), list)
+        else []
+    }
+    _set_reason_from_metric_lines(
+        sub,
+        fallback=_join_analysis_reasoning_list(part.get("analysis_reasoning")),
+    )
+    return str(sub.get("reason") or "")
+
+
+# (segment_key, eval_field_name, reason_field_name, score_field_name)
+MA_MARKET_SEGMENT_SPECS: tuple[tuple[str, str, str, str], ...] = (
+    ("field_trend", "ma_market_field_trend_evaluation", "field_trend_reason", "field_trend_score"),
+    ("crossborder", "ma_market_crossborder_evaluation", "crossborder_reason", "crossborder_score"),
+    ("ma_type", "ma_market_ma_type_evaluation", "ma_type_reason", "ma_type_score"),
+    ("hightech", "ma_market_hightech_evaluation", "hightech_reason", "hightech_score"),
+)
+
+
+def build_ma_segment_prompt_field_trend(payload: dict) -> str:
+    sub = {
+        "user_info": {
+            "title": (payload.get("user_info") or {}).get("title"),
+            "abstract": (payload.get("user_info") or {}).get("abstract"),
+            "field": (payload.get("user_info") or {}).get("field"),
+        },
+        "field_analysis": payload.get("field_analysis"),
+        "naics_trend": payload.get("naics_trend"),
+    }
+    return f"""
+당신은 M&A 시장 분석가이다. 이번 호출은 **(1) 분야 지표 + (2) NAICS 5개년 동향·집중도**만 다룬다.
+
+[입력 JSON — 이 블록만 사용]
+{json.dumps(sub, ensure_ascii=False, indent=2)}
+
+[역할]
+- field_analysis.trend_metrics와 naics_trend(time_series, trend_summary, industry_concentration_acquiror_naics)를 근거로 성장·회복·동종 인수 비중·집중도를 해석한다.
+- 다른 블록(crossborder, ma_type, hightech)은 언급하지 말 것.
+
+{_ma_segment_json_schema(14)}
+"""
+
+
+def build_ma_segment_prompt_crossborder(payload: dict) -> str:
+    sub = {
+        "user_info": {
+            "title": (payload.get("user_info") or {}).get("title"),
+            "country": (payload.get("user_info") or {}).get("country"),
+        },
+        "crossborder_analysis": payload.get("crossborder_analysis"),
+    }
+    return f"""
+당신은 M&A 시장 분석가이다. 이번 호출은 **국경/지역 간 거래 구조(crossborder)**만 다룬다.
+
+[입력 JSON — 이 블록만 사용]
+{json.dumps(sub, ensure_ascii=False, indent=2)}
+
+[역할]
+- crossborder_metrics 및 crossborder_deal_count_by_year를 근거로 개방성·방향성(in/out)·연도별 패턴을 해석한다.
+- 분야·NAICS 시계열·인수유형·하이테크는 언급하지 말 것.
+
+{_ma_segment_json_schema(12)}
+"""
+
+
+def build_ma_segment_prompt_ma_type(payload: dict) -> str:
+    sub = {
+        "user_info": {
+            "title": (payload.get("user_info") or {}).get("title"),
+        },
+        "ma_type_analysis": payload.get("ma_type_analysis"),
+    }
+    return f"""
+당신은 M&A 시장 분석가이다. 이번 호출은 **인수 유형(지분 vs 전체, multi 지표)**만 다룬다.
+
+[입력 JSON — 이 블록만 사용]
+{json.dumps(sub, ensure_ascii=False, indent=2)}
+
+[역할]
+- ma_type_metrics(stake_single, stake_multi, full, 비율 지표)를 근거로 전략적 의미를 해석한다.
+- 국경간·분야·하이테크·NAICS 시계열은 언급하지 말 것.
+
+{_ma_segment_json_schema(12)}
+"""
+
+
+def build_ma_segment_prompt_hightech(payload: dict) -> str:
+    sub = {
+        "user_info": {
+            "title": (payload.get("user_info") or {}).get("title"),
+            "abstract": (payload.get("user_info") or {}).get("abstract"),
+        },
+        "hightech_prompt": payload.get("hightech_prompt"),
+    }
+    return f"""
+당신은 M&A 시장 분석가이다. 이번 호출은 **High-Tech 적합성**만 다룬다.
+
+[입력 JSON — 이 블록만 사용]
+{json.dumps(sub, ensure_ascii=False, indent=2)}
+
+[역할]
+- hightech_prompt와 특허 제목·요약을 근거로 하이테크 해당 가능성·산업 파급을 해석한다.
+- 수치형 M&A 테이블은 언급하지 말 것.
+
+{_ma_segment_json_schema(12)}
+"""
+
+
+def run_ma_market_evaluation_four_calls(payload: dict) -> dict:
+    """
+    M&A 시장 매력도: **4관점별 별도 LLM 호출**(관점별 점수·3단락 평가·내부 reason) +
+    **1 정량 앵커 파이프라인**을 합산·블렌딩한다.
+    """
+    segment_builders = [
+        ("field_trend", build_ma_segment_prompt_field_trend, 14),
+        ("crossborder", build_ma_segment_prompt_crossborder, 12),
+        ("ma_type", build_ma_segment_prompt_ma_type, 12),
+        ("hightech", build_ma_segment_prompt_hightech, 12),
+    ]
+    merged: dict = {
+        "metric_evaluations": [],
+        "analysis_reasoning": [],
+        "ma_segment_results": {},
+        "ma_market_perspectives": {},
+    }
+    perspective_blocks: list[str] = []
+    llm_sum = 0
+    spec_by_key = {s[0]: s for s in MA_MARKET_SEGMENT_SPECS}
+
+    for key, builder, mx in segment_builders:
+        prompt = builder(payload)
+        part = call_llm(prompt, max_tokens=2800)
+        seg = _normalize_component_score(part.get("segment_score"), mx)
+        llm_sum += seg
+        paras = _normalize_ma_segment_evaluation_paragraphs(part)
+        eval_joined = "\n\n".join(p for p in paras if p)
+        seg_reason = _segment_internal_reason(part)
+        _, eval_field, reason_field, score_field = spec_by_key[key]
+        enriched = {
+            **part,
+            "segment_score_capped": seg,
+            "evaluation_paragraphs_normalized": paras,
+            reason_field: seg_reason,
+            eval_field: eval_joined,
+            score_field: seg,
+        }
+        merged["ma_segment_results"][key] = enriched
+        merged["ma_market_perspectives"][key] = {
+            score_field: seg,
+            eval_field: eval_joined,
+            f"{eval_field}_paragraphs": paras,
+            reason_field: seg_reason,
+        }
+        rows = part.get("metric_evaluations")
+        if isinstance(rows, list):
+            merged["metric_evaluations"].extend(rows)
+        ar = part.get("analysis_reasoning")
+        if isinstance(ar, list):
+            merged["analysis_reasoning"].extend(ar)
+        if eval_joined:
+            perspective_blocks.append(eval_joined)
+
+    merged["evaluation_summary"] = "\n\n".join(perspective_blocks)
+    merged["ma_attractiveness_score_llm_segments_sum"] = min(50, llm_sum)
+
+    anchor_detail = _compute_ma_attractiveness_anchor_detail(payload)
+    anchor = int(anchor_detail["ma_anchor_score"])
+    merged["ma_market_anchor"] = {
+        "ma_anchor_score": anchor,
+        "ma_market_anchor_evaluation": anchor_detail.get("ma_market_anchor_evaluation", ""),
+        "anchor_reason": anchor_detail.get("anchor_reason", ""),
+    }
+    merged["ma_anchor_score"] = anchor
+    blended = int(round(0.42 * anchor + 0.58 * merged["ma_attractiveness_score_llm_segments_sum"]))
+    merged["ma_attractiveness_score"] = max(0, min(50, blended))
+    merged["ma_llm_score_component"] = merged["ma_attractiveness_score_llm_segments_sum"]
+    merged["ma_score_blending"] = {
+        "anchor_weight": 0.42,
+        "llm_four_perspectives_sum_weight": 0.58,
+        "llm_four_perspectives_sum_cap": 50,
+    }
+
+    reason_sections = []
+    titles = {
+        "field_trend": "【분야·NAICS·동향】",
+        "crossborder": "【국경간 거래】",
+        "ma_type": "【인수 유형】",
+        "hightech": "【하이테크 적합성】",
+    }
+    for key, _, _, _ in MA_MARKET_SEGMENT_SPECS:
+        p = merged["ma_market_perspectives"].get(key) or {}
+        r = ""
+        for _k, _ef, rf, _sf in MA_MARKET_SEGMENT_SPECS:
+            if _k == key:
+                r = str(p.get(rf) or "")
+                break
+        if r.strip():
+            reason_sections.append(f"{titles.get(key, key)}\n{r.strip()}")
+    arn = str(anchor_detail.get("anchor_reason") or "").strip()
+    if arn:
+        reason_sections.append(f"【정량 앵커】\n{arn}")
+    merged["reason"] = "\n\n".join(reason_sections)
+    return merged
+
 
 def build_rights_prompt(
     row,
@@ -728,18 +1111,7 @@ def evaluate_patent(
     user_title = user_info.get("title")
     user_abstract = user_info.get("abstract")
 
-    ma_prompt = build_ma_prompt(payload)
-    ma_result = call_llm(ma_prompt, max_tokens=4096)
-    ma_result["ma_attractiveness_score"] = _normalize_component_score(
-        ma_result.get("ma_attractiveness_score", ma_result.get("ma_attractiveness")),
-        50
-    )
-    if not ma_result.get("evaluation_summary") and ma_result.get("user_report"):
-        ma_result["evaluation_summary"] = ma_result["user_report"]
-    _set_reason_from_metric_lines(
-        ma_result,
-        fallback=_join_analysis_reasoning_list(ma_result.get("analysis_reasoning")),
-    )
+    ma_result = run_ma_market_evaluation_four_calls(payload)
 
     tech_prompt = build_tech_prompt(
         row=row,
