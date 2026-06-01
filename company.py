@@ -43,8 +43,44 @@ def get_embedding(text: str, model: str = "text-embedding-3-large") -> Optional[
     text = text.replace("\n", " ").strip()
     if not text:
         return None
-    response = openai_client.embeddings.create(input=[text], model=model)
-    return response.data[0].embedding
+
+    # Conservative first cut to reduce 8192-token overflow risk.
+    embedding_input = text
+    if len(embedding_input) > 24000:
+        print(f"[COMPANY_EMBED_TRUNCATE] initial chars={len(embedding_input)} -> 24000")
+        embedding_input = embedding_input[:24000]
+
+    for _ in range(5):
+        try:
+            response = openai_client.embeddings.create(
+                input=embedding_input,
+                model=model
+            )
+            return response.data[0].embedding
+        except Exception as e:
+            msg = str(e)
+            if "maximum context length" in msg:
+                requested_match = re.search(r"requested\s+(\d+)\s+tokens", msg)
+                if requested_match:
+                    requested_tokens = int(requested_match.group(1))
+                    shrink_ratio = (8192 / max(requested_tokens, 1)) * 0.8
+                    new_len = int(len(embedding_input) * shrink_ratio)
+                else:
+                    # Fallback when token count is not present in the error message.
+                    new_len = int(len(embedding_input) * 0.65)
+
+                new_len = max(1200, min(new_len, len(embedding_input) - 200))
+                if new_len >= len(embedding_input):
+                    new_len = max(1200, len(embedding_input) - 500)
+                if new_len >= len(embedding_input):
+                    raise
+
+                print(f"[COMPANY_EMBED_RETRY_TRUNCATE] chars={len(embedding_input)} -> {new_len}")
+                embedding_input = embedding_input[:new_len]
+                continue
+            raise
+
+    raise RuntimeError("Failed to create company embedding after truncation retries")
 
 
 def parse_ipc_codes(ipc_string: str) -> List[str]:

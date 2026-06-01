@@ -16,6 +16,7 @@ import re
 import json
 import time
 import ast
+import unicodedata
 from typing import Any, Optional
 import pandas as pd
 from pprint import pprint
@@ -46,7 +47,47 @@ pc = Pinecone(
 
 index = pc.Index(INDEX_NAME)
 
+_CONTROL_CHAR_PATTERN = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
+_IMAGE_MARKDOWN_PATTERN = re.compile(r"!\[[^\]]*\]\([^)]+\)")
+_PAGE_SPLIT_PATTERN = re.compile(r"<---\s*Page\s+\d+\s+Split\s*--->\\?", re.IGNORECASE)
+_INVALID_JSON_ESCAPE_PATTERN = re.compile(r'\\(?!["\\/bfnrtu])')
 _BAYESIAN_PROB_TABLE = None
+
+
+def _sanitize_ocr_text(text: str) -> str:
+    if text is None:
+        return ""
+
+    cleaned = str(text)
+    cleaned = cleaned.replace("\r\n", "\n").replace("\r", "\n")
+    cleaned = unicodedata.normalize("NFKC", cleaned)
+    cleaned = "".join(ch for ch in cleaned if not 0xD800 <= ord(ch) <= 0xDFFF)
+    cleaned = _IMAGE_MARKDOWN_PATTERN.sub(" ", cleaned)
+    cleaned = _PAGE_SPLIT_PATTERN.sub(" ", cleaned)
+    cleaned = re.sub(r"\\([()\[\]{}])", r"\1", cleaned)
+    cleaned = _CONTROL_CHAR_PATTERN.sub(" ", cleaned)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned.strip()
+
+
+def _parse_metadata_json(content: str) -> dict:
+    source = (content or "").strip()
+    if source.startswith("```"):
+        source = source.strip("`").strip()
+        if source.startswith("json"):
+            source = source[4:].strip()
+
+    start = source.find("{")
+    end = source.rfind("}") + 1
+    if start == -1 or end <= start:
+        raise ValueError("No valid JSON object found in model response")
+
+    candidate = source[start:end]
+    try:
+        return json.loads(candidate)
+    except json.JSONDecodeError:
+        repaired = _INVALID_JSON_ESCAPE_PATTERN.sub(r"\\\\", candidate)
+        return json.loads(repaired)
 
 # 메타데이터 추출 LLM·임베딩(Pinecone fallback)에만 동일하게 적용하는 OCR 앞부분 상한(글자 수).
 # INID(51·57 등)는 대부분 문서 앞쪽이라 앞에서 자름. 최소 필요 글자(~3500 등)보다 크게 두고,
@@ -64,15 +105,46 @@ def truncate_ocr_for_metadata_embed(text: str) -> str:
 def embed_patent_text(text: str) -> list:
     # Embedding API 입력·비용 상한. 메타데이터 LLM과 동일한 앞부분 기준을 쓴다.
     text = truncate_ocr_for_metadata_embed(text)
+    if not text or not text.strip():
+        raise ValueError("Empty text for embedding")
 
-    response = client.embeddings.create(
-        model="text-embedding-3-large",
-        input=text
-    )
-    embedding = response.data[0].embedding
+    embedding_input = text.strip()
+    if len(embedding_input) > 18000:
+        print(f"[EMBED_TRUNCATE] initial chars={len(embedding_input)} -> 18000")
+        embedding_input = embedding_input[:18000]
 
-    assert len(embedding) == 3072
-    return embedding
+    for _ in range(5):
+        try:
+            response = client.embeddings.create(
+                model="text-embedding-3-large",
+                input=embedding_input
+            )
+            embedding = response.data[0].embedding
+            assert len(embedding) == 3072
+            return embedding
+        except Exception as e:
+            msg = str(e)
+            if "maximum context length" in msg:
+                requested_match = re.search(r"requested\s+(\d+)\s+tokens", msg)
+                if requested_match:
+                    requested_tokens = int(requested_match.group(1))
+                    shrink_ratio = (8192 / max(requested_tokens, 1)) * 0.8
+                    new_len = int(len(embedding_input) * shrink_ratio)
+                else:
+                    new_len = int(len(embedding_input) * 0.65)
+
+                new_len = max(1200, min(new_len, len(embedding_input) - 200))
+                if new_len >= len(embedding_input):
+                    new_len = max(1200, len(embedding_input) - 500)
+                if new_len >= len(embedding_input):
+                    raise
+
+                print(f"[EMBED_RETRY_TRUNCATE] chars={len(embedding_input)} -> {new_len}")
+                embedding_input = embedding_input[:new_len]
+                continue
+            raise
+
+    raise RuntimeError("Failed to create embedding after truncation retries")
 
 def retrieve_top_naics(
     query_vector: list,
@@ -714,8 +786,8 @@ def _ipc_display(norm: str) -> str:
 
 def extract_structured_metadata(user_ocr: str, back_ocr: Optional[str] = None) -> dict[str, Any]:
     """Stage 1: INID·IPC(51)·인용·청구 통계 등 결정론적 구조."""
-    front = _normalize_ocr_literals(user_ocr or "")
-    back = _normalize_ocr_literals(back_ocr or "") if back_ocr else ""
+    front = _normalize_ocr_literals(_sanitize_ocr_text(user_ocr or ""))
+    back = _normalize_ocr_literals(_sanitize_ocr_text(back_ocr or "")) if back_ocr else ""
     combined = front + ("\n" + back if back else "")
     blocks = _parse_inid_blocks(front[:80000])
     blocks_c = _parse_inid_blocks(combined[:400000])
@@ -1045,15 +1117,11 @@ def verify_naics_candidates_vs_context(
     return report
 
 def _parse_json_object(content: str) -> dict:
-    content = (content or "").strip()
-    start = content.find("{")
-    end = content.rfind("}") + 1
-    if start == -1 or end <= start:
-        raise ValueError("No valid JSON object found in model response")
-    return json.loads(content[start:end])
+    return _parse_metadata_json(content)
 
 
 def extract_patent_metadata_llm_legacy(text: str, naics_context: str):
+    text = _sanitize_ocr_text(text)
     prompt = f"""
 You are a patent classification and information extraction system.
 
@@ -1234,13 +1302,7 @@ OCR TEXT (metadata prompt; 길이={len(text)} chars, 앞부분만 잘린 경우 
     )
 
     content = response.choices[0].message.content.strip()
-    # JSON 안전 추출
-    start = content.find("{")
-    end = content.rfind("}") + 1
-    if start == -1 or end == -1:
-        raise ValueError("No valid JSON object found in model response")
-
-    return json.loads(content[start:end])
+    return _parse_metadata_json(content)
 
 
 def merge_legacy_metadata_with_strict_ipc(
@@ -1290,23 +1352,153 @@ def merge_legacy_metadata_with_strict_ipc(
     return out
 
 
-def extract_patent_claims_llm_legacy(text_front: str, text_back: str = None):
-    """
-    - 50페이지 미만: text_front 에 전체 OCR 텍스트 입력, text_back = None
-    - 53페이지 이상: text_front = 앞 3페이지 OCR
-                     text_back  = 뒤 50페이지 OCR
-    """
+_CLAIM_START_PATTERNS = [
+    (
+        "en_the_invention_claimed",
+        re.compile(r"\bthe\s+invention\s+claimed\s+is\s*[:;]?", re.IGNORECASE),
+    ),
+    (
+        "en_what_is_claimed",
+        re.compile(r"\bwhat\s+is\s+claimed\s+is\s*[:;]?", re.IGNORECASE),
+    ),
+    (
+        "ko_청구범위",
+        re.compile(r"청\s*구\s*범\s*위\s*[:：]?", re.IGNORECASE),
+    ),
+]
+_CLAIM_HEADING_WITH_NUMBER_PATTERN = re.compile(
+    r"(?is)\bclaims?\b\s*[:：]?\s*(?:\n|\r|\s){0,20}(?:\(?\d+\)?\s*[\.\)])"
+)
+_CLAIM_FOCUS_CONTEXT_BEFORE_CHARS = 1200
+_CLAIM_FOCUS_MAX_CHARS = 120000
+_CLAIM_PROMPT_MAX_CHARS = 42000
+_CLAIM_FRONT_PROMPT_MAX_CHARS = 18000
+_CLAIM_FOCUS_PROMPT_MAX_CHARS = 28000
+_CLAIM_FOCUS_BLOCK_MAX_CHARS = 12000
 
+
+def _build_combined_claim_text(text_front: str, text_back: Optional[str] = None) -> str:
     if text_back:
-        combined_text = f"""
+        return f"""
         [FRONT_PART_OCR]
         {text_front}
 
         [BACK_PART_OCR]
         {text_back}
         """
-    else:
-        combined_text = text_front
+    return text_front or ""
+
+
+def _find_claim_start_hint(text: str) -> Optional[dict]:
+    source = text or ""
+    for hint_name, pattern in _CLAIM_START_PATTERNS:
+        m = pattern.search(source)
+        if m:
+            return {
+                "hint_name": hint_name,
+                "matched_text": m.group(0).strip(),
+                "start_idx": m.start(),
+            }
+
+    fallback = _CLAIM_HEADING_WITH_NUMBER_PATTERN.search(source)
+    if fallback:
+        return {
+            "hint_name": "heading_claims_with_number",
+            "matched_text": fallback.group(0).strip(),
+            "start_idx": fallback.start(),
+        }
+
+    return None
+
+
+def _build_claim_focus_text(text: str, start_idx: int) -> str:
+    begin = max(0, start_idx - _CLAIM_FOCUS_CONTEXT_BEFORE_CHARS)
+    focused = (text or "")[begin:]
+    if len(focused) > _CLAIM_FOCUS_MAX_CHARS:
+        focused = focused[:_CLAIM_FOCUS_MAX_CHARS]
+    return focused
+
+
+def _build_claim_prompt_text(
+    combined_text: str,
+    text_front: str,
+    claim_focus_text: Optional[str],
+) -> str:
+    if claim_focus_text:
+        front_part = (text_front or "")[:_CLAIM_FRONT_PROMPT_MAX_CHARS]
+        focus_part = claim_focus_text[:_CLAIM_FOCUS_PROMPT_MAX_CHARS]
+        return f"""
+        [FRONT_PART_OCR]
+        {front_part}
+
+        [CLAIM_SECTION_CANDIDATE]
+        {focus_part}
+        """
+
+    source = (combined_text or "").strip()
+    if len(source) > _CLAIM_PROMPT_MAX_CHARS:
+        source = source[:_CLAIM_PROMPT_MAX_CHARS]
+    return source
+
+
+def _claim_hint_block(claim_start_hint: Optional[dict]) -> str:
+    if not claim_start_hint:
+        return ""
+    return f"""
+----------------------------------------
+CLAIM START HINT (REGEX PRE-DETECTED)
+----------------------------------------
+- start_found: true
+- hint_name: {claim_start_hint.get("hint_name")}
+- matched_text: {claim_start_hint.get("matched_text")}
+- start_idx: {claim_start_hint.get("start_idx")}
+
+IMPORTANT:
+- A regex-based pre-detector already found this claim-start indicator.
+- You MUST use this location as the primary anchor when locating the claim section.
+"""
+
+
+def _claim_focus_block(claim_focus_text: Optional[str]) -> str:
+    if not claim_focus_text:
+        return ""
+    compact_focus = claim_focus_text[:_CLAIM_FOCUS_BLOCK_MAX_CHARS]
+    return f"""
+----------------------------------------
+CLAIM-FOCUSED OCR WINDOW (FROM START HINT)
+----------------------------------------
+{compact_focus}
+"""
+
+
+def extract_patent_claims_llm_legacy(
+    text_front: str,
+    text_back: str = None,
+    _claim_retry: bool = False,
+):
+    """
+    - 50페이지 미만: text_front 에 전체 OCR 텍스트 입력, text_back = None
+    - 53페이지 이상: text_front = 앞 3페이지 OCR
+                     text_back  = 뒤 50페이지 OCR
+    """
+
+    clean_front = _sanitize_ocr_text(text_front or "")
+    clean_back = _sanitize_ocr_text(text_back or "") if text_back else None
+    combined_source = _build_combined_claim_text(clean_front, clean_back)
+    claim_start_hint = _find_claim_start_hint(combined_source)
+    claim_focus_text = None
+    if claim_start_hint:
+        claim_focus_text = _build_claim_focus_text(
+            combined_source,
+            claim_start_hint["start_idx"],
+        )
+    combined_text = _build_claim_prompt_text(
+        combined_text=combined_source,
+        text_front=clean_front,
+        claim_focus_text=claim_focus_text,
+    )
+    hint_block = _claim_hint_block(claim_start_hint)
+    focus_block = _claim_focus_block(claim_focus_text)
 
     prompt = f"""
 You are a patent claim extraction and structural analysis system.
@@ -1505,11 +1697,13 @@ Return EXACTLY:
 }}
 
 `forward_citation_count_self_check` MUST equal `forward_citation_count` (re-count mentally before output).
+{hint_block}
 
 ----------------------------------------
 OCR TEXT
 ----------------------------------------
 {combined_text}
+{focus_block}
 """
 
     response = client.chat.completions.create(
@@ -1534,7 +1728,24 @@ OCR TEXT
         raise ValueError("No valid JSON object found in model response")
 
     json_str = match.group(0)
-    return json.loads(json_str)
+    result = json.loads(json_str)
+    if (
+        not _claim_retry
+        and isinstance(result, dict)
+        and result.get("error") == "claims_not_found"
+        and claim_start_hint
+        and claim_focus_text
+    ):
+        focused_combined_text = f"""
+        [CLAIM_SECTION_CANDIDATE]
+        {claim_focus_text[:_CLAIM_FOCUS_PROMPT_MAX_CHARS]}
+        """
+        return extract_patent_claims_llm_legacy(
+            focused_combined_text,
+            None,
+            _claim_retry=True,
+        )
+    return result
 
 def run_metadata_reasoning_llm(structured: dict[str, Any], naics_context: str) -> dict[str, Any]:
     """
@@ -1823,9 +2034,12 @@ def run_NAIC_extract(
     # ---------------------------------
     # 1. NAICS / Metadata (베이지안 IPC는 전·후면 OCR 합본 기준, 임베딩은 전면만)
     # ---------------------------------
-    patent_text = user_ocr
+    patent_text = _sanitize_ocr_text(user_ocr or "")
+    if not patent_text:
+        return [], {"error": "metadata_extraction_failed"}
     metadata_ocr_text = truncate_ocr_for_metadata_embed(patent_text)
-    combined_ocr = (user_ocr or "") + ("\n" + (back_ocr or "") if back_ocr else "")
+    clean_back_ocr = _sanitize_ocr_text(back_ocr or "") if back_ocr else ""
+    combined_ocr = patent_text + ("\n" + clean_back_ocr if clean_back_ocr else "")
 
     # 후보 생성: 베이지안 기반 (IPC -> NAICS)
     naics_candidates = build_naics_candidates_from_bayesian(
@@ -1880,7 +2094,7 @@ def run_NAIC_extract(
                 flush=True,
             )
 
-    structured = extract_structured_metadata(user_ocr, back_ocr)
+    structured = extract_structured_metadata(patent_text, clean_back_ocr)
 
     try:
         llm_meta = extract_patent_metadata_llm_legacy(metadata_ocr_text, naics_context)
@@ -1937,15 +2151,15 @@ def run_NAIC_extract(
         ]
 
         results.append(result_item)
-        _fill_applicant_from_ocr(result_item, user_ocr)
+        _fill_applicant_from_ocr(result_item, patent_text)
 
         # ---------------------------------
         # 4. 청구 (레거시 LLM + 결정론 병합)
         # ---------------------------------
         try:
             claims = extract_patent_claims(
-                text_front=user_ocr,
-                text_back=back_ocr
+                text_front=patent_text,
+                text_back=clean_back_ocr
             )
             if isinstance(claims, str):
                 claims = json.loads(claims)
@@ -1965,7 +2179,7 @@ def run_NAIC_extract(
                 claims["forward_citation_count"] = ri["forward_citation_count"]
 
         ri = results[0]
-        ri["parse_audit"] = _build_parse_audit(ri, user_ocr, back_ocr, claims, metadata_ocr_text)
+        ri["parse_audit"] = _build_parse_audit(ri, patent_text, clean_back_ocr, claims, metadata_ocr_text)
 
         # if isinstance(claims, dict) and "error" in claims:
         #     return results, claims
