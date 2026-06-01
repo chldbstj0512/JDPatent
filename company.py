@@ -356,12 +356,26 @@ def _filter_and_group(
         dominant_country = None
         if group["country_counts"]:
             dominant_country = max(group["country_counts"].items(), key=lambda x: x[1])[0]
+        raw_patents = sorted(group["patents"], key=lambda x: -float(x.get("score") or 0.0))
+        deduped = []
+        seen_key = set()
+        for p in raw_patents:
+            meta = p.get("metadata") or {}
+            pid = str(meta.get("application_number") or meta.get("patent_id") or "").strip()
+            title = str(meta.get("invention_name") or "").strip()[:80]
+            dedup_k = (pid, title) if pid else (str(id(meta)),)
+            if dedup_k in seen_key:
+                continue
+            seen_key.add(dedup_k)
+            deduped.append(p)
+            if len(deduped) >= 3:
+                break
         ranked.append({
             "company_name": group["company_name"],
             "company_id": group["company_id"],
             "avg_score": avg_score,
             "matched_patent_count": len(group["patents"]),
-            "patents": sorted(group["patents"], key=lambda x: -x["score"])[:3],
+            "patents": deduped,
             "_dominant_country": dominant_country,
         })
 

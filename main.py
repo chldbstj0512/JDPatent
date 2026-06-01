@@ -11,6 +11,28 @@ from pattern import run_pattern
 from output import build_final_output
 
 from util.ocr import split_ocr_text
+from validate import log_ocr_parse_validation
+
+
+def prepare_acquisitions_df(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    대규모 M&A 테이블용 최소 품질 필터(수정요구: 추가 데이터 필터링의 기본선).
+    권리·기술 기준은 컬럼 정의가 과제별로 달라질 수 있어, 여기서는 핵심 키 결측만 제거한다.
+    """
+    d = df.copy()
+    key_cols = [
+        "Target Primary NAIC Code 2022",
+        "Year",
+        "Acquiror Primary NAIC Code 2022",
+    ]
+    for c in key_cols:
+        if c not in d.columns:
+            return df
+    d = d.dropna(subset=key_cols)
+    d["Year"] = pd.to_numeric(d["Year"], errors="coerce")
+    d = d.dropna(subset=["Year"])
+    return d
+
 
 def main(
     user_id: str,
@@ -28,6 +50,8 @@ def main(
     avg_citation_count: float
 ):
 
+    acquisitions_df = prepare_acquisitions_df(acquisitions_df)
+
     # ---------------------------
     # 1. NAIC + Claim 추출
     # ---------------------------
@@ -39,10 +63,31 @@ def main(
     )
 
     if isinstance(claims, dict) and "error" in claims:
+        try:
+            log_ocr_parse_validation(
+                user_id=user_id,
+                front_ocr=front_ocr,
+                back_ocr=back_ocr,
+                user_info_list=user_info_list if user_info_list else None,
+                claims=claims,
+            )
+        except Exception as e:
+            print(f"[validation] log failed: {e}", flush=True)
         return {
             "status": "error",
             "reason": claims["error"]
         }
+
+    try:
+        log_ocr_parse_validation(
+            user_id=user_id,
+            front_ocr=front_ocr,
+            back_ocr=back_ocr,
+            user_info_list=user_info_list,
+            claims=claims,
+        )
+    except Exception as e:
+        print(f"[validation] log failed: {e}", flush=True)
 
     # ---------------------------
     # 2. 점수 평가 (row → claims)

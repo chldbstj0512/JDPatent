@@ -103,8 +103,10 @@ def build_final_output(
         "pdf_name": user_info.get("pdf_name"),
         "country": user_info.get("country"),
         "field": field_code_to_display_name(user_info.get("field")),
+        "parse_audit": user_info.get("parse_audit"),
         "patent": {
             "title": user_info.get("title"),
+            "forward_citation_count": user_info.get("forward_citation_count"),
             "applicant": {
                 "name": user_info.get("applicant_name"),
                 "number": user_info.get("applicant_number"),
@@ -133,6 +135,15 @@ def build_final_output(
     evaluation = {
         "ma_market_evaluation": {
             "ma_market_score": user_score["evaluation"]["ma_market_evaluation"]["ma_attractiveness_score"],
+            "ma_anchor_score": user_score["evaluation"]["ma_market_evaluation"].get("ma_anchor_score"),
+            "ma_llm_four_perspectives_sum": user_score["evaluation"]["ma_market_evaluation"].get(
+                "ma_attractiveness_score_llm_segments_sum"
+            ),
+            "ma_score_blending": user_score["evaluation"]["ma_market_evaluation"].get("ma_score_blending"),
+            "ma_market_perspectives": user_score["evaluation"]["ma_market_evaluation"].get(
+                "ma_market_perspectives", {}
+            ),
+            "ma_market_anchor": user_score["evaluation"]["ma_market_evaluation"].get("ma_market_anchor", {}),
             "ma_market_evaluation": (
                 user_score["evaluation"]["ma_market_evaluation"].get("evaluation_summary")
                 or user_score["evaluation"]["ma_market_evaluation"].get("user_report")
