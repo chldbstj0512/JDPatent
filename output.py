@@ -18,6 +18,25 @@ def field_code_to_display_name(field_code) -> str:
     return FIELD_CODE_TO_DISPLAY_NAME.get(key, str(field_code).strip())
 
 
+def _normalize_applicant_name_for_output(name):
+    """
+    legacy output.json 형식: 출원인 법인명만 노출.
+    US 서지 'Corp, City, ST (US)' 등 주소·국가 접미는 제거한다.
+    """
+    if not name or not isinstance(name, str):
+        return name
+    s = name.strip()
+    if "," not in s:
+        return s
+    head, tail = s.split(",", 1)
+    tail = tail.strip()
+    if re.search(r"\([A-Z]{2}\)\s*$", tail, re.IGNORECASE):
+        return head.strip()
+    if re.search(r",\s*[A-Z]{2}\s*\(", tail):
+        return head.strip()
+    return s
+
+
 def strip_excel_xml_unicode_escapes(text):
     """
     Excel/Office sharedStrings 등에서 쓰이는 이스케이프 제거.
@@ -103,12 +122,10 @@ def build_final_output(
         "pdf_name": user_info.get("pdf_name"),
         "country": user_info.get("country"),
         "field": field_code_to_display_name(user_info.get("field")),
-        "parse_audit": user_info.get("parse_audit"),
         "patent": {
             "title": user_info.get("title"),
-            "forward_citation_count": user_info.get("forward_citation_count"),
             "applicant": {
-                "name": user_info.get("applicant_name"),
+                "name": _normalize_applicant_name_for_output(user_info.get("applicant_name")),
                 "number": user_info.get("applicant_number"),
                 "date": user_info.get("applicant_date"),
             },
@@ -273,5 +290,8 @@ def build_final_output(
         "recommend_companies": recommend_companies,
         "ma_patterns": ma_patterns,
     }
+    parse_audit = user_info.get("parse_audit")
+    if parse_audit:
+        final_output["parse_audit"] = parse_audit
 
     return final_output
