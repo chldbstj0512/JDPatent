@@ -133,7 +133,7 @@ def main(
     return final_result
 
 if __name__ == "__main__":
-    user_id = "output"
+    user_id = "0604"
 
     # ----------------------------
     # OCR

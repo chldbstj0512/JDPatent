@@ -1,0 +1,502 @@
+{
+  "basic_info": {
+    "pdf_name": "0604",
+    "country": "US",
+    "field": "electronic",
+    "patent": {
+      "title": "DEFECT MANAGEMENT POLICIES FOR NAND FLASH MEMORY",
+      "applicant": {
+        "name": "Intel Corporation",
+        "number": "14/087,282",
+        "date": "2013-11-22"
+      },
+      "grant": {
+        "number": "US 9,535,777 B2",
+        "date": "2017-01-03"
+      },
+      "ipc_code": [
+        "G06F 11/00",
+        "G11C 29/00",
+        "G06F 11/07",
+        "G11B 20/18"
+      ],
+      "abstract": "Systems and methods of managing defects in nonvolatile storage systems that can be used to avoid an inadvertent loss of data, while maintaining as much useful memory in the nonvolatile storage systems as possible. The disclosed systems and methods can monitor a plurality of trigger events for detecting possible defects in one or more nonvolatile memory (NVM) devices included in the nonvolatile storage systems, and apply one or more defect management policies to the respective NVM devices based on the types of trigger events that resulted in detection of the possible defects. Such defect management policies can be used proactively to retire memory in the nonvolatile storage systems with increased granularity, focusing the retirement of memory on regions of nonvolatile memory that are likely to contain a defect."
+    }
+  },
+  "naics": {
+    "primary": {
+      "code": "334413",
+      "title": "Semiconductor and Related Device Manufacturing",
+      "description": "This industry comprises establishments primarily engaged in manufacturing semiconductors and related solid-state devices. Examples of products made by these establishments are integrated circuits, memory chips, microprocessors, diodes, transistors, solar cells, and other optoelectronic devices."
+    },
+    "candidates": []
+  },
+  "evaluation": {
+    "ma_market_evaluation": {
+      "ma_market_score": 28,
+      "ma_anchor_score": 26,
+      "ma_llm_four_perspectives_sum": 29,
+      "ma_score_blending": {
+        "anchor_weight": 0.42,
+        "llm_four_perspectives_sum_weight": 0.58,
+        "llm_four_perspectives_sum_cap": 50
+      },
+      "ma_market_perspectives": {
+        "field_trend": {
+          "field_trend_score": 8,
+          "ma_market_field_trend_evaluation": "이 분야는 최근 5년간 완만한 성장세를 보이고 있으며, 과거 최저점 대비 뚜렷한 회복세를 나타내고 있습니다. 연간 거래 건수도 꾸준히 증가하여 시장의 활력이 유지되고 있습니다.\n\n동종 산업 내 인수 비중은 전체 거래의 약 20~25%로, 내부 인수와 외부 인수가 균형을 이루고 있습니다. 이는 다양한 유형의 인수 전략이 혼재되어 있음을 시사합니다.\n\n인수자 집중도는 낮은 편으로, 상위 3개 인수자의 점유율이 38% 수준이고 HHI 지수도 낮아 시장이 다수의 기업에 의해 분산되어 있습니다. 따라서 특정 기업의 독점적 영향력은 크지 않은 것으로 보입니다.",
+          "ma_market_field_trend_evaluation_paragraphs": [
+            "이 분야는 최근 5년간 완만한 성장세를 보이고 있으며, 과거 최저점 대비 뚜렷한 회복세를 나타내고 있습니다. 연간 거래 건수도 꾸준히 증가하여 시장의 활력이 유지되고 있습니다.",
+            "동종 산업 내 인수 비중은 전체 거래의 약 20~25%로, 내부 인수와 외부 인수가 균형을 이루고 있습니다. 이는 다양한 유형의 인수 전략이 혼재되어 있음을 시사합니다.",
+            "인수자 집중도는 낮은 편으로, 상위 3개 인수자의 점유율이 38% 수준이고 HHI 지수도 낮아 시장이 다수의 기업에 의해 분산되어 있습니다. 따라서 특정 기업의 독점적 영향력은 크지 않은 것으로 보입니다."
+          ],
+          "field_trend_reason": "recent_growth : (입력 JSON의 원시 값) -> (최근 5년간 M&A 성장률은 0.278로, 완만한 성장세를 보이고 있습니다.)\nrecovery_ratio : (입력 JSON의 원시 값) -> (회복 수준은 1.376으로, 과거 최저점 대비 상당한 회복세를 나타냅니다.)\nrecent_trend_slope : (입력 JSON의 원시 값) -> (연간 추세 기울기(240.5)는 최근 몇 년간 거래 건수 증가가 뚜렷했음을 시사합니다.)\nfinal_score : (입력 JSON의 원시 값) -> (성장성과 회복성을 반영한 종합 점수는 0.688로, 해당 분야의 중상위권 성장성을 의미합니다.)\nA_target_cnt (NAICS 334413) : (입력 JSON의 원시 값) -> (2021~2025년 동안 M&A 타깃 건수는 512(2022년)에서 862(2025년)로 증가해, 시장 규모가 확대되고 있습니다.)\nB_ratio (동종 인수 비중) : (입력 JSON의 원시 값) -> (동종 산업 내 인수 비중은 0.214~0.254로, 전체 거래의 약 20~25%가 내부 인수임을 보여줍니다.)\nindustry_concentration_acquiror_naics : (입력 JSON의 원시 값) -> (상위 3개 인수자의 점유율은 38.35%, HHI는 0.06735로, 인수자 분산도가 높고 특정 기업 집중 현상은 낮은 편입니다.)"
+        },
+        "crossborder": {
+          "crossborder_score": 3,
+          "ma_market_crossborder_evaluation": "국경 간 거래 비중은 전체의 약 20%로, 이 분야의 거래는 주로 국내에서 이루어지는 경향이 있습니다. 개방성 측면에서는 다소 제한적인 모습을 보입니다.\n\n국경 간 거래의 방향성은 미국 기업이 해외 기업을 인수하는 유출(outbound)이 더 많아, 미국이 적극적으로 해외 시장에 진출하는 양상이 나타납니다.\n\n연도별로 보면 국경 간 거래 건수는 최근 6년간 비교적 일정하게 유지되고 있으며, 2023년 이후에는 소폭 증가하는 추세를 보이고 있습니다.",
+          "ma_market_crossborder_evaluation_paragraphs": [
+            "국경 간 거래 비중은 전체의 약 20%로, 이 분야의 거래는 주로 국내에서 이루어지는 경향이 있습니다. 개방성 측면에서는 다소 제한적인 모습을 보입니다.",
+            "국경 간 거래의 방향성은 미국 기업이 해외 기업을 인수하는 유출(outbound)이 더 많아, 미국이 적극적으로 해외 시장에 진출하는 양상이 나타납니다.",
+            "연도별로 보면 국경 간 거래 건수는 최근 6년간 비교적 일정하게 유지되고 있으며, 2023년 이후에는 소폭 증가하는 추세를 보이고 있습니다."
+          ],
+          "crossborder_reason": "cross_border_ratio : (0.195) -> (전체 거래 중 약 19.5%가 국경 간 거래로, 개방성은 낮은 편입니다.)\ndirection : (\"outbound\" (outbound_cnt: 158, inbound_cnt: 117)) -> (국경 간 거래에서 유출(미국 기업이 해외 기업을 인수)이 유입보다 많아, 거래 방향성은 유출 중심입니다.)\ncrossborder_deal_count_by_year : ({\"2020\": 113, \"2021\": 116, \"2022\": 113, \"2023\": 131, \"2024\": 128, \"2025\": 125}) -> (최근 6년간 국경 간 거래 건수는 연 110~130건대로 비교적 일정하며, 2023년 이후 소폭 증가하는 경향이 있습니다.)"
+        },
+        "ma_type": {
+          "ma_type_score": 8,
+          "ma_market_ma_type_evaluation": "해당 분야에서는 전체 인수(Full Acquisition)와 일부 지분 인수(Stake Purchase)가 모두 활발하게 이루어지고 있습니다. 전체 인수 비중이 약 50%에 달해, 기업들이 기술이나 시장을 신속하게 확보하려는 경향이 강하게 나타납니다.\n\n일부 지분 인수 중에서도 동일 기업에 대해 반복적으로 지분을 늘리는 사례가 약 28%로 나타나, 단순한 탐색을 넘어 단계적으로 영향력을 확대하려는 전략이 자주 사용되고 있습니다. 이는 신중한 접근과 점진적 통제권 확보를 선호하는 투자 패턴을 보여줍니다.\n\n이러한 다양한 인수 유형의 조합은 기업들이 시장 상황과 리스크를 고려해 맞춤형 M&A 전략을 구사하고 있음을 의미합니다. 즉각적인 통제권 확보와 점진적 영향력 확대 전략이 공존하고 있어, 유연한 투자 및 인수 방식을 채택하는 것이 특징입니다.",
+          "ma_market_ma_type_evaluation_paragraphs": [
+            "해당 분야에서는 전체 인수(Full Acquisition)와 일부 지분 인수(Stake Purchase)가 모두 활발하게 이루어지고 있습니다. 전체 인수 비중이 약 50%에 달해, 기업들이 기술이나 시장을 신속하게 확보하려는 경향이 강하게 나타납니다.",
+            "일부 지분 인수 중에서도 동일 기업에 대해 반복적으로 지분을 늘리는 사례가 약 28%로 나타나, 단순한 탐색을 넘어 단계적으로 영향력을 확대하려는 전략이 자주 사용되고 있습니다. 이는 신중한 접근과 점진적 통제권 확보를 선호하는 투자 패턴을 보여줍니다.",
+            "이러한 다양한 인수 유형의 조합은 기업들이 시장 상황과 리스크를 고려해 맞춤형 M&A 전략을 구사하고 있음을 의미합니다. 즉각적인 통제권 확보와 점진적 영향력 확대 전략이 공존하고 있어, 유연한 투자 및 인수 방식을 채택하는 것이 특징입니다."
+          ],
+          "ma_type_reason": "stake_single_target_cnt : (355) -> (주식 일부 인수 중 동일 기업에 대해 1회만 이뤄진 거래가 355건으로, 탐색적이거나 옵션형 투자가 일정 비중을 차지함을 보여줍니다.)\nstake_multi_target_cnt : (522) -> (동일 기업에 대해 2회 이상 주식 일부 인수가 이뤄진 사례가 522건으로, 단계적 인수 또는 지배력 강화를 위한 전략이 활발히 사용되고 있음을 시사합니다.)\nfull_acquisition_cnt : (1853) -> (전체 주식 인수(Full Acquisition)가 1853건으로, 즉각적인 기술 또는 시장 확보를 목적으로 한 거래가 절반에 가까운 비중을 차지합니다.)\nstake_multi_over_stake_ratio : (0.2787) -> (주식 일부 인수 중 동일 타깃에 대한 다회 거래 비율이 약 27.9%로, 단순 탐색을 넘어 반복적·단계적 지분 확대 전략이 두드러집니다.)\nfull_over_all_ratio : (0.4973) -> (전체 거래 중 Full Acquisition의 비중이 약 49.7%로, 시장에서는 전체 인수를 통한 확실한 통제권 확보 전략이 절반가량을 차지합니다.)"
+        },
+        "hightech": {
+          "hightech_score": 10,
+          "ma_market_hightech_evaluation": "이 특허는 NAND 플래시 메모리와 같은 비휘발성 저장장치의 결함을 관리하는 시스템과 방법에 관한 것입니다. 데이터 손실을 방지하고 메모리의 효율적 사용을 도모하는 기술로, 반도체 및 저장장치 분야의 첨단 기술에 해당합니다.\n\n특허의 내용은 다양한 트리거 이벤트를 모니터링하여 결함을 탐지하고, 이에 따라 메모리 영역을 세분화하여 관리하는 정책을 포함하고 있습니다. 이는 고도의 데이터 처리 및 저장장치 관리 기술이 요구되는 분야에서 활용될 수 있습니다.\n\n따라서 본 특허는 제공된 High-Tech 리스트 중 'Semiconductors'와 'Disk Drives' 분야와 직접적으로 관련이 있습니다. 이러한 기술은 IT 하드웨어, 데이터센터, 첨단 전자기기 등 다양한 산업에서 파급효과를 가질 수 있습니다.",
+          "ma_market_hightech_evaluation_paragraphs": [
+            "이 특허는 NAND 플래시 메모리와 같은 비휘발성 저장장치의 결함을 관리하는 시스템과 방법에 관한 것입니다. 데이터 손실을 방지하고 메모리의 효율적 사용을 도모하는 기술로, 반도체 및 저장장치 분야의 첨단 기술에 해당합니다.",
+            "특허의 내용은 다양한 트리거 이벤트를 모니터링하여 결함을 탐지하고, 이에 따라 메모리 영역을 세분화하여 관리하는 정책을 포함하고 있습니다. 이는 고도의 데이터 처리 및 저장장치 관리 기술이 요구되는 분야에서 활용될 수 있습니다.",
+            "따라서 본 특허는 제공된 High-Tech 리스트 중 'Semiconductors'와 'Disk Drives' 분야와 직접적으로 관련이 있습니다. 이러한 기술은 IT 하드웨어, 데이터센터, 첨단 전자기기 등 다양한 산업에서 파급효과를 가질 수 있습니다."
+          ],
+          "hightech_reason": "High-Tech 적합성 : (입력 JSON의 특허 제목 및 초록) -> (비휘발성 메모리(NAND Flash Memory)의 결함 관리 정책에 관한 기술로, 'Semiconductors' 및 'Disk Drives' 등 High-Tech 카테고리와 명확한 기술적 연관성이 있음.)"
+        }
+      },
+      "ma_market_anchor": {
+        "ma_anchor_score": 26,
+        "ma_market_anchor_evaluation": "정량 앵커는 분야 동향·NAICS 동종 비중·국경간 개방성·완전 인수 비율을 반영해 26점(50점 만점)으로 산출되었습니다. 이 값은 LLM 네 관점 합산 점수와 가중 블렌딩되어 최종 시장 매력도에 반영됩니다.",
+        "anchor_reason": "분야 M&A 종합(final_score×22, 캡22) : (0.6880) -> (기여 15.14점)\n최근 3년 평균 동종 인수비중 B_ratio×16, 캡16 : (0.2373) -> (기여 3.80점)\n국경간 거래비중×12, 캡12 : (0.1950) -> (기여 2.34점)\n완전인수 비율 full/total×10, 캡10 : (full=1853, total=3726, 비율=0.4973) -> (기여 4.97점)"
+      },
+      "ma_market_evaluation": "이 분야는 최근 5년간 완만한 성장세를 보이고 있으며, 과거 최저점 대비 뚜렷한 회복세를 나타내고 있습니다. 연간 거래 건수도 꾸준히 증가하여 시장의 활력이 유지되고 있습니다.\n\n동종 산업 내 인수 비중은 전체 거래의 약 20~25%로, 내부 인수와 외부 인수가 균형을 이루고 있습니다. 이는 다양한 유형의 인수 전략이 혼재되어 있음을 시사합니다.\n\n인수자 집중도는 낮은 편으로, 상위 3개 인수자의 점유율이 38% 수준이고 HHI 지수도 낮아 시장이 다수의 기업에 의해 분산되어 있습니다. 따라서 특정 기업의 독점적 영향력은 크지 않은 것으로 보입니다.\n\n국경 간 거래 비중은 전체의 약 20%로, 이 분야의 거래는 주로 국내에서 이루어지는 경향이 있습니다. 개방성 측면에서는 다소 제한적인 모습을 보입니다.\n\n국경 간 거래의 방향성은 미국 기업이 해외 기업을 인수하는 유출(outbound)이 더 많아, 미국이 적극적으로 해외 시장에 진출하는 양상이 나타납니다.\n\n연도별로 보면 국경 간 거래 건수는 최근 6년간 비교적 일정하게 유지되고 있으며, 2023년 이후에는 소폭 증가하는 추세를 보이고 있습니다.\n\n해당 분야에서는 전체 인수(Full Acquisition)와 일부 지분 인수(Stake Purchase)가 모두 활발하게 이루어지고 있습니다. 전체 인수 비중이 약 50%에 달해, 기업들이 기술이나 시장을 신속하게 확보하려는 경향이 강하게 나타납니다.\n\n일부 지분 인수 중에서도 동일 기업에 대해 반복적으로 지분을 늘리는 사례가 약 28%로 나타나, 단순한 탐색을 넘어 단계적으로 영향력을 확대하려는 전략이 자주 사용되고 있습니다. 이는 신중한 접근과 점진적 통제권 확보를 선호하는 투자 패턴을 보여줍니다.\n\n이러한 다양한 인수 유형의 조합은 기업들이 시장 상황과 리스크를 고려해 맞춤형 M&A 전략을 구사하고 있음을 의미합니다. 즉각적인 통제권 확보와 점진적 영향력 확대 전략이 공존하고 있어, 유연한 투자 및 인수 방식을 채택하는 것이 특징입니다.\n\n이 특허는 NAND 플래시 메모리와 같은 비휘발성 저장장치의 결함을 관리하는 시스템과 방법에 관한 것입니다. 데이터 손실을 방지하고 메모리의 효율적 사용을 도모하는 기술로, 반도체 및 저장장치 분야의 첨단 기술에 해당합니다.\n\n특허의 내용은 다양한 트리거 이벤트를 모니터링하여 결함을 탐지하고, 이에 따라 메모리 영역을 세분화하여 관리하는 정책을 포함하고 있습니다. 이는 고도의 데이터 처리 및 저장장치 관리 기술이 요구되는 분야에서 활용될 수 있습니다.\n\n따라서 본 특허는 제공된 High-Tech 리스트 중 'Semiconductors'와 'Disk Drives' 분야와 직접적으로 관련이 있습니다. 이러한 기술은 IT 하드웨어, 데이터센터, 첨단 전자기기 등 다양한 산업에서 파급효과를 가질 수 있습니다.",
+      "ma_market_reason": "【분야·NAICS·동향】\nrecent_growth : (입력 JSON의 원시 값) -> (최근 5년간 M&A 성장률은 0.278로, 완만한 성장세를 보이고 있습니다.)\nrecovery_ratio : (입력 JSON의 원시 값) -> (회복 수준은 1.376으로, 과거 최저점 대비 상당한 회복세를 나타냅니다.)\nrecent_trend_slope : (입력 JSON의 원시 값) -> (연간 추세 기울기(240.5)는 최근 몇 년간 거래 건수 증가가 뚜렷했음을 시사합니다.)\nfinal_score : (입력 JSON의 원시 값) -> (성장성과 회복성을 반영한 종합 점수는 0.688로, 해당 분야의 중상위권 성장성을 의미합니다.)\nA_target_cnt (NAICS 334413) : (입력 JSON의 원시 값) -> (2021~2025년 동안 M&A 타깃 건수는 512(2022년)에서 862(2025년)로 증가해, 시장 규모가 확대되고 있습니다.)\nB_ratio (동종 인수 비중) : (입력 JSON의 원시 값) -> (동종 산업 내 인수 비중은 0.214~0.254로, 전체 거래의 약 20~25%가 내부 인수임을 보여줍니다.)\nindustry_concentration_acquiror_naics : (입력 JSON의 원시 값) -> (상위 3개 인수자의 점유율은 38.35%, HHI는 0.06735로, 인수자 분산도가 높고 특정 기업 집중 현상은 낮은 편입니다.)\n\n【국경간 거래】\ncross_border_ratio : (0.195) -> (전체 거래 중 약 19.5%가 국경 간 거래로, 개방성은 낮은 편입니다.)\ndirection : (\"outbound\" (outbound_cnt: 158, inbound_cnt: 117)) -> (국경 간 거래에서 유출(미국 기업이 해외 기업을 인수)이 유입보다 많아, 거래 방향성은 유출 중심입니다.)\ncrossborder_deal_count_by_year : ({\"2020\": 113, \"2021\": 116, \"2022\": 113, \"2023\": 131, \"2024\": 128, \"2025\": 125}) -> (최근 6년간 국경 간 거래 건수는 연 110~130건대로 비교적 일정하며, 2023년 이후 소폭 증가하는 경향이 있습니다.)\n\n【인수 유형】\nstake_single_target_cnt : (355) -> (주식 일부 인수 중 동일 기업에 대해 1회만 이뤄진 거래가 355건으로, 탐색적이거나 옵션형 투자가 일정 비중을 차지함을 보여줍니다.)\nstake_multi_target_cnt : (522) -> (동일 기업에 대해 2회 이상 주식 일부 인수가 이뤄진 사례가 522건으로, 단계적 인수 또는 지배력 강화를 위한 전략이 활발히 사용되고 있음을 시사합니다.)\nfull_acquisition_cnt : (1853) -> (전체 주식 인수(Full Acquisition)가 1853건으로, 즉각적인 기술 또는 시장 확보를 목적으로 한 거래가 절반에 가까운 비중을 차지합니다.)\nstake_multi_over_stake_ratio : (0.2787) -> (주식 일부 인수 중 동일 타깃에 대한 다회 거래 비율이 약 27.9%로, 단순 탐색을 넘어 반복적·단계적 지분 확대 전략이 두드러집니다.)\nfull_over_all_ratio : (0.4973) -> (전체 거래 중 Full Acquisition의 비중이 약 49.7%로, 시장에서는 전체 인수를 통한 확실한 통제권 확보 전략이 절반가량을 차지합니다.)\n\n【하이테크 적합성】\nHigh-Tech 적합성 : (입력 JSON의 특허 제목 및 초록) -> (비휘발성 메모리(NAND Flash Memory)의 결함 관리 정책에 관한 기술로, 'Semiconductors' 및 'Disk Drives' 등 High-Tech 카테고리와 명확한 기술적 연관성이 있음.)\n\n【정량 앵커】\n분야 M&A 종합(final_score×22, 캡22) : (0.6880) -> (기여 15.14점)\n최근 3년 평균 동종 인수비중 B_ratio×16, 캡16 : (0.2373) -> (기여 3.80점)\n국경간 거래비중×12, 캡12 : (0.1950) -> (기여 2.34점)\n완전인수 비율 full/total×10, 캡10 : (full=1853, total=3726, 비율=0.4973) -> (기여 4.97점)"
+    },
+    "tech_evaluation": {
+      "tech_score": 13,
+      "tech_evaluation": "본 발명은 비휘발성 메모리 내 결함을 관리하기 위한 정책 엔진의 동작을 구체적으로 정의하고 있습니다. 청구항은 트리거 이벤트의 유형별 모니터링, 결함 발생 가능성 평가, 그리고 선제적 페이지 리타이어링까지의 일련의 절차를 상세히 기술하여, 구현 단계에서의 구체성이 확보되어 보입니다. 다만, 결함 관리 및 예측적 리타이어링이라는 기본 개념 자체는 동 분야에서 널리 연구된 주제이므로, 근본적인 차별화 포인트가 뚜렷하게 드러나지는 않습니다. 트리거 이벤트의 유형 및 결함 가능성 산정 방식이 구체적으로 명시되어 있으나, 기존 기술과의 실질적 차별성은 제한적으로 읽힙니다. 인용문헌 수가 많아 선행기술 대비 신규성이나 진보성 확보에 부담이 있는 것으로 판단됩니다. 기술 설명은 논리적 흐름이 일관되고, 용어 사용 역시 명확하여 신뢰도는 준수한 편입니다. 전체적으로 완성도는 있으나, 기존 기술과의 차별성이나 독창성 측면에서는 한계가 보입니다.",
+      "tech_reason": "IPC 코드 개수 : (IPC 개수: 4, 산업 평균: 4.15) -> (IPC 코드 개수가 산업 평균에 근접하여 기술 범위의 확장성이나 융합성 측면에서 평이한 수준임을 시사함.)\n인용문헌 수 : (인용문헌 수: 17, 산업 평균: 10) -> (인용문헌 수가 산업 평균보다 상당히 많아, 선행기술 부담이 크고 신규성·진보성 측면에서 차별화가 쉽지 않음을 의미함.)\n독립항·청구 구조 : (독립항 1개, 청구항 1개, 청구항 길이(단어 수) 상당히 김) -> (독립항이 1개로 집중되어 있으나, 상세한 단계와 조건을 포함해 구체적으로 기술되어 있어 완성도는 중간 이상으로 평가됨.)"
+    },
+    "rights_evaluation": {
+      "rights_score": 21,
+      "rights_evaluation": "이 특허는 전체 청구항 수와 독립항, 계열 수가 모두 풍부하여 권리 설계 측면에서 매우 강점을 보입니다. 다양한 독립항을 통해 여러 기술적 측면을 포괄하고 있어, 회피 설계에 대한 저항력이 높아 보입니다. 다만, 독립항의 문구가 상당히 길고 구체적으로 작성되어 있어, 권리 범위가 명확한 대신 해석상 한정될 여지도 있습니다. 방법 청구항 중심의 구성으로 보이나, 계열이 다양해 실무적으로도 활용도가 높을 것으로 판단됩니다. 수학식이나 수치 범위에 의한 과도한 제한은 보이지 않아, 기술적 범위의 불필요한 축소는 우려되지 않습니다. 전반적으로 권리 범위의 안정성과 실효성이 모두 확보된 설계로 평가됩니다.",
+      "rights_reason": "전체 청구항 수 : (20) -> (평균을 크게 상회하는 청구항 수로, 다양한 실시예와 회피 방지에 유리한 구조입니다.)\n독립항·종속항·계열 : (독립항 8, 종속항 12, 계열 8) -> (독립항과 계열이 모두 많아, 권리 범위의 다각적 확보와 다양한 기술적 포인트를 포괄할 수 있습니다.)\n독립항 분량(단어 수) : (287) -> (독립항이 상당히 장문으로 작성되어 있어, 권리 범위가 구체적이지만 다소 한정적으로 해석될 소지가 있습니다.)"
+    },
+    "final_result": {
+      "final_score": 62,
+      "evaluation": "시장 매력도는 성장성과 회복성이 중상위권에 속하며, 다양한 인수 전략이 혼재되어 있어 투자 유연성이 높게 나타납니다. 기술성 측면에서는 구현의 구체성은 확보되어 있으나, 선행기술 대비 차별성이나 독창성에서는 다소 한계가 보입니다. 권리성은 청구항 수와 계열이 풍부해 회피 설계에 강점을 가지며, 권리 범위의 안정성과 실효성이 모두 확보된 구조로 보입니다. 전체적으로 각 영역의 장단점이 균형 있게 반영되어, 실무적 활용 가능성과 시장 진입 매력 모두 일정 수준 이상임을 시사합니다. 다만, 기술적 차별화의 한계는 장기적 경쟁력 확보 측면에서 보완이 필요해 보입니다.",
+      "reason": "시장 매력도(28점)는 성장률, 회복성, 인수 유형의 다양성, 하이테크 적합성 등에서 중상위권임. 기술성(13점)은 구체적 구현과 논리적 완성도는 있으나, 인용문헌 다수와 기존 기술 대비 차별성 부족으로 점수가 제한됨. 권리성(21점)은 청구항 수, 독립항·계열의 풍부함, 회피 설계 저항력 등에서 강점이 뚜렷함. 종합 점수(62점)는 각 영역의 강점과 약점이 균형 있게 반영된 결과임."
+    }
+  },
+  "ipc_descriptions": [
+    {
+      "ipc_code": "G06F 11/00",
+      "short_description": "컴퓨터 시스템",
+      "long_description": "컴퓨터 시스템의 구조 및 기능에 관한 기술"
+    },
+    {
+      "ipc_code": "G11C 29/00",
+      "short_description": "비휘발성 메모리",
+      "long_description": "비휘발성 메모리 장치의 구조 및 기능에 관한 기술"
+    },
+    {
+      "ipc_code": "G06F 11/07",
+      "short_description": "메모리 관리",
+      "long_description": "메모리 관리 및 최적화에 관한 기술"
+    },
+    {
+      "ipc_code": "G11B 20/18",
+      "short_description": "데이터 저장",
+      "long_description": "데이터 저장 및 검색 기술에 관한 기술"
+    }
+  ],
+  "recommend_companies": {
+    "target_similar_companies": [
+      {
+        "rank": 1,
+        "company_name": "Medtronic Inc",
+        "company_id": "35311",
+        "avg_similarity": 0.5312,
+        "matched_patent_count": 2,
+        "patents": [
+          {
+            "similarity": 0.5602,
+            "title": "Implantable medical device having a scheme for managing storage of data",
+            "ipc": [
+              "A61N1/02",
+              "A61N1/362",
+              "A61N1/372",
+              "G06F12/02",
+              "G16H10/60"
+            ],
+            "abstract": " The disclosure describes a scheme for managing the operations of a flash memory. The scheme enables the flash memory to be used in a write-once mode to allow non-volatile storage of small amounts of data that must be written repeatedly. Among other things, the scheme eliminates the need to erase sectors of the flash memory, thus eliminating the high current consumption associated with erasures, while enabling preservation of relevant data in those sectors. In the context of an implantable medical device, this scheme is used to store data that is needed after a reset of the device, such as MRI-related data that is/are dynamically adjusted by firmware, or program code updates.",
+            "application_number": "15375722",
+            "application_date": "20161212",
+            "patent_country": "US"
+          },
+          {
+            "similarity": 0.5023,
+            "title": "Memory array with flash and random access memory and method therefor, reading data from the flash memory without storing the data in the random access memory",
+            "ipc": [
+              "G06F12/00",
+              "G11C11/00",
+              "G11C16/10",
+              "G06F13/42",
+              "G06F3/06",
+              "G06F13/38",
+              "G06F12/02",
+              "G06F12/0868",
+              "G06F12/06"
+            ],
+            "abstract": " Memory array, system and method for storing data. The memory array has a flash memory array, a random access memory array coupled to the flash memory and configured to receive the data, a memory management module and a data bus. The memory management module is coupled to the random access memory array and to the flash memory array, the memory management module being configured to transfer at least a portion of the data stored in the random access memory array to the flash memory array. The data bus is coupled to the flash memory array and configured to output at least a portion of the data originally stored in the random access memory array from the flash memory array.",
+            "application_number": "13663099",
+            "application_date": "20121029",
+            "patent_country": "US"
+          }
+        ]
+      },
+      {
+        "rank": 2,
+        "company_name": "Mos Tech Co Ltd",
+        "company_id": "36906",
+        "avg_similarity": 0.5193,
+        "matched_patent_count": 1,
+        "patents": [
+          {
+            "similarity": 0.5193,
+            "title": "사용중에 발생되는 결함을 효율적으로 리페어할 수 있는 플래시 메모리 장치 및 그의 리페어 방법",
+            "ipc": [
+              "G11C 29/00",
+              "G11C 16/08"
+            ],
+            "abstract": "사용중에 발생되는 결함을 효율적으로 리페어할 수 있는 플래시 메모리 장치 및 그의 리페어 방법이 게시된다. 본 발명의 플래시 메모리 장치는 복수개의 플래시 메모리 셀들이 다수개의 노말 메모리 블락들, 블락 리던던시 블락, 칼럼 리던던시 블락 및 캠 블락으로 구분되어 배치되는 상기 메모리 어레이; 상기 메모리 어레이의 로우를 선택하여 구동하는 로우 선택 구동부; 상기 메모리 어레이의 칼럼을 선택하여 상기 메모리 어레이로의 데이터를 입출하는 칼럼 선택부; 상기 로우 선택 구동부 및 상기 칼럼 선택부를 제어하는 내부 리페어 명령 신호군을 발생하는 리페어 제어부; 및 결함수를 생성하여 소정의 기준수와 비교하고, 비교된 결과를 반영하는 상기 리페어 결정 신호를 발생하는 리페어 방법 결정부를 구비한다. 본 발명의 플래시 메모리 장치 및 그의 리페어 방법에 의하면, 사용중에 발생되는 결함이 효율적으로 리페어될 수 있다.",
+            "application_number": "1020140064042",
+            "application_date": "20140528",
+            "patent_country": "KR"
+          }
+        ]
+      },
+      {
+        "rank": 3,
+        "company_name": "Palantir Technologies Inc",
+        "company_id": "41635",
+        "avg_similarity": 0.5162,
+        "matched_patent_count": 2,
+        "patents": [
+          {
+            "similarity": 0.5162,
+            "title": "Defect resolution",
+            "ipc": [
+              "G06F9/44",
+              "G06F11/36",
+              "G06F8/70",
+              "G06F8/10"
+            ],
+            "abstract": " Systems, methods, and non-transitory computer readable media are provided for facilitating improved defect resolution. Defect information and defect criteria information may be obtained. The defect information may identify defects of software and/or hardware in development. The defect criteria information may define one or more criteria for measuring the defects. The defects may be measured based on the one or more criteria. A defect analysis interface may be provided. The defect analysis interface may list a limited number of the defects based on the measurements of the defects. The defect analysis interface may provide costs (e.g., computing resources, time, personnel) of solving the defects.",
+            "application_number": "17752370",
+            "application_date": "20220524",
+            "patent_country": "US"
+          },
+          {
+            "similarity": 0.5162,
+            "title": "Defect resolution",
+            "ipc": [
+              "G06F9/44",
+              "G06F11/36",
+              "G06F8/70",
+              "G06F8/10"
+            ],
+            "abstract": " Systems, methods, and non-transitory computer readable media are provided for facilitating improved defect resolution. Defect information and defect criteria information may be obtained. The defect information may identify defects of software and/or hardware in development. The defect criteria information may define one or more criteria for measuring the defects. The defects may be measured based on the one or more criteria. A defect analysis interface may be provided. The defect analysis interface may list a limited number of the defects based on the measurements of the defects. The defect analysis interface may provide costs (e.g., computing resources, time, personnel) of solving the defects.",
+            "application_number": "16250818",
+            "application_date": "20190117",
+            "patent_country": "US"
+          }
+        ]
+      },
+      {
+        "rank": 4,
+        "company_name": "Tessell Inc",
+        "company_id": "56051",
+        "avg_similarity": 0.5126,
+        "matched_patent_count": 1,
+        "patents": [
+          {
+            "similarity": 0.5126,
+            "title": "Systems and methods for preventing data loss",
+            "ipc": [
+              "G06F11/14"
+            ],
+            "abstract": " Systems, methods, and computer readable media for preventing data loss at ephemeral and/or volatile storage of a local storage system are provided. These techniques may include synchronizing that state of the ephemeral storage system to a cloud-based storage system and capturing a cloud snapshot of the cloud-based storage system. In the event of a failure at the volatile storage, the cloud-based snapshot can be used as a restore point for the cloud-based storage system, the state of which can then be synchronized back to the volatile storage. Additionally, the local storage system includes durable storage for storing transaction logs. After synchronizing the state of the cloud-based storage system to the volatile storage, the local storage system can playback transactions in the transaction log to restore the volatile segment to the state at the time of the failure.",
+            "application_number": "17751964",
+            "application_date": "20220524",
+            "patent_country": "US"
+          }
+        ]
+      },
+      {
+        "rank": 5,
+        "company_name": "C&R Research Co Ltd",
+        "company_id": "9251",
+        "avg_similarity": 0.4964,
+        "matched_patent_count": 1,
+        "patents": [
+          {
+            "similarity": 0.4964,
+            "title": "메모리 컨트롤러 및 이를 포함하는 스토리지 장치",
+            "ipc": [
+              "G06F 12/02",
+              "G06F 12/1009",
+              "G06F 3/06"
+            ],
+            "abstract": "본 발명의 일 실시예에 따른 스토리지 장치는, 복수의 피지컬 존(physical zone)에 대응하는 복수의 메모리 블록을 포함하는 메모리 장치 및 메모리 컨트롤러를 포함하며, 상기 메모리 컨트롤러는, 호스트로부터 복수의 로지컬 존(logical zone) 중의 리셋(reset) 대상 존에 대한 존 리셋 커맨드를 수신하면, 매핑 테이블(mapping table)에서 상기 복수의 피지컬 존 중에서 상기 리셋 대상 존에 대응하는 피지컬 존을 무효 존(invalid zone)으로 업데이트하고, 상기 호스트로부터 수신한 포그라운드(foreground) 커맨드에 대응하는 포그라운드 동작을 수행하지 않는 기간마다 상기 무효 존에 포함된 메모리 블록들 중에서 적어도 하나의 삭제 대상 메모리 블록에 대해 하나씩 블록 삭제(block erase) 동작을 순차적으로 트리거하며, 상기 삭제 대상 메모리 블록 중에서 현재 메모리 블록에 대한 블록 삭제 동작을 수행하는 기간에 상기 포그라운드 커맨드를 수신하면, 상기 현재 메모리 블록에 대한 블록 삭제 동작을 완료한 후에 상기 포그라운드 커맨드에 대응하는 포그라운드 동작을 트리거함으로써, 포그라운드 동작의 지연 시간을 감소시키고 스토리지 장치의 수명을 개선한다.",
+            "application_number": "1020230178989",
+            "application_date": "20231211",
+            "patent_country": "KR"
+          }
+        ]
+      }
+    ],
+    "acquiror_similar_companies": [
+      {
+        "rank": 1,
+        "company_name": "Cadence Design Systems Inc",
+        "company_id": "6365",
+        "avg_similarity": 0.586,
+        "matched_patent_count": 1,
+        "patents": [
+          {
+            "similarity": 0.586,
+            "title": "Robust erase page detection logic for NAND flash memory devices",
+            "ipc": [
+              "G11C16/06",
+              "G11C16/04"
+            ],
+            "abstract": " The present invention provides a method and system to reduce the impact of errors introduced in flash devices while providing improved system performance through optimized activities with limited impact to overhead using a predetermined threshold value or threshold device value. In an embodiment, a device threshold value is compared with the cumulative number of data bits having a zero value of a target page and an error type of the target page is assessed to determine whether the target page is available to be written to. Therefore for a highly effective method for is provided for determining the availability of a page, having a block address and page address, to be identified, in one instance, as being an erased page that is available to be written to.",
+            "application_number": "13631171",
+            "application_date": "20120928",
+            "patent_country": "US"
+          }
+        ]
+      },
+      {
+        "rank": 2,
+        "company_name": "Intel Corp",
+        "company_id": "19310",
+        "avg_similarity": 0.5611,
+        "matched_patent_count": 3,
+        "patents": [
+          {
+            "similarity": 0.6267,
+            "title": "NAND 플래시 메모리를 위한 결함 관리 정책들",
+            "ipc": [
+              "G06F 11/07",
+              "G06F 11/20"
+            ],
+            "abstract": "비휘발성 스토리지 시스템들에서 유용한 메모리를 가능한 한 많이 유지하면서, 데이터의 우발적인 손실을 회피하기 위해 사용될 수 있는, 비휘발성 스토리지 시스템들에서의 결함들을 관리하는 시스템들 및 방법들이 개시되어 있다. 개시된 시스템들 및 방법들은 비휘발성 스토리지 시스템들에 포함되는 하나 이상의 비휘발성 메모리(NVM) 디바이스들에서의 가능한 결함들을 검출하기 위해 복수의 트리거 이벤트들을 모니터링하고, 가능한 결함들의 검출을 초래한 트리거 이벤트들의 타입들에 기초하여 하나 이상의 결함 관리 정책들을 각각의 NVM 디바이스들에 적용할 수 있다. 그러한 결함 관리 정책들은 증가된 그래뉼러티로 비휘발성 스토리지 시스템들에서 메모리를 리타이어링하는데 선행적으로 사용되어, 결함을 포함할 가능성이 있는 비휘발성 메모리의 영역들에 대해 메모리의 리타이어먼트를 포커싱할 수 있다.",
+            "application_number": "1020167010692",
+            "application_date": "20141021",
+            "patent_country": "KR"
+          },
+          {
+            "similarity": 0.5287,
+            "title": "불량 블록 관리 메커니즘",
+            "ipc": [
+              "G11C 29/00",
+              "G11C 29/56",
+              "G11C 16/34",
+              "G11B 20/18"
+            ],
+            "abstract": "시스템은 NVRAM(non-volatile random access memory) 디바이스 및 이 디바이스 내에서 불량 블록을 검출하고, 불량 블록을 회수하고, 불량 블록의 주소를 교체 블록에 할당함으로써 불량 블록을 교체 블록으로 대체하는 제어기 로직을 포함한다.",
+            "application_number": "1020147033521",
+            "application_date": "20130603",
+            "patent_country": "KR"
+          },
+          {
+            "similarity": 0.5278,
+            "title": "NAND 메모리 내구성을 개선하는 동적 윈도우",
+            "ipc": [
+              "G11C 16/34",
+              "G11C 16/10",
+              "G11C 29/42"
+            ],
+            "abstract": "NAND(Not And) 메모리 내구성을 개선하기 위해 동적 윈도우를 제공하는 방법들 및 장치가 설명된다. 일 실시예에서, NAND 메모리 장치와 연관되는 프로그램 소거 윈도우는 더 높은 소거 검증(TEV) 전압으로 시작하고 TEV 전압을 현재 사이클 카운트 값에 기초하여 NAND 메모리 장치의 수명 동안 후속 사이클들에 의해 낮춤으로써 동적으로 변화된다. 대안적으로, 프로그램 소거 윈도우는 더 높은 프로그램 검증(PV) 전압 및 소거 검증(TEV) 전압으로 시작하고 PV 및 TEV 전압들을 현재 사이클 카운트 값에 기초하여 NAND 메모리 장치의 수명 동안 후속 사이클들에 의해 낮춤으로써 동적으로 변화된다. 다른 실시예들이 또한 개시되고 청구된다.",
+            "application_number": "1020147017561",
+            "application_date": "20111229",
+            "patent_country": "KR"
+          }
+        ]
+      },
+      {
+        "rank": 3,
+        "company_name": "Medtronic Inc",
+        "company_id": "24373",
+        "avg_similarity": 0.5596,
+        "matched_patent_count": 1,
+        "patents": [
+          {
+            "similarity": 0.5596,
+            "title": "Implantable medical device having a scheme for managing storage of data",
+            "ipc": [
+              "A61N1/02",
+              "A61N1/362",
+              "A61N1/372",
+              "G06F12/02",
+              "G16H10/60"
+            ],
+            "abstract": " The disclosure describes a scheme for managing the operations of a flash memory. The scheme enables the flash memory to be used in a write-once mode to allow non-volatile storage of small amounts of data that must be written repeatedly. Among other things, the scheme eliminates the need to erase sectors of the flash memory, thus eliminating the high current consumption associated with erasures, while enabling preservation of relevant data in those sectors. In the context of an implantable medical device, this scheme is used to store data that is needed after a reset of the device, such as MRI-related data that is/are dynamically adjusted by firmware, or program code updates.",
+            "application_number": "15375722",
+            "application_date": "20161212",
+            "patent_country": "US"
+          }
+        ]
+      },
+      {
+        "rank": 4,
+        "company_name": "Hitachi Ltd",
+        "company_id": "17508",
+        "avg_similarity": 0.5593,
+        "matched_patent_count": 1,
+        "patents": [
+          {
+            "similarity": 0.5593,
+            "title": "STORAGE DEVICE AND STORAGE DEVICE CONTROL METHOD",
+            "ipc": [
+              "G06F11/07",
+              "G06F3/06"
+            ],
+            "abstract": " The degree of deterioration of each physical storage area in a non-volatile memory is evaluated without interrupted operation of a storage device. The storage device includes a non-volatile memory configured to include a plurality of physical storage areas and a controller. The controller calculates the degree of deterioration of each of a plurality of specific physical storage areas by performing an evaluation process of evaluating the plurality of specific physical storage areas part by part over all of the plurality of specific physical storage areas and determines whether to use the corresponding physical storage areas based on the calculated degree of deterioration. In the evaluation process, the controller selects a part of the plurality of specific physical storage areas writes predetermined evaluation data on the physical storage area group, reads the evaluation data and calculates the degree of deterioration based on the read evaluation data.",
+            "application_number": "14233939",
+            "application_date": "20130319",
+            "patent_country": "US"
+          }
+        ]
+      },
+      {
+        "rank": 5,
+        "company_name": "SK Inc",
+        "company_id": "34812",
+        "avg_similarity": 0.526,
+        "matched_patent_count": 2,
+        "patents": [
+          {
+            "similarity": 0.5288,
+            "title": "예비 영역을 유동적으로 관리하는 반도체 스토리지 시스템 및 그 제어 방법",
+            "ipc": [
+              "G06F 12/02",
+              "G06F 13/16"
+            ],
+            "abstract": "반도체 스토리지 시스템이 개시된다. 개시된 반도체 스토리지 시스템은, 복수의 메모리 블록을 포함하며, 상기 메모리 블록 내 불량 블록 발생시 상기 불량 블록의 교체용 블록들을 포함하는 플래시 메모리 영역, 및 상기 교체용 블록들을 포함하는 논리적 블록에 대해 논리적-물리적 어드레스 맵핑을 수행하고, 상기 불량 블록에 대응되도록 상기 논리적 블록의 논리적 어드레스를 이용하여 상기 교체용 블록들을 선택하는 메모리 컨트롤러를 포함한다.  플래시 메모리, 할당, 불량 블록,",
+            "application_number": "1020090093594",
+            "application_date": "20090930",
+            "patent_country": "KR"
+          },
+          {
+            "similarity": 0.5231,
+            "title": "데이터 저장 장치 및 데이터 저장 장치의 동작 방법",
+            "ipc": [
+              "G06F 12/02",
+              "G06F 3/06"
+            ],
+            "abstract": "본 발명은 각 메모리 영역의 불량 정보에 기초하여 각 메모리 영역에 있는 여분 영역을 일정한 비율 또는 일정한 크기 이상으로 유지하도록 관리하는 데이터 저장 장치 및 데이터 저장 장치의 동작 방법에 관한 것이다.  본 발명의 실시예들에 의하면, 메모리 장치에 구비된 복수의 메모리 영역들을 복수의 저장 영역들로 구분하고, 상기 복수의 저장 영역들 각각에 외부 장치의 논리 주소를 매핑하여 관리하는 동작, 상기 복수의 저장 영역들 각각에 대응하는 메모리 영역에서 발생하는 불량 정보를 모니터링하는 동작 및 상기 복수의 메모리 영역 각각의 여분 영역을 일정한 크기 또는 일정한 비율 이상으로 유지하기 위하여 상기 불량 정보에 기초하여 상기 복수의 저장 영역들 각각에 대해 상기 논리 주소를 리매핑하는 동작을 포함하는 데이터 저장 장치의 동작 방법이 제공될 수 있다.",
+            "application_number": "1020240040317",
+            "application_date": "20240325",
+            "patent_country": "KR"
+          }
+        ]
+      }
+    ]
+  },
+  "ma_patterns": {
+    "target_naic": "334413",
+    "target_naic_title": "Semiconductor and Related Device Manufacturing",
+    "patterns": [
+      {
+        "acquirer_naic": "334413",
+        "acquirer_naic_title": "Semiconductor and Related Device Manufacturing",
+        "ratio_percent": 20.8,
+        "relation_label": "수평확장",
+        "one_line_description": "같은 산업 내 경쟁력 강화",
+        "reason": "같은 반도체 산업에서 인수합병이 이루어지면, 경쟁력을 높이고 시장 점유율을 확대할 수 있습니다. 두 회사가 비슷한 기술과 고객을 가지고 있어, 서로의 강점을 활용할 수 있는 기회가 많습니다."
+      },
+      {
+        "acquirer_naic": "523910",
+        "acquirer_naic_title": "Miscellaneous Intermediation",
+        "ratio_percent": 11.6,
+        "relation_label": "금융지원",
+        "one_line_description": "자금 조달 및 투자 지원",
+        "reason": "금융 중개업체가 반도체 기업을 인수하면, 자금 조달과 투자 지원을 통해 기업의 성장 가능성을 높일 수 있습니다. 이들은 자본을 효율적으로 관리하고, 필요한 자금을 적시에 제공하여 기업의 운영을 원활하게 도와줍니다."
+      },
+      {
+        "acquirer_naic": "523999",
+        "acquirer_naic_title": "Miscellaneous Financial Investment Activities",
+        "ratio_percent": 5.6,
+        "relation_label": "금융지원",
+        "one_line_description": "투자 및 자산 관리",
+        "reason": "다양한 금융 투자 활동을 하는 기업이 반도체 회사를 인수하면, 자산 관리와 투자 전략을 통해 기업의 가치를 높일 수 있습니다. 이들은 시장의 변화에 맞춰 자금을 효율적으로 운용하여, 반도체 기업의 성장에 기여할 수 있습니다."
+      },
+      {
+        "acquirer_naic": "525990",
+        "acquirer_naic_title": "Other Financial Vehicles",
+        "ratio_percent": 4.7,
+        "relation_label": "금융지원",
+        "one_line_description": "자산 운용 및 투자",
+        "reason": "기타 금융 수단을 제공하는 기업이 반도체 회사를 인수하면, 자산 운용과 투자 기회를 통해 기업의 재무 구조를 개선할 수 있습니다. 이들은 다양한 금융 상품을 활용하여 반도체 기업의 성장을 지원할 수 있습니다."
+      },
+      {
+        "acquirer_naic": "334419",
+        "acquirer_naic_title": "Other Electronic Component Manufacturing",
+        "ratio_percent": 3.2,
+        "relation_label": "수직통합",
+        "one_line_description": "부품 생산 및 공급망 통합",
+        "reason": "다른 전자 부품 제조업체가 반도체 회사를 인수하면, 부품 생산과 공급망을 통합하여 효율성을 높일 수 있습니다. 이를 통해 생산 과정에서의 비용 절감과 품질 향상을 기대할 수 있습니다."
+      }
+    ]
+  },
+  "parse_audit": {
+    "ocr_lengths": {
+      "front_ocr_chars": 3307,
+      "back_ocr_chars": 67022,
+      "metadata_prompt_ocr_chars": 3307,
+      "metadata_max_chars_setting": 12000,
+      "metadata_truncated": false
+    },
+    "ipc_counts": {
+      "strict_ipc_count_inid51_full_ocr": 4,
+      "strict_ipc_count_inid51_metadata_slice": 4,
+      "ipc_info_count_after_pipeline": 4,
+      "delta_strict_full_minus_ipc_info": 0
+    },
+    "verbatim_checks": {
+      "title_substring_in_front_ocr": true,
+      "abstract_prefix_in_front_ocr": true,
+      "independent_claim_400chars_prefix_in_full_ocr": false
+    },
+    "claims_audit": {
+      "forward_citation_count": 17,
+      "claim_count": 20,
+      "independent_claim_count": 8,
+      "dependent_claim_count": 12,
+      "independent_plus_dependent_le_claim_count": true,
+      "ipc_count_claims": 4
+    }
+  }
+}
