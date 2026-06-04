@@ -107,6 +107,26 @@ def _extract_patent_country(meta: dict) -> str | None:
     return None
 
 
+def _ma_market_score_from_schema(ma_eval: dict):
+    score = ma_eval.get("ma_attractiveness_score")
+    if score is not None:
+        try:
+            return max(0, min(50, int(round(float(score)))))
+        except (TypeError, ValueError):
+            return None
+
+    anchor = ma_eval.get("ma_anchor_score")
+    llm_sum = ma_eval.get("ma_attractiveness_score_llm_segments_sum")
+    if anchor is None or llm_sum is None:
+        return None
+
+    try:
+        blended = round(0.42 * float(anchor) + 0.58 * float(llm_sum))
+    except (TypeError, ValueError):
+        return None
+    return max(0, min(50, int(blended)))
+
+
 def build_final_output(
     user_info_list,
     user_score,
@@ -114,18 +134,18 @@ def build_final_output(
     user_pattern
 ):
     user_info = user_info_list[0]
+    ipc_info = user_info.get("ipc_info") or []
+    ma_market_eval = user_score["evaluation"]["ma_market_evaluation"]
 
     # -----------------------------
     # BASIC INFO
     # -----------------------------
     basic_info = {
         "pdf_name": user_info.get("pdf_name"),
-        "country": user_info.get("country"),
+        "country": _normalize_country_for_output(user_info.get("country")),
         "field": field_code_to_display_name(user_info.get("field")),
-        "parse_audit": user_info.get("parse_audit"),
         "patent": {
             "title": user_info.get("title"),
-            "forward_citation_count": user_info.get("forward_citation_count"),
             "applicant": {
                 "name": _normalize_applicant_name_for_output(user_info.get("applicant_name")),
                 "number": user_info.get("applicant_number"),
@@ -135,7 +155,7 @@ def build_final_output(
                 "number": user_info.get("grant_number"),
                 "date": user_info.get("grant_date"),
             },
-            "ipc_code": [ipc["code"] for ipc in user_info.get("ipc_info", [])],
+            "ipc_code": [ipc["code"] for ipc in ipc_info],
             "abstract": user_info.get("abstract"),
         },
     }
@@ -145,7 +165,7 @@ def build_final_output(
     # -----------------------------
     naics = {
         "primary": user_info.get("primary_naic_info"),
-        "candidates": user_info.get("candidate_naic_info", []),
+        "candidates": user_info.get("candidate_naic_info") or [],
     }
 
     # -----------------------------
@@ -153,21 +173,17 @@ def build_final_output(
     # -----------------------------
     evaluation = {
         "ma_market_evaluation": {
-            "ma_market_score": user_score["evaluation"]["ma_market_evaluation"]["ma_attractiveness_score"],
-            "ma_anchor_score": user_score["evaluation"]["ma_market_evaluation"].get("ma_anchor_score"),
-            "ma_llm_four_perspectives_sum": user_score["evaluation"]["ma_market_evaluation"].get(
-                "ma_attractiveness_score_llm_segments_sum"
-            ),
-            "ma_score_blending": user_score["evaluation"]["ma_market_evaluation"].get("ma_score_blending"),
-            "ma_market_perspectives": user_score["evaluation"]["ma_market_evaluation"].get(
-                "ma_market_perspectives", {}
-            ),
-            "ma_market_anchor": user_score["evaluation"]["ma_market_evaluation"].get("ma_market_anchor", {}),
+            "ma_market_score": _ma_market_score_from_schema(ma_market_eval),
+            "ma_anchor_score": ma_market_eval.get("ma_anchor_score"),
+            "ma_llm_four_perspectives_sum": ma_market_eval.get("ma_attractiveness_score_llm_segments_sum"),
+            "ma_score_blending": ma_market_eval.get("ma_score_blending"),
+            "ma_market_perspectives": ma_market_eval.get("ma_market_perspectives", {}),
+            "ma_market_anchor": ma_market_eval.get("ma_market_anchor", {}),
             "ma_market_evaluation": (
-                user_score["evaluation"]["ma_market_evaluation"].get("evaluation_summary")
-                or user_score["evaluation"]["ma_market_evaluation"].get("user_report")
+                ma_market_eval.get("evaluation_summary")
+                or ma_market_eval.get("user_report")
             ),
-            "ma_market_reason": user_score["evaluation"]["ma_market_evaluation"].get("reason", ""),
+            "ma_market_reason": ma_market_eval.get("reason", ""),
         },
         "tech_evaluation": {
             "tech_score": user_score["evaluation"]["tech_evaluation"]["technical_score"],
@@ -195,7 +211,7 @@ def build_final_output(
             "short_description": ipc["short_description"],
             "long_description": ipc["long_description"],
         }
-        for ipc in user_info.get("ipc_info", [])
+        for ipc in ipc_info
     ]
 
     # -----------------------------
@@ -219,7 +235,7 @@ def build_final_output(
 
     def transform_company_list(company_list, is_target=True):
         output = []
-        for idx, company in enumerate(company_list, start=1):
+        for idx, company in enumerate(company_list or [], start=1):
             output.append({
                 "rank": idx,
                 "company_name": strip_excel_xml_unicode_escapes(company.get("company_name")),
@@ -231,7 +247,7 @@ def build_final_output(
                         "similarity": round(p.get("score", 0), 4),
                         **_transform_patent(p.get("metadata", {}), is_target),
                     }
-                    for p in company.get("patents", [])
+                    for p in company.get("patents", []) or []
                 ],
             })
         return output
@@ -253,7 +269,7 @@ def build_final_output(
     # ratio_percent: 해당 피인수 NAIC 거래 전체 중 이 인수자 NAIC 비중(%), 소수 첫째 자리
     # -----------------------------
     pattern_rows = []
-    for item in user_pattern.get("relation_analysis", []):
+    for item in user_pattern.get("relation_analysis") or []:
         ev = item.get("evidence") or {}
         ratio_raw = ev.get("acquirer_ratio_percent")
         if ratio_raw is not None:

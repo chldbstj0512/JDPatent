@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<!-- saved from url=(0065)http://localhost:8000/result/cb286f18-d3fa-44d6-b4f5-6a28fc8363d6 -->
+<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>특허 분석 리포트</title>
+<style>
+  :root {
+    --bg: #f6f8fb;
+    --surface: #ffffff;
+    --surface2: #f8fafc;
+    --surface3: #f0f0f0;
+    --border: #d0d7de;
+    --text: #1f2328;
+    --text-muted: #59636e;
+    --blue: #0969da;
+    --green: #1a7f37;
+    --yellow: #9a6700;
+    --purple: #8250df;
+    --cyan: #0f766e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.6; letter-spacing: 0; }
+  header { background: linear-gradient(135deg, #fbfdff 0%, #eef4ff 100%); border-bottom: 1px solid var(--border); padding: 40px 48px 32px; opacity: 0; transform: translateY(-8px); animation: headerIn .55s cubic-bezier(.2,.75,.2,1) forwards; }
+  .badge { display: inline-block; background: #e7f0ff; color: var(--blue); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-bottom: 12px; }
+  header h1 { font-size: 22px; font-weight: 700; line-height: 1.4; max-width: 800px; margin-bottom: 16px; }
+  .meta { display: flex; gap: 24px; flex-wrap: wrap; }
+  .meta-item { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--text-muted); }
+  .meta-item strong { color: var(--text); }
+
+  main { max-width: 1200px; margin: 0 auto; padding: 40px 48px; display: grid; gap: 24px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 28px; box-shadow: 0 1px 2px rgba(31,35,40,.04); }
+  .card-title { font-size: 13px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 20px; }
+
+  .score-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .score-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 24px 20px; text-align: center; position: relative; overflow: hidden; }
+  .score-item::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .score-item.total::before { background: linear-gradient(90deg, var(--blue), var(--purple)); }
+  .score-item.market::before { background: linear-gradient(90deg, var(--yellow), #bf8700); }
+  .score-item.tech::before { background: linear-gradient(90deg, var(--green), #2da44e); }
+  .score-item.rights::before { background: linear-gradient(90deg, var(--cyan), #0d9488); }
+  .score-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px; }
+  .score-number { font-size: 52px; font-weight: 800; line-height: 1; letter-spacing: -2px; }
+  .score-item.total .score-number { background: linear-gradient(135deg, var(--blue), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .score-item.market .score-number { color: var(--yellow); }
+  .score-item.tech .score-number { color: var(--green); }
+  .score-item.rights .score-number { color: var(--cyan); }
+  .score-max { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+  .eval-text { font-size: 14px; color: var(--text-muted); line-height: 1.8; margin-top: 12px; white-space: pre-line; }
+  .eval-text.highlight { color: var(--text); background: var(--surface2); border-left: 3px solid var(--blue); padding: 14px 18px; border-radius: 0 8px 8px 0; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+  .naics-primary { background: var(--surface2); border: 1px solid var(--blue); border-radius: 10px; padding: 20px; margin-bottom: 14px; }
+  .naics-code { font-size: 28px; font-weight: 800; color: var(--blue); letter-spacing: -1px; }
+  .naics-title { font-size: 15px; font-weight: 600; margin: 6px 0 4px; }
+  .naics-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+  .ipc-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .ipc-chip { background: #e7f0ff; border: 1px solid #b6d0f7; border-radius: 8px; padding: 10px 14px; }
+  .ipc-chip .code { font-size: 13px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+  .ipc-chip .desc { font-size: 11px; color: var(--text-muted); }
+
+  .patent-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .patent-table td { padding: 10px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .patent-table td:first-child { color: var(--text-muted); width: 140px; }
+  .patent-table tr:last-child td { border-bottom: none; }
+
+  .tab-wrap { display: flex; gap: 4px; margin-bottom: 18px; background: #eef2f7; border: 1px solid #d8e0ea; border-radius: 8px; padding: 4px; width: fit-content; }
+  .tab-btn { background: none; border: none; color: var(--text-muted); font-size: 13px; font-weight: 650; padding: 8px 18px; border-radius: 6px; cursor: pointer; }
+  .tab-btn:hover { color: var(--text); background: rgba(255,255,255,.55); }
+  .tab-btn.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(31,35,40,.08); }
+  .tab-content { display: none; }
+  .tab-content.active { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: 18px; align-items: start; animation: tabFade .24s ease; }
+  .tab-content > .eval-text { margin-top: 0; color: var(--text); font-size: 15px; line-height: 2; background: #fbfcfe; border: 1px solid #d8e0ea; border-left: 4px solid var(--blue); border-radius: 8px; padding: 22px 24px; max-width: 74ch; }
+  .tab-content > .reason-block { margin-top: 0; max-height: 520px; overflow: auto; }
+  .tab-content > .reason-block::before { content: "산출 근거"; display: block; margin-bottom: 10px; color: #334155; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+
+  .abstract-text { font-size: 13px; color: var(--text-muted); line-height: 1.9; background: var(--surface2); padding: 18px 20px; border-radius: 8px; border-left: 3px solid var(--border); white-space: pre-line; }
+  .reason-block { background: #f8fafc; border: 1px solid #d8e0ea; border-radius: 8px; padding: 18px 20px; margin-top: 10px; font-size: 13px; color: #4b5563; line-height: 1.85; white-space: pre-line; }
+
+  .company-list { display: flex; flex-direction: column; gap: 14px; }
+  .company-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: border-color .2s; }
+  .company-card:hover { border-color: #9ec4f4; }
+  .company-header { display: flex; align-items: center; gap: 14px; padding: 18px 20px; cursor: pointer; user-select: none; }
+  .company-rank { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 13px; font-weight: 800; flex-shrink: 0; background: linear-gradient(135deg, #e7f0ff, #f2ecff); color: var(--blue); border: 1px solid #b6d0f7; }
+  .company-info { flex: 1; min-width: 0; }
+  .company-name { font-size: 15px; font-weight: 700; }
+  .company-meta { display: flex; gap: 16px; margin-top: 4px; font-size: 12px; color: var(--text-muted); }
+  .company-meta .val { color: var(--text); font-weight: 600; }
+  .company-chevron { font-size: 14px; color: var(--text-muted); transition: transform .25s; flex-shrink: 0; }
+  .company-card.open .company-chevron { transform: rotate(180deg); }
+  .company-patents { max-height: 0; overflow: hidden; transition: max-height .35s cubic-bezier(.4,0,.2,1); }
+  .company-card.open .company-patents { max-height: 3000px; }
+  .company-patents-inner { padding: 0 20px 18px; border-top: 1px solid var(--border); }
+
+  .patent-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-top: 10px; font-size: 13px; cursor: pointer; transition: border-color .2s; }
+  .patent-item:hover { border-color: #9ec4f4; }
+  .patent-item-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .patent-item-title-wrap { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .patent-item-title-text { font-weight: 600; }
+  .country-pill { font-size: 11px; font-weight: 700; background: #e7f0ff; color: #0969da; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+  .patent-item-chevron { font-size: 12px; color: var(--text-muted); transition: transform .25s; flex-shrink: 0; }
+  .patent-item.open .patent-item-chevron { transform: rotate(180deg); }
+  .patent-item-ipc { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .ipc-tag { font-size: 10px; font-weight: 600; color: var(--blue); background: #eef5ff; border: 1px solid #bfd4f4; border-radius: 4px; padding: 2px 7px; }
+  .patent-item-meta { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+  .patent-item-abstract { font-size: 11px; color: var(--text-muted); line-height: 1.7; margin-top: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .patent-item.open .patent-item-abstract { display: block; -webkit-line-clamp: initial; -webkit-box-orient: initial; overflow: visible; }
+
+  .pattern-list { display: grid; gap: 10px; }
+  .pattern-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  .pattern-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+  .pattern-reason { font-size: 12px; color: var(--text-muted); margin-top: 6px; line-height: 1.7; }
+  .muted { font-size: 13px; color: var(--text-muted); }
+  .reveal-item { opacity: 0; transform: translateY(14px); animation: sectionIn .55s cubic-bezier(.2,.75,.2,1) forwards; }
+
+  @keyframes headerIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes sectionIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes tabFade {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  @media (max-width: 768px) {
+    main { padding: 24px 20px; }
+    header { padding: 28px 20px; }
+    .score-grid { grid-template-columns: 1fr 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+    .tab-wrap { width: 100%; overflow-x: auto; }
+    .tab-btn { flex: 1 0 auto; padding: 8px 14px; }
+    .tab-content.active { grid-template-columns: 1fr; }
+    .tab-content > .eval-text { max-width: none; padding: 18px 20px; font-size: 14px; line-height: 1.9; }
+    .tab-content > .reason-block { max-height: none; }
+    .patent-item-head { align-items: flex-start; }
+  }
+
+  /* --- 동적 상태(로딩/에러) --- */
+  .state-screen { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center; padding: 40px; }
+  .spinner { width: 38px; height: 38px; border: 4px solid #c8d4e3; border-top-color: var(--blue); border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .state-title { font-size: 18px; font-weight: 700; }
+  .state-sub { font-size: 14px; color: var(--text-muted); }
+  .state-screen.error .state-title { color: #cf222e; }
+  .back-link { display: inline-block; margin-top: 8px; font-size: 13px; color: var(--blue); text-decoration: none; border: 1px solid var(--border); padding: 8px 18px; border-radius: 8px; }
+  .back-link:hover { background: var(--surface2); }
+  .pattern-item strong { color: var(--blue); }
+  .load-bar { width: 280px; max-width: 80vw; height: 6px; background: #e1e8f0; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+  .load-bar > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--blue), var(--purple)); border-radius: 4px; transition: width .5s ease; }
+</style>
+</head>
+<body>
+<div id="app"><header><div class="badge">KR Patent · other</div><h1>고체 산화물 연료전지 탑재 선박의 폐열 회수 및 액화천연가스 냉열을 활용한 이산화탄소 액화 포집 시스템</h1><div class="meta"><div class="meta-item">출원번호 <strong>10-2022-0034717</strong></div><div class="meta-item">출원일 <strong>2022-03-21</strong></div><div class="meta-item">등록일 <strong>2023-10-05</strong></div><div class="meta-item">산업 <strong>336611 · Ship Building and Repairing</strong></div></div></header><main><div class="card reveal-item" style="animation-delay: 120ms;"><div class="card-title">종합 평가 점수</div><div class="score-grid"><div class="score-item total"><div class="score-label">종합 점수</div><div class="score-number">56</div><div class="score-max">/ 100</div></div><div class="score-item market"><div class="score-label">M&amp;A 시장 매력도</div><div class="score-number">29</div><div class="score-max">/ 50</div></div><div class="score-item tech"><div class="score-label">기술성</div><div class="score-number">22</div><div class="score-max">/ 25</div></div><div class="score-item rights"><div class="score-label">권리성</div><div class="score-number">5</div><div class="score-max">/ 25</div></div></div><div class="eval-text highlight">시장 매력도는 최근 5년간의 성장세와 다양한 인수자 참여, 그리고 확실한 지배권 확보 전략이 어우러져 긍정적인 환경을 보여줍니다. 기술성 측면에서는 융합적 시스템 구성과 신규성, 구체적 청구항 설계 등에서 높은 완성도를 갖추고 있습니다. 반면, 권리성은 청구항 구조의 불명확성과 방어력 한계로 인해 약점이 분명하게 드러납니다. 종합적으로 시장과 기술의 강점이 점수의 대부분을 견인하며, 권리성의 약점이 전체 균형을 일부 저해하는 구조로 보입니다. 세 영역의 조합이 실제 사업화 및 투자 판단에 있어 상호 보완적 역할을 하고 있습니다.</div></div><div class="two-col reveal-item" style="animation-delay: 200ms;"><div class="card"><div class="card-title">특허 기본 정보</div><table class="patent-table"><tbody><tr><td>발명의 명칭</td><td>고체 산화물 연료전지 탑재 선박의 폐열 회수 및 액화천연가스 냉열을 활용한 이산화탄소 액화 포집 시스템</td></tr><tr><td>출원번호</td><td>10-2022-0034717</td></tr><tr><td>출원일</td><td>2022-03-21</td></tr><tr><td>등록번호</td><td>10-2023-0137522</td></tr><tr><td>등록일</td><td>2023-10-05</td></tr><tr><td>국가</td><td>KR</td></tr><tr><td>기술 분야</td><td>other</td></tr><tr><td>공보 유형</td><td>registration</td></tr><tr><td>Kind Code</td><td>B1</td></tr></tbody></table><div style="margin-top:20px;"><div class="card-title">초록</div><div class="abstract-text">본 발명은 고체 산화물 연료전지 탑재 선박의 폐열 회수 및 액화천연가스 냉열을 활용한 이산화탄소 액화포집 시스템에 관한 것으로, 케스드(cathode) 및 애노드(anode)를 갖는 고체 산화물 연료전지(Solid Oxide Fuel Cell, SOFC); 수소를 포함하는 연료를 생성하여, 상기 애노드로 공급하는 연료공급부; 공기를 승압 및 가열하여 상기 케스드로 공급하는 공기공급부; 상기 연료전지에서 발생된 배가스의 폐열로 액화천연가스 개질을 위한 스팀을 가열하는 스팀가열부; 상기 스팀가열부를 거친 배가스를 탈수 및 압축하는 탈수가압부; 및 탈수가 완료된 배가스에서 이산화탄소를 제거하는 이산화탄소 포집부;를 포함하는 것을 특징으로 한다.</div></div></div><div class="card"><div class="card-title">IPC 코드</div><div class="ipc-grid"><div class="ipc-chip"><div class="code">B63H 21/38</div><div class="desc">선박</div></div><div class="ipc-chip"><div class="code">B63B 17/00</div><div class="desc">선박의 추진</div></div><div class="ipc-chip"><div class="code">B63B 25/16</div><div class="desc">선박의 연료</div></div><div class="ipc-chip"><div class="code">B63H 21/00</div><div class="desc">선박의 전기</div></div><div class="ipc-chip"><div class="code">B63J 2/12</div><div class="desc">선박의 냉각</div></div><div class="ipc-chip"><div class="code">H01M 8/12</div><div class="desc">연료전지의 구성</div></div></div><div style="margin-top:24px;"><div class="card-title">NAICS 산업 분류</div><div class="naics-primary"><div class="naics-code">336611</div><div class="naics-title">Ship Building and Repairing</div><div class="naics-desc">This industry comprises establishments primarily engaged in operating shipyards. Shipyards are fixed facilities with drydocks and fabrication equipment capable of building a ship, defined as watercraft typically suitable or intended for other than personal or recreational use. Activities of shipyards include the construction of ships, their repair, conversion and alteration, the production of prefabricated ship and barge sections, and specialized services, such as ship scaling. Illustrative Examples: Barge building Cargo ship building Drilling and production platforms, floating, oil and gas, building Passenger ship building Submarine building Yachts built in shipyards</div></div></div></div></div><div class="card reveal-item" style="animation-delay: 280ms;"><div class="card-title">세부 평가</div><div class="tab-wrap"><button class="tab-btn active" onclick="switchTab(event,&#39;tab-market&#39;)">M&amp;A 시장</button><button class="tab-btn" onclick="switchTab(event,&#39;tab-tech&#39;)">기술성</button><button class="tab-btn" onclick="switchTab(event,&#39;tab-rights&#39;)">권리성</button></div><div id="tab-market" class="tab-content active"><div class="eval-text" style="color:var(--text);">해당 분야는 최근 5년간 꾸준한 성장과 회복세를 보이고 있습니다. 성장률과 회복 지표 모두 긍정적으로 나타나 시장 환경이 안정적임을 알 수 있습니다.
+
+NAICS 336611(선박 건조 및 수리) 관련 M&amp;A 건수는 5년간 점진적으로 증가하여, 2025년에는 최대치에 도달할 것으로 전망됩니다. 이는 산업 내 거래가 꾸준히 이루어지고 있음을 보여줍니다.
+
+동종 산업 내 인수 비중은 17~29% 수준으로 내부 거래가 일정 부분을 차지하지만, 시장 집중도는 낮고 다양한 인수자가 활발히 참여하는 구조입니다. 전반적으로 경쟁과 진입이 자유로운 시장으로 평가됩니다.
+
+이 분야의 M&amp;A 시장에서는 국경 간 거래가 전체의 약 21%로, 해외와의 거래가 활발하지 않은 편입니다. 대부분의 거래가 국내에서 이루어지고 있습니다.
+
+국경 간 거래 중에서는 한국 기업이 인수자로 나선 사례는 없고, 오히려 외국 기업이 한국 기업을 인수한 사례가 1건 있습니다. 즉, 해외 자본의 유입이 소수 발생한 상황입니다.
+
+연도별로 보면 국경 간 거래가 2021년 이후 점진적으로 늘었다가 최근에는 다소 줄어드는 모습을 보이고 있습니다. 전반적으로 개방성은 낮고, 유입 중심의 거래 구조가 특징입니다.
+
+이 시장에서는 주식 전체 인수가 대부분을 차지하고 있습니다. 즉, 기업들은 확실한 지배권 확보와 빠른 기술·시장 진입을 선호하는 경향이 강하게 나타납니다.
+
+일부 지분 인수는 제한적으로 활용되고 있으며, 특히 동일 타깃에 대한 단계적 인수(멀티 스테이크)는 드문 편입니다. 이는 탐색적이거나 옵션형 투자가 보조적으로 이루어지고 있음을 의미합니다.
+
+이러한 거래 구조는 시장의 불확실성보다 확실한 통제권과 신속한 사업 전개가 더 중요하게 평가되고 있음을 시사합니다. 따라서 인수 전략 수립 시 전체 인수 중심의 접근이 유리할 수 있습니다.
+
+이 특허는 선박에 탑재된 고체 산화물 연료전지와 관련된 시스템으로, 폐열 회수와 이산화탄소 포집 기술을 포함하고 있습니다. 하지만 제공된 High-Tech 분야 리스트와 직접적으로 연관되는 기술은 포함되어 있지 않습니다.
+
+특허의 주요 내용은 에너지 효율 향상과 친환경 선박 기술에 초점을 두고 있으나, 리스트에 명시된 첨단 제조, 반도체, 데이터 처리, 통신 등과 같은 분야와는 기술적으로 분명한 연결고리가 없습니다.
+
+따라서 이번 평가 관점에서는 해당 특허가 High-Tech 기술 분야로 분류되기 어렵습니다. 향후 관련 기술이 High-Tech 리스트에 추가된다면 재평가가 필요할 수 있습니다.</div><div class="reason-block">【분야·NAICS·동향】
+분야 성장성(recent_growth) : (입력 JSON의 원시 값) -&gt; (최근 5개년 M&amp;A 성장률이 0.296으로, 해당 분야가 안정적인 성장세를 보이고 있음을 의미합니다.)
+분야 회복성(recovery_ratio) : (입력 JSON의 원시 값) -&gt; (회복 비율이 1.978로, 과거 최저점 대비 거의 두 배 가까이 회복하여 시장의 저점 탈피와 재도약이 확인됩니다.)
+분야 종합 점수(final_score) : (입력 JSON의 원시 값) -&gt; (성장성과 회복성을 반영한 종합 점수가 0.941로, 전반적으로 긍정적인 시장 환경임을 시사합니다.)
+NAICS 336611 M&amp;A 건수 추이 : (입력 JSON의 원시 값) -&gt; (2021~2025년 연평균 M&amp;A 건수는 35.8건(총 179건)으로, 2025년 최대치(49건)까지 점진적 증가세를 보입니다.)
+동종 산업 내부 인수 비중(B_ratio) : (입력 JSON의 원시 값) -&gt; (동종 산업 내 인수 비중은 0.167~0.286 범위로, 최근 5년간 약 17~29% 수준에서 등락하며 내부 거래가 일정 비중을 차지합니다.)
+산업 집중도(HHI, Top3, NAICS 다양성) : (입력 JSON의 원시 값) -&gt; (HHI가 0.0702, 상위 3개 인수자 비중이 37.2%, 인수자 NAICS 다양성이 64개로, 시장 집중도는 낮고 다양한 인수자가 활발히 참여하는 구조입니다.)
+
+【국경간 거래】
+cross_border_ratio : (0.208) -&gt; (전체 거래 중 약 21%만이 국경 간 거래로, 개방성이 낮은 편임.)
+cross_border_majority : (false) -&gt; (국경 간 거래가 과반을 차지하지 않아, 내수 중심의 거래 구조임.)
+direction : ("inbound") -&gt; (국경 간 거래 중 유입(inbound)이 중심이며, 한국이 피인수자로 참여한 사례가 있음.)
+outbound_cnt : (0) -&gt; (한국이 인수자로서 국경 간 거래를 한 사례는 없음.)
+inbound_cnt : (1) -&gt; (한국이 피인수자로서 국경 간 거래를 한 사례가 1건 있음.)
+prefer_acquiror_ratio : (0.066) -&gt; (전체 거래 중 한국이 인수자인 비중은 약 7%로 낮음.)
+crossborder_deal_count_by_year : ({"2020": 3, "2021": 8, "2022": 9, "2023": 10, "2024": 4, "2025": 7}) -&gt; (연도별로 국경 간 거래가 소폭 증가하다가 최근 감소 경향도 보임.)
+
+【인수 유형】
+full_acquisition_cnt : (162) -&gt; (전체 M&amp;A 거래 중 162건이 주식 전체 인수로, 즉시적인 기술·시장 확보를 중시하는 경향이 매우 강함을 보여줍니다.)
+stake_single_target_cnt : (22) -&gt; (주식 일부 인수(단일 타깃)는 22건으로, 탐색적 또는 옵션형 투자가 일부 활용되고 있음을 시사합니다.)
+stake_multi_target_cnt : (6) -&gt; (동일 타깃에 대한 단계적 또는 지배력 강화 목적의 일부 인수는 6건으로, 상대적으로 드문 전략임을 알 수 있습니다.)
+stake_multi_over_stake_ratio : (0.1714) -&gt; (일부 인수 중 동일 타깃에 대한 다회 거래 비중이 약 17%로, stake 전략 내에서도 멀티 인수는 제한적으로 활용되고 있습니다.)
+full_over_all_ratio : (0.8223) -&gt; (전체 거래 중 주식 전체 인수 비중이 82%에 달해, 시장 내에서 확실한 지배권 확보가 주요 전략임을 보여줍니다.)
+
+【하이테크 적합성】
+High-Tech 분야 일치 여부 : (입력 JSON의 특허 제목 및 요약) -&gt; (제공된 High-Tech 카테고리 리스트와 특허의 기술적 내용이 직접적으로 일치하지 않음.)
+기술적 관련성 : (특허 요약의 주요 구성요소와 High-Tech 리스트 비교) -&gt; (고체 산화물 연료전지, 폐열 회수, 이산화탄소 포집 등은 리스트 내 High-Tech 분야와 명확히 연결되지 않음.)
+산업 파급력 : (High-Tech 카테고리 내 포함 여부) -&gt; (특허가 환경 및 에너지 분야에서 의미가 있으나, 제공된 High-Tech 분류에는 해당하지 않음.)
+
+【정량 앵커】
+분야 M&amp;A 종합(final_score×22, 캡22) : (0.9410) -&gt; (기여 20.70점)
+최근 3년 평균 동종 인수비중 B_ratio×16, 캡16 : (0.2363) -&gt; (기여 3.78점)
+국경간 거래비중×12, 캡12 : (0.2080) -&gt; (기여 2.50점)
+완전인수 비율 full/total×10, 캡10 : (full=162, total=197, 비율=0.8223) -&gt; (기여 8.22점)</div></div><div id="tab-tech" class="tab-content"><div class="eval-text" style="color:var(--text);">본 발명은 고체 산화물 연료전지 기반 선박에서 배가스의 폐열과 LNG의 냉열을 복합적으로 활용하여 이산화탄소를 액화·포집하고, 잔여 배가스를 연료로 재순환하는 시스템을 제안하고 있습니다. 청구항에서는 각 열교환기, 탈수·가압 공정, CO₂ 액화 및 저장 등 세부 구성요소가 단계별로 구체적으로 제시되어, 실제 구현 가능성과 시스템적 완성도가 높아 보입니다. 특히 LNG 기화 냉열을 CO₂ 액화에 직접 활용하는 점, 배가스 재순환을 통한 연료 효율 극대화 등은 기존 선박용 연료전지 시스템과 차별화되는 핵심 포인트로 읽힙니다. 선행문헌 인용이 전혀 없어, 신규성·진보성 측면에서 부담이 매우 적은 점도 강점입니다. 기술 설명은 각 용어와 논리적 흐름이 일관되며, 도면과의 연계도 명확하게 이루어져 신뢰도가 높습니다. 다만, 일부 공정(예: 탈수·가압 조건의 구체적 수치 등)에서 산업적 최적화에 대한 추가 설명이 보강된다면 더욱 설득력을 가질 수 있을 것으로 보입니다. 전반적으로 복합 에너지 회수 및 온실가스 저감 분야에서 높은 기술적 차별성과 실용성을 갖춘 발명으로 평가됩니다.</div><div class="reason-block">IPC 코드 개수 : (8 (산업 평균 4.15)) -&gt; (다양한 기술 분야에 걸친 융합적 시스템임을 보여주며, 기술적 범위와 응용성이 넓음을 시사한다.)
+인용문헌 수 : (0 (산업 평균 10)) -&gt; (선행기술에 대한 인용 부담이 거의 없어 신규성 및 독창성 측면에서 매우 유리하다.)
+독립항·청구 구조 : (독립항 1개, 종속항 9개(5,6항 삭제), 각 항의 구성요소와 공정 단계가 명확히 구분됨) -&gt; (청구항의 구체적 기술 수단과 각 부의 기능적 연계가 논리적으로 잘 드러나 있으며, 시스템적 완성도가 높게 설계되어 있다.)</div></div><div id="tab-rights" class="tab-content"><div class="eval-text" style="color:var(--text);">청구항 구조를 살펴보면, 독립항이 존재하지 않고 종속항만으로 이루어진 점이 가장 큰 약점으로 보입니다. 이로 인해 발명의 핵심 권리 범위가 명확하게 정의되지 않아, 권리 행사나 방어 시 불리하게 작용할 가능성이 높습니다. 전체 청구항 수도 평균에 미치지 못해, 다양한 실시예나 변형에 대한 포괄적 보호가 어렵습니다. 특히 독립항의 문구가 지나치게 길고 복잡하여, 권리 범위 해석이 불명확해질 우려가 있으며, 이는 무효 심판 등에서 취약점이 될 수 있습니다. 시스템 구성만을 중심으로 한 청구 유형도 권리 범위의 다양성 측면에서 한계가 있습니다. 실무적으로는 회피 설계가 용이하고, 경쟁사에 대한 억제력도 약화될 것으로 판단됩니다. 전반적으로 권리 설계와 명확성 측면에서 보완이 필요해 보입니다.</div><div class="reason-block">전체 청구항 수 : (5) -&gt; (평균보다 적은 청구항 수로, 권리 범위 확장성과 방어적 설계에 한계가 있습니다.)
+독립항·종속항·계열 : (독립항 수: 0, 종속항 수: 5, 청구항 계열 수: 2) -&gt; (독립항이 존재하지 않고 종속항만으로 구성되어 있어, 핵심 권리 범위가 불명확하며 방어력도 약화됩니다.)
+독립항 분량(단어 수) : (3587) -&gt; (비정상적으로 긴 독립항 분량은 권리 범위 해석을 어렵게 하고, 불명확성 및 무효 위험을 높입니다.)</div></div></div><div class="two-col reveal-item" style="animation-delay: 360ms;"><div class="card"><div class="card-title">유사 기업 추천 — 피인수 기업 (Target)</div><div class="company-list"><div class="company-card" onclick="toggleCompany(event,this)"><div class="company-header"><div class="company-rank">1</div><div class="company-info"><div class="company-name">Hanwha Corp</div><div class="company-meta"><span>유사도: <span class="val">67.63%</span></span><span>매칭 특허: <span class="val">1</span></span></div></div><div class="company-chevron">▼</div></div><div class="company-patents"><div class="company-patents-inner"><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">무탄소 추진 선박 및 선박의 무탄소 추진 방법</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">KR</span></div><div class="patent-item-ipc"><span class="ipc-tag">B63J 3/04</span><span class="ipc-tag">B63H 21/32</span><span class="ipc-tag">B63H 21/16</span><span class="ipc-tag">B63B 25/16</span><span class="ipc-tag">B63J 2/12</span><span class="ipc-tag">F02G 5/02</span><span class="ipc-tag">F01K 23/10</span><span class="ipc-tag">F01K 25/10</span></div><div class="patent-item-meta">출원번호: 1020240057413 · 출원일: 2024-04-30 · 유사도: 67.63%</div><div class="patent-item-abstract">본 발명은 무탄소 연료를 사용하는 가스터빈이 마련된 선박에 관한 것이다.  본 발명에 따른 무탄소 추진 선박은, 액화가스를 저장하는 액화가스 저장탱크; 상기 액화가스를 연소시켜 생성한 연소가스로 터빈을 구동시킴으로써 전력을 생성하는 가스터빈; 상기 가스터빈으로부터 배출되는 배기가스의 폐열과 가스터빈으로 공급되는 액화가스의 냉열 중 어느 하나 이상을 회수하여 추가 전력을 생성하는 폐열 회수부; 및 상기 가스터빈 및 폐열 회수부에서 생성된 전력 중 어느 하나 이상의 전력으로 선박을 추진하는 추진 시스템;을 포함하고, 상기 폐열 회수부는, 상기 액화가스를 연료로 사용하여 상기 가스터빈으로부터 배출되는 배기가스를 가열하는 덕트버너; 상기 덕트버너에 의해 가열된 배기가스의 폐열을 회수하는 폐열 회수장치; 상기 액화가스 저장탱크로부터 배출된 액화가스의 냉열을 회수하는 냉열 회수장치; 및 상기 폐열 회수장치와 냉열 회수장치의 온도차로 추가 전력을 생성하는 하부 사이클;을 포함한다.</div></div></div></div></div><div class="company-card" onclick="toggleCompany(event,this)"><div class="company-header"><div class="company-rank">2</div><div class="company-info"><div class="company-name">Re:Build</div><div class="company-meta"><span>유사도: <span class="val">66.70%</span></span><span>매칭 특허: <span class="val">2</span></span></div></div><div class="company-chevron">▼</div></div><div class="company-patents"><div class="company-patents-inner"><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">이산화탄소 액화시스템 및 이를 포함하는 선박</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">KR</span></div><div class="patent-item-ipc"><span class="ipc-tag">B63B 25/16</span><span class="ipc-tag">B63J 2/14</span><span class="ipc-tag">F25J 1/00</span><span class="ipc-tag">F25J 1/02</span><span class="ipc-tag">F17C 9/04</span></div><div class="patent-item-meta">출원번호: 1020250024788 · 출원일: 2025-02-26 · 유사도: 70.25%</div><div class="patent-item-abstract">본 발명은 이산화탄소 액화시스템 및 이를 포함하는 선박에 관한 것으로서, 이산화탄소를 저장하는 저장 탱크, 비등점이 이산화탄소보다 낮으며 선박을 추진 혹은 발전하기 위해 사용되는 가스연료를 저장하는 연료 탱크, 저장 탱크에서 배출되는 이산화탄소를 압축하는 압축기 및 압축기의 후단에 마련되며 가스연료의 냉열을 이용하여 저장 탱크에서 배출되는 이산화탄소를 냉각하는 열교환기를 포함하며, 압축기는 이산화탄소의 압력을 열교환기로 유입되는 가스연료의 압력보다 낮게 압축하여, 열교환기에서 가스연료의 압력이 이산화탄소의 압력보다 높은 상태를 유지하고, 열교환기에서 누출 발생시에, 이산화탄소가 가스연료가 이동하는 라인으로의 유입이 방지되어, 가스연료가 이동하는 라인에서의 이산화탄소 결빙을 방지할 수 있다.</div></div><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">가스 저장 시스템 및 이를 포함하는 선박</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">KR</span></div><div class="patent-item-ipc"><span class="ipc-tag">B63B 25/16</span><span class="ipc-tag">B63B 13/00</span><span class="ipc-tag">F17C 13/12</span><span class="ipc-tag">F17C 3/02</span><span class="ipc-tag">B63B 25/08</span></div><div class="patent-item-meta">출원번호: 1020210147391 · 출원일: 2021-10-29 · 유사도: 63.15%</div><div class="patent-item-abstract">본 발명은 가스 저장 시스템 및 이를 포함하는 선박에 관한 것으로서, 액화가스를 저장하는 액화가스 저장탱크; 선체의 격벽에 의해 외부와 분리되는 내부공간으로서 상기 액화가스 저장탱크를 수용하는 홀드부; 상기 홀드부의 하부에 마련되며 상기 액화가스 저장탱크를 지지하는 서포트; 및 상기 액화가스 저장탱크의 내부에 액화가스보다 밀도가 높은 물질을 주입하는 물질 주입부를 포함하며, 상기 물질 주입부는, 상기 홀드부의 내부가 상기 액화가스 저장탱크에 부력이 작용하는 환경으로 변화할 경우, 상기 액화가스 저장탱크의 내부에 상기 물질을 주입한다.</div></div></div></div></div><div class="company-card" onclick="toggleCompany(event,this)"><div class="company-header"><div class="company-rank">3</div><div class="company-info"><div class="company-name">Engine B Ltd</div><div class="company-meta"><span>유사도: <span class="val">66.55%</span></span><span>매칭 특허: <span class="val">2</span></span></div></div><div class="company-chevron">▼</div></div><div class="company-patents"><div class="company-patents-inner"><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">이산화탄소 액화시스템 및 이를 포함하는 선박</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">KR</span></div><div class="patent-item-ipc"><span class="ipc-tag">B63B 25/16</span><span class="ipc-tag">B63J 2/14</span><span class="ipc-tag">F25J 1/00</span><span class="ipc-tag">F25J 1/02</span><span class="ipc-tag">F17C 9/04</span></div><div class="patent-item-meta">출원번호: 1020250024788 · 출원일: 2025-02-26 · 유사도: 70.14%</div><div class="patent-item-abstract">본 발명은 이산화탄소 액화시스템 및 이를 포함하는 선박에 관한 것으로서, 이산화탄소를 저장하는 저장 탱크, 비등점이 이산화탄소보다 낮으며 선박을 추진 혹은 발전하기 위해 사용되는 가스연료를 저장하는 연료 탱크, 저장 탱크에서 배출되는 이산화탄소를 압축하는 압축기 및 압축기의 후단에 마련되며 가스연료의 냉열을 이용하여 저장 탱크에서 배출되는 이산화탄소를 냉각하는 열교환기를 포함하며, 압축기는 이산화탄소의 압력을 열교환기로 유입되는 가스연료의 압력보다 낮게 압축하여, 열교환기에서 가스연료의 압력이 이산화탄소의 압력보다 높은 상태를 유지하고, 열교환기에서 누출 발생시에, 이산화탄소가 가스연료가 이동하는 라인으로의 유입이 방지되어, 가스연료가 이동하는 라인에서의 이산화탄소 결빙을 방지할 수 있다.</div></div><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">가스 저장 시스템 및 이를 포함하는 선박</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">KR</span></div><div class="patent-item-ipc"><span class="ipc-tag">B63B 25/16</span><span class="ipc-tag">B63B 13/00</span><span class="ipc-tag">F17C 13/12</span><span class="ipc-tag">F17C 3/02</span><span class="ipc-tag">B63B 25/08</span></div><div class="patent-item-meta">출원번호: 1020210147391 · 출원일: 2021-10-29 · 유사도: 62.97%</div><div class="patent-item-abstract">본 발명은 가스 저장 시스템 및 이를 포함하는 선박에 관한 것으로서, 액화가스를 저장하는 액화가스 저장탱크; 선체의 격벽에 의해 외부와 분리되는 내부공간으로서 상기 액화가스 저장탱크를 수용하는 홀드부; 상기 홀드부의 하부에 마련되며 상기 액화가스 저장탱크를 지지하는 서포트; 및 상기 액화가스 저장탱크의 내부에 액화가스보다 밀도가 높은 물질을 주입하는 물질 주입부를 포함하며, 상기 물질 주입부는, 상기 홀드부의 내부가 상기 액화가스 저장탱크에 부력이 작용하는 환경으로 변화할 경우, 상기 액화가스 저장탱크의 내부에 상기 물질을 주입한다.</div></div></div></div></div><div class="company-card" onclick="toggleCompany(event,this)"><div class="company-header"><div class="company-rank">4</div><div class="company-info"><div class="company-name">Hyundai Engine Co Ltd</div><div class="company-meta"><span>유사도: <span class="val">65.09%</span></span><span>매칭 특허: <span class="val">3</span></span></div></div><div class="company-chevron">▼</div></div><div class="company-patents"><div class="company-patents-inner"><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">이산화탄소 액화시스템 및 이를 포함하는 선박</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">KR</span></div><div class="patent-item-ipc"><span class="ipc-tag">B63B 25/16</span><span class="ipc-tag">B63J 2/14</span><span class="ipc-tag">F25J 1/00</span><span class="ipc-tag">F25J 1/02</span><span class="ipc-tag">F17C 9/04</span></div><div class="patent-item-meta">출원번호: 1020250024788 · 출원일: 2025-02-26 · 유사도: 70.15%</div><div class="patent-item-abstract">본 발명은 이산화탄소 액화시스템 및 이를 포함하는 선박에 관한 것으로서, 이산화탄소를 저장하는 저장 탱크, 비등점이 이산화탄소보다 낮으며 선박을 추진 혹은 발전하기 위해 사용되는 가스연료를 저장하는 연료 탱크, 저장 탱크에서 배출되는 이산화탄소를 압축하는 압축기 및 압축기의 후단에 마련되며 가스연료의 냉열을 이용하여 저장 탱크에서 배출되는 이산화탄소를 냉각하는 열교환기를 포함하며, 압축기는 이산화탄소의 압력을 열교환기로 유입되는 가스연료의 압력보다 낮게 압축하여, 열교환기에서 가스연료의 압력이 이산화탄소의 압력보다 높은 상태를 유지하고, 열교환기에서 누출 발생시에, 이산화탄소가 가스연료가 이동하는 라인으로의 유입이 방지되어, 가스연료가 이동하는 라인에서의 이산화탄소 결빙을 방지할 수 있다.</div></div><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">가스 저장 시스템 및 이를 포함하는 선박</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">KR</span></div><div class="patent-item-ipc"><span class="ipc-tag">B63B 25/16</span><span class="ipc-tag">B63B 13/00</span><span class="ipc-tag">F17C 13/12</span><span class="ipc-tag">F17C 3/02</span><span class="ipc-tag">B63B 25/08</span></div><div class="patent-item-meta">출원번호: 1020210147391 · 출원일: 2021-10-29 · 유사도: 62.92%</div><div class="patent-item-abstract">본 발명은 가스 저장 시스템 및 이를 포함하는 선박에 관한 것으로서, 액화가스를 저장하는 액화가스 저장탱크; 선체의 격벽에 의해 외부와 분리되는 내부공간으로서 상기 액화가스 저장탱크를 수용하는 홀드부; 상기 홀드부의 하부에 마련되며 상기 액화가스 저장탱크를 지지하는 서포트; 및 상기 액화가스 저장탱크의 내부에 액화가스보다 밀도가 높은 물질을 주입하는 물질 주입부를 포함하며, 상기 물질 주입부는, 상기 홀드부의 내부가 상기 액화가스 저장탱크에 부력이 작용하는 환경으로 변화할 경우, 상기 액화가스 저장탱크의 내부에 상기 물질을 주입한다.</div></div><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">주기용 엔진의 폐열을 이용하는 보기용 연료전지 시스템</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">KR</span></div><div class="patent-item-ipc"><span class="ipc-tag">H01M 8/0612</span><span class="ipc-tag">H01M 8/04014</span><span class="ipc-tag">F02G 5/02</span></div><div class="patent-item-meta">출원번호: 1020100011073 · 출원일: 2010-02-05 · 유사도: 62.19%</div><div class="patent-item-abstract">본 발명은 주기용 엔진의 폐열을 이용하는 보기용 연료전지 시스템에 관한 것이다. 이는 선체 추진 동력을 제공하기 위한 주기용 엔진부(110)와 선박의 여러가지 전기 장치에 필요한 전력을 생산하기 위한 보기용 연료전지 시스템(130)을 갖춘 선박용 동력 시스템(110)에 있어서, 상기 보기용 연료전지 시스템(130)은, 탄화수소계열 연료와 수증기를 혼합하여 혼합 가스로서 배출하는 믹싱 모듈(131)과; 상기 믹싱 모듈(131)에서 배출된 혼합 가스를 개질하여 수소 가스를 생성하는 개질기(133)와; 상기 개질기(133)에 의하여 개질된 수소 가스와 공기 중의 산소를 반응시켜 전기를 생산하는 연료전지스택(135)을 포함하되, 상기 믹싱 모듈(131)은 상기 주기용 엔진부(110)로부터의 배출가스로 예열된다. 이에 따라 보기용 연료전지 시스템의 개질기에 공급되는 탄화수소계열연료와 수증기의 예열이 주기용 엔진의 폐열에 의하여 이루어질 수 있기 때문에, 연료전지의 동작에 필요한 에너지가 절약될 수 있게 하는 등의 효과를 제공한다.</div></div></div></div></div><div class="company-card" onclick="toggleCompany(event,this)"><div class="company-header"><div class="company-rank">5</div><div class="company-info"><div class="company-name">Carbon Inc</div><div class="company-meta"><span>유사도: <span class="val">62.91%</span></span><span>매칭 특허: <span class="val">3</span></span></div></div><div class="company-chevron">▼</div></div><div class="company-patents"><div class="company-patents-inner"><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">Method, apparatus and system for capturing carbon using fuel cell</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">US</span></div><div class="patent-item-ipc"><span class="ipc-tag">H01M8/04</span><span class="ipc-tag">C25B1/135</span><span class="ipc-tag">C25B1/23</span><span class="ipc-tag">C25B3/03</span><span class="ipc-tag">C25B3/07</span><span class="ipc-tag">C25B3/26</span><span class="ipc-tag">C25B15/023</span><span class="ipc-tag">H01M8/04111</span><span class="ipc-tag">H01M8/0432</span><span class="ipc-tag">H01M8/04492</span><span class="ipc-tag">H01M8/04537</span><span class="ipc-tag">H01M8/04746</span><span class="ipc-tag">H01M10/42</span><span class="ipc-tag">H01M10/63</span><span class="ipc-tag">H01M12/06</span><span class="ipc-tag">H01M16/00</span></div><div class="patent-item-meta">출원번호: 18746489 · 출원일: 2024-06-18 · 유사도: 63.10%</div><div class="patent-item-abstract"> In the present disclosure, a method, an apparatus, and a system for collecting carbon using a fuel cell principle are disclosed. More specifically, the carbon capture device may comprise an air cartridge in which a gas including a carbon component is introduced; a fuel cartridge in which a fuel is injected; a fuel cell stack; a fuel supply line for supplying the fuel between the fuel cartridge and the fuel cell stack; and a controller, wherein the fuel cell stack may include: an anode unit including a fuel electrode for performing an oxidation reaction of the fuel supplied from the fuel supply line; a cathode unit including an air electrode for performing a reduction reaction of the gas introduced from the air cartridge; and an electrolyte unit including an electrolyte for transferring metal ions generated by the oxidation reaction of the fuel between the anode unit and the cathode unit. Various embodiments for collecting carbon and generating energy are disclosed.</div></div><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">Method, apparatus and system for capturing carbon using fuel cell</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">US</span></div><div class="patent-item-ipc"><span class="ipc-tag">H01M12/06</span><span class="ipc-tag">C25B1/135</span><span class="ipc-tag">C25B1/23</span><span class="ipc-tag">C25B3/03</span><span class="ipc-tag">C25B3/07</span><span class="ipc-tag">C25B3/26</span><span class="ipc-tag">C25B15/023</span><span class="ipc-tag">H01M8/04111</span><span class="ipc-tag">H01M8/0432</span><span class="ipc-tag">H01M8/04492</span><span class="ipc-tag">H01M8/04537</span><span class="ipc-tag">H01M8/04746</span><span class="ipc-tag">H01M10/42</span><span class="ipc-tag">H01M10/63</span><span class="ipc-tag">H01M16/00</span></div><div class="patent-item-meta">출원번호: 18377276 · 출원일: 2023-10-05 · 유사도: 63.07%</div><div class="patent-item-abstract"> In the present disclosure, a method, an apparatus, and a system for collecting carbon using a fuel cell principle are disclosed. More specifically, the carbon capture device may comprise an air cartridge in which a gas including a carbon component is introduced; a fuel cartridge in which a fuel is injected; a fuel cell stack; a fuel supply line for supplying the fuel between the fuel cartridge and the fuel cell stack; and a controller, wherein the fuel cell stack may include: an anode unit including a fuel electrode for performing an oxidation reaction of the fuel supplied from the fuel supply line; a cathode unit including an air electrode for performing a reduction reaction of the gas introduced from the air cartridge; and an electrolyte unit including an electrolyte for transferring metal ions generated by the oxidation reaction of the fuel between the anode unit and the cathode unit. Various embodiments for collecting carbon and generating energy are disclosed.</div></div><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">공기청정기에 구비가능한 탄소포집 장치, 방법 및 시스템</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">KR</span></div><div class="patent-item-ipc"><span class="ipc-tag">F24F 8/95</span><span class="ipc-tag">F24F 8/108</span><span class="ipc-tag">F24F 11/88</span><span class="ipc-tag">H01M 8/24</span><span class="ipc-tag">H01M 8/0668</span><span class="ipc-tag">H02J 50/00</span></div><div class="patent-item-meta">출원번호: 1020240045280 · 출원일: 2024-04-03 · 유사도: 62.55%</div><div class="patent-item-abstract">본 발명의 실시 예는 공기청정기에 구비가능한 탄소 포집 장치에 있어서, 연료 셀을 포함하고, 상기 연료 셀은, 연료의 산화 반응이 이루어지는 연료 전극을 포함하는 음극부, 상기 공기청정기로 유입된 공기에 포함된 기체의 환원 반응이 이루어지는 공기 전극을 포함하는 양극부 - 상기 양극부의 상기 환원 반응에 기반하여 탄소 포집 생성물이 생성됨 - 및 상기 음극부 및 상기 양극부 사이에서 상기 연료의 산화 반응에 의해 생성된 금속 이온을 전달하는 전해질을 포함하는 전해질부를 포함하는, 탄소 포집 장치를 개시한다.</div></div></div></div></div></div></div><div class="card"><div class="card-title">유사 기업 추천 — 인수 기업 (Acquiror)</div><div class="company-list"><div class="company-card" onclick="toggleCompany(event,this)"><div class="company-header"><div class="company-rank">1</div><div class="company-info"><div class="company-name">Aso Corp</div><div class="company-meta"><span>유사도: <span class="val">67.70%</span></span><span>매칭 특허: <span class="val">1</span></span></div></div><div class="company-chevron">▼</div></div><div class="company-patents"><div class="company-patents-inner"><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">무탄소 추진 선박 및 선박의 무탄소 추진 방법</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">KR</span></div><div class="patent-item-ipc"><span class="ipc-tag">B63J 3/04</span><span class="ipc-tag">B63H 21/32</span><span class="ipc-tag">B63H 21/16</span><span class="ipc-tag">B63B 25/16</span><span class="ipc-tag">B63J 2/12</span><span class="ipc-tag">F02G 5/02</span><span class="ipc-tag">F01K 23/10</span><span class="ipc-tag">F01K 25/10</span></div><div class="patent-item-meta">출원번호: 1020240057413 · 출원일: 2024-04-30 · 유사도: 67.70%</div><div class="patent-item-abstract">본 발명은 무탄소 연료를 사용하는 가스터빈이 마련된 선박에 관한 것이다.  본 발명에 따른 무탄소 추진 선박은, 액화가스를 저장하는 액화가스 저장탱크; 상기 액화가스를 연소시켜 생성한 연소가스로 터빈을 구동시킴으로써 전력을 생성하는 가스터빈; 상기 가스터빈으로부터 배출되는 배기가스의 폐열과 가스터빈으로 공급되는 액화가스의 냉열 중 어느 하나 이상을 회수하여 추가 전력을 생성하는 폐열 회수부; 및 상기 가스터빈 및 폐열 회수부에서 생성된 전력 중 어느 하나 이상의 전력으로 선박을 추진하는 추진 시스템;을 포함하고, 상기 폐열 회수부는, 상기 액화가스를 연료로 사용하여 상기 가스터빈으로부터 배출되는 배기가스를 가열하는 덕트버너; 상기 덕트버너에 의해 가열된 배기가스의 폐열을 회수하는 폐열 회수장치; 상기 액화가스 저장탱크로부터 배출된 액화가스의 냉열을 회수하는 냉열 회수장치; 및 상기 폐열 회수장치와 냉열 회수장치의 온도차로 추가 전력을 생성하는 하부 사이클;을 포함한다.</div></div></div></div></div><div class="company-card" onclick="toggleCompany(event,this)"><div class="company-header"><div class="company-rank">2</div><div class="company-info"><div class="company-name">Hanwha Corp</div><div class="company-meta"><span>유사도: <span class="val">67.65%</span></span><span>매칭 특허: <span class="val">1</span></span></div></div><div class="company-chevron">▼</div></div><div class="company-patents"><div class="company-patents-inner"><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">무탄소 추진 선박 및 선박의 무탄소 추진 방법</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">KR</span></div><div class="patent-item-ipc"><span class="ipc-tag">B63J 3/04</span><span class="ipc-tag">B63H 21/32</span><span class="ipc-tag">B63H 21/16</span><span class="ipc-tag">B63B 25/16</span><span class="ipc-tag">B63J 2/12</span><span class="ipc-tag">F02G 5/02</span><span class="ipc-tag">F01K 23/10</span><span class="ipc-tag">F01K 25/10</span></div><div class="patent-item-meta">출원번호: 1020240057413 · 출원일: 2024-04-30 · 유사도: 67.65%</div><div class="patent-item-abstract">본 발명은 무탄소 연료를 사용하는 가스터빈이 마련된 선박에 관한 것이다.  본 발명에 따른 무탄소 추진 선박은, 액화가스를 저장하는 액화가스 저장탱크; 상기 액화가스를 연소시켜 생성한 연소가스로 터빈을 구동시킴으로써 전력을 생성하는 가스터빈; 상기 가스터빈으로부터 배출되는 배기가스의 폐열과 가스터빈으로 공급되는 액화가스의 냉열 중 어느 하나 이상을 회수하여 추가 전력을 생성하는 폐열 회수부; 및 상기 가스터빈 및 폐열 회수부에서 생성된 전력 중 어느 하나 이상의 전력으로 선박을 추진하는 추진 시스템;을 포함하고, 상기 폐열 회수부는, 상기 액화가스를 연료로 사용하여 상기 가스터빈으로부터 배출되는 배기가스를 가열하는 덕트버너; 상기 덕트버너에 의해 가열된 배기가스의 폐열을 회수하는 폐열 회수장치; 상기 액화가스 저장탱크로부터 배출된 액화가스의 냉열을 회수하는 냉열 회수장치; 및 상기 폐열 회수장치와 냉열 회수장치의 온도차로 추가 전력을 생성하는 하부 사이클;을 포함한다.</div></div></div></div></div><div class="company-card" onclick="toggleCompany(event,this)"><div class="company-header"><div class="company-rank">3</div><div class="company-info"><div class="company-name">Hanwha Solutions Corp</div><div class="company-meta"><span>유사도: <span class="val">67.65%</span></span><span>매칭 특허: <span class="val">1</span></span></div></div><div class="company-chevron">▼</div></div><div class="company-patents"><div class="company-patents-inner"><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">무탄소 추진 선박 및 선박의 무탄소 추진 방법</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">KR</span></div><div class="patent-item-ipc"><span class="ipc-tag">B63J 3/04</span><span class="ipc-tag">B63H 21/32</span><span class="ipc-tag">B63H 21/16</span><span class="ipc-tag">B63B 25/16</span><span class="ipc-tag">B63J 2/12</span><span class="ipc-tag">F02G 5/02</span><span class="ipc-tag">F01K 23/10</span><span class="ipc-tag">F01K 25/10</span></div><div class="patent-item-meta">출원번호: 1020240057413 · 출원일: 2024-04-30 · 유사도: 67.65%</div><div class="patent-item-abstract">본 발명은 무탄소 연료를 사용하는 가스터빈이 마련된 선박에 관한 것이다.  본 발명에 따른 무탄소 추진 선박은, 액화가스를 저장하는 액화가스 저장탱크; 상기 액화가스를 연소시켜 생성한 연소가스로 터빈을 구동시킴으로써 전력을 생성하는 가스터빈; 상기 가스터빈으로부터 배출되는 배기가스의 폐열과 가스터빈으로 공급되는 액화가스의 냉열 중 어느 하나 이상을 회수하여 추가 전력을 생성하는 폐열 회수부; 및 상기 가스터빈 및 폐열 회수부에서 생성된 전력 중 어느 하나 이상의 전력으로 선박을 추진하는 추진 시스템;을 포함하고, 상기 폐열 회수부는, 상기 액화가스를 연료로 사용하여 상기 가스터빈으로부터 배출되는 배기가스를 가열하는 덕트버너; 상기 덕트버너에 의해 가열된 배기가스의 폐열을 회수하는 폐열 회수장치; 상기 액화가스 저장탱크로부터 배출된 액화가스의 냉열을 회수하는 냉열 회수장치; 및 상기 폐열 회수장치와 냉열 회수장치의 온도차로 추가 전력을 생성하는 하부 사이클;을 포함한다.</div></div></div></div></div><div class="company-card" onclick="toggleCompany(event,this)"><div class="company-header"><div class="company-rank">4</div><div class="company-info"><div class="company-name">Hd Hyundai M&amp;S</div><div class="company-meta"><span>유사도: <span class="val">65.09%</span></span><span>매칭 특허: <span class="val">3</span></span></div></div><div class="company-chevron">▼</div></div><div class="company-patents"><div class="company-patents-inner"><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">이산화탄소 액화시스템 및 이를 포함하는 선박</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">KR</span></div><div class="patent-item-ipc"><span class="ipc-tag">B63B 25/16</span><span class="ipc-tag">B63J 2/14</span><span class="ipc-tag">F25J 1/00</span><span class="ipc-tag">F25J 1/02</span><span class="ipc-tag">F17C 9/04</span></div><div class="patent-item-meta">출원번호: 1020250024788 · 출원일: 2025-02-26 · 유사도: 70.19%</div><div class="patent-item-abstract">본 발명은 이산화탄소 액화시스템 및 이를 포함하는 선박에 관한 것으로서, 이산화탄소를 저장하는 저장 탱크, 비등점이 이산화탄소보다 낮으며 선박을 추진 혹은 발전하기 위해 사용되는 가스연료를 저장하는 연료 탱크, 저장 탱크에서 배출되는 이산화탄소를 압축하는 압축기 및 압축기의 후단에 마련되며 가스연료의 냉열을 이용하여 저장 탱크에서 배출되는 이산화탄소를 냉각하는 열교환기를 포함하며, 압축기는 이산화탄소의 압력을 열교환기로 유입되는 가스연료의 압력보다 낮게 압축하여, 열교환기에서 가스연료의 압력이 이산화탄소의 압력보다 높은 상태를 유지하고, 열교환기에서 누출 발생시에, 이산화탄소가 가스연료가 이동하는 라인으로의 유입이 방지되어, 가스연료가 이동하는 라인에서의 이산화탄소 결빙을 방지할 수 있다.</div></div><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">가스 저장 시스템 및 이를 포함하는 선박</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">KR</span></div><div class="patent-item-ipc"><span class="ipc-tag">B63B 25/16</span><span class="ipc-tag">B63B 13/00</span><span class="ipc-tag">F17C 13/12</span><span class="ipc-tag">F17C 3/02</span><span class="ipc-tag">B63B 25/08</span></div><div class="patent-item-meta">출원번호: 1020210147391 · 출원일: 2021-10-29 · 유사도: 62.97%</div><div class="patent-item-abstract">본 발명은 가스 저장 시스템 및 이를 포함하는 선박에 관한 것으로서, 액화가스를 저장하는 액화가스 저장탱크; 선체의 격벽에 의해 외부와 분리되는 내부공간으로서 상기 액화가스 저장탱크를 수용하는 홀드부; 상기 홀드부의 하부에 마련되며 상기 액화가스 저장탱크를 지지하는 서포트; 및 상기 액화가스 저장탱크의 내부에 액화가스보다 밀도가 높은 물질을 주입하는 물질 주입부를 포함하며, 상기 물질 주입부는, 상기 홀드부의 내부가 상기 액화가스 저장탱크에 부력이 작용하는 환경으로 변화할 경우, 상기 액화가스 저장탱크의 내부에 상기 물질을 주입한다.</div></div><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">선박</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">KR</span></div><div class="patent-item-ipc"><span class="ipc-tag">F02M 26/35</span><span class="ipc-tag">F02M 26/28</span><span class="ipc-tag">F02M 26/09</span><span class="ipc-tag">B63H 21/14</span><span class="ipc-tag">B63J 2/12</span></div><div class="patent-item-meta">출원번호: 1020200160449 · 출원일: 2020-11-25 · 유사도: 62.10%</div><div class="patent-item-abstract">본 발명은 선박에 관한 것으로서, 탱크탑과 어퍼데크 사이에 제1데크와 제2데크가 상하로 일정 간격 이격되어 설치되는 엔진룸; 상기 탱크탑 상에 고정 설치되고, 상부에 배기가스를 배출하고 공기를 유입하는 터보차저가 상기 제1데크 상부로 돌출되어 마련되는 내연기관; 상기 터보차저의 터빈으로부터 압축기까지 연장되는 배기가스재순환라인 상에 마련되는 배기가스재순환시스템을 포함하고, 상기 배기가스재순환시스템은, 하단부가 상기 제1데크 상에 고정 설치되고, 상부가 상기 제2데크 상부로 돌출되어 상기 제2데크에 의해 고정되며, 상기 배기가스재순환라인 상에 마련되어 프레시워터 또는 중화제(NaOH) 수용액을 분무하여 배기가스에 포함된 불순물을 제거함과 동시에 냉각시키는 배기가스냉각기; 상기 배기가스냉각기 전단의 상기 배기가스재순환라인 상에 마련되며, 상기 배기가스냉각기로 공급되는 배기가스의 폐열을 회수하는 이코노마이저; 및 상기 배기가스냉각기보다 아래에 위치되며, 상기 배기가스냉각기에 냉각된 프레시워터를 공급하고 가열된 프레시워터를 회수하는 프레시워터순환장치를 포함한다.</div></div></div></div></div><div class="company-card" onclick="toggleCompany(event,this)"><div class="company-header"><div class="company-rank">5</div><div class="company-info"><div class="company-name">Carbon Inc</div><div class="company-meta"><span>유사도: <span class="val">62.58%</span></span><span>매칭 특허: <span class="val">4</span></span></div></div><div class="company-chevron">▼</div></div><div class="company-patents"><div class="company-patents-inner"><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">Method, apparatus and system for capturing carbon using fuel cell</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">US</span></div><div class="patent-item-ipc"><span class="ipc-tag">H01M8/04</span><span class="ipc-tag">C25B1/135</span><span class="ipc-tag">C25B1/23</span><span class="ipc-tag">C25B3/03</span><span class="ipc-tag">C25B3/07</span><span class="ipc-tag">C25B3/26</span><span class="ipc-tag">C25B15/023</span><span class="ipc-tag">H01M8/04111</span><span class="ipc-tag">H01M8/0432</span><span class="ipc-tag">H01M8/04492</span><span class="ipc-tag">H01M8/04537</span><span class="ipc-tag">H01M8/04746</span><span class="ipc-tag">H01M10/42</span><span class="ipc-tag">H01M10/63</span><span class="ipc-tag">H01M12/06</span><span class="ipc-tag">H01M16/00</span></div><div class="patent-item-meta">출원번호: 18746489 · 출원일: 2024-06-18 · 유사도: 62.88%</div><div class="patent-item-abstract"> In the present disclosure, a method, an apparatus, and a system for collecting carbon using a fuel cell principle are disclosed. More specifically, the carbon capture device may comprise an air cartridge in which a gas including a carbon component is introduced; a fuel cartridge in which a fuel is injected; a fuel cell stack; a fuel supply line for supplying the fuel between the fuel cartridge and the fuel cell stack; and a controller, wherein the fuel cell stack may include: an anode unit including a fuel electrode for performing an oxidation reaction of the fuel supplied from the fuel supply line; a cathode unit including an air electrode for performing a reduction reaction of the gas introduced from the air cartridge; and an electrolyte unit including an electrolyte for transferring metal ions generated by the oxidation reaction of the fuel between the anode unit and the cathode unit. Various embodiments for collecting carbon and generating energy are disclosed.</div></div><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">Method, apparatus and system for capturing carbon using fuel cell</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">US</span></div><div class="patent-item-ipc"><span class="ipc-tag">H01M12/06</span><span class="ipc-tag">C25B1/135</span><span class="ipc-tag">C25B1/23</span><span class="ipc-tag">C25B3/03</span><span class="ipc-tag">C25B3/07</span><span class="ipc-tag">C25B3/26</span><span class="ipc-tag">C25B15/023</span><span class="ipc-tag">H01M8/04111</span><span class="ipc-tag">H01M8/0432</span><span class="ipc-tag">H01M8/04492</span><span class="ipc-tag">H01M8/04537</span><span class="ipc-tag">H01M8/04746</span><span class="ipc-tag">H01M10/42</span><span class="ipc-tag">H01M10/63</span><span class="ipc-tag">H01M16/00</span></div><div class="patent-item-meta">출원번호: 18377276 · 출원일: 2023-10-05 · 유사도: 62.88%</div><div class="patent-item-abstract"> In the present disclosure, a method, an apparatus, and a system for collecting carbon using a fuel cell principle are disclosed. More specifically, the carbon capture device may comprise an air cartridge in which a gas including a carbon component is introduced; a fuel cartridge in which a fuel is injected; a fuel cell stack; a fuel supply line for supplying the fuel between the fuel cartridge and the fuel cell stack; and a controller, wherein the fuel cell stack may include: an anode unit including a fuel electrode for performing an oxidation reaction of the fuel supplied from the fuel supply line; a cathode unit including an air electrode for performing a reduction reaction of the gas introduced from the air cartridge; and an electrolyte unit including an electrolyte for transferring metal ions generated by the oxidation reaction of the fuel between the anode unit and the cathode unit. Various embodiments for collecting carbon and generating energy are disclosed.</div></div><div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head"><div class="patent-item-title-wrap"><span class="patent-item-title-text">공기청정기에 구비가능한 탄소포집 장치, 방법 및 시스템</span><span class="patent-item-chevron">▼</span></div><span class="country-pill">KR</span></div><div class="patent-item-ipc"><span class="ipc-tag">F24F 8/95</span><span class="ipc-tag">F24F 8/108</span><span class="ipc-tag">F24F 11/88</span><span class="ipc-tag">H01M 8/24</span><span class="ipc-tag">H01M 8/0668</span><span class="ipc-tag">H02J 50/00</span></div><div class="patent-item-meta">출원번호: 1020240045280 · 출원일: 2024-04-03 · 유사도: 62.81%</div><div class="patent-item-abstract">본 발명의 실시 예는 공기청정기에 구비가능한 탄소 포집 장치에 있어서, 연료 셀을 포함하고, 상기 연료 셀은, 연료의 산화 반응이 이루어지는 연료 전극을 포함하는 음극부, 상기 공기청정기로 유입된 공기에 포함된 기체의 환원 반응이 이루어지는 공기 전극을 포함하는 양극부 - 상기 양극부의 상기 환원 반응에 기반하여 탄소 포집 생성물이 생성됨 - 및 상기 음극부 및 상기 양극부 사이에서 상기 연료의 산화 반응에 의해 생성된 금속 이온을 전달하는 전해질을 포함하는 전해질부를 포함하는, 탄소 포집 장치를 개시한다.</div></div></div></div></div></div></div></div><div class="card reveal-item" style="animation-delay: 440ms;"><div class="card-title">M&amp;A 패턴</div><div class="pattern-list"><div class="pattern-item"><div><strong>336611</strong> · Ship Building and Repairing</div><div class="pattern-meta">비중 23.1% · 수평확장 · 같은 산업 내 경쟁 관계입니다.</div><div class="pattern-reason">피인수자와 인수자가 모두 조선업에 속해 있어, 서로 경쟁하는 관계입니다. 이들은 같은 고객층을 대상으로 하며, 기술과 시장에서의 경쟁이 이루어집니다.</div></div><div class="pattern-item"><div><strong>523910</strong> · Miscellaneous Intermediation</div><div class="pattern-meta">비중 8.2% · 금융지원 · 자금을 지원하는 관계입니다.</div><div class="pattern-reason">인수자는 피인수자에게 자금을 제공하여 사업을 지원할 수 있습니다. 이는 조선업체가 필요한 자본을 확보하는 데 도움을 주며, 금융 서비스와 자금 조달이 연결됩니다.</div></div><div class="pattern-item"><div><strong>523999</strong> · Miscellaneous Financial Investment Activities</div><div class="pattern-meta">비중 7.7% · 금융지원 · 자금을 지원하는 관계입니다.</div><div class="pattern-reason">인수자는 피인수자에게 투자하여 자금을 지원할 수 있습니다. 이는 조선업체가 필요한 자본을 확보하는 데 도움을 주며, 금융 서비스와 자금 조달이 연결됩니다.</div></div><div class="pattern-item"><div><strong>541330</strong> · Engineering Services</div><div class="pattern-meta">비중 5.5% · 기술흡수 · 기술을 공유하는 관계입니다.</div><div class="pattern-reason">인수자는 피인수자의 기술을 활용하여 조선업의 효율성을 높일 수 있습니다. 엔지니어링 서비스와 조선업의 기술적 연결이 이루어져, 혁신적인 솔루션을 제공할 수 있습니다.</div></div><div class="pattern-item"><div><strong>336612</strong> · Boat Building</div><div class="pattern-meta">비중 4.4% · 수평확장 · 같은 산업 내 경쟁 관계입니다.</div><div class="pattern-reason">피인수자와 인수자는 모두 조선업에 속해 있어, 서로 경쟁하는 관계입니다. 이들은 같은 고객층을 대상으로 하며, 기술과 시장에서의 경쟁이 이루어집니다.</div></div></div></div></main></div>
+
+<script>
+const API_BASE = "/api/v1";
+
+// URL: /result/{task_id}
+function getTaskId() {
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  return parts[parts.length - 1];
+}
+
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function pct(x) { return (Number(x) * 100).toFixed(2) + "%"; }
+function fmtDate(s) {
+  if (!s) return "-";
+  const t = String(s);
+  if (/^\d{8}$/.test(t)) return t.slice(0, 4) + "-" + t.slice(4, 6) + "-" + t.slice(6, 8);
+  return t;
+}
+
+// 처리 단계 → 라벨 / 진행률(%) (UX용)
+// 실제 worker state: queued / PARSING / JDPATENT_SUBMIT / JDPATENT_PROCESSING
+const STAGE_LABEL = {
+  queued: "대기 중…",
+  PARSING: "특허 문서 파싱 중…",
+  JDPATENT_SUBMIT: "특허 분석 작업 등록 중…",
+  JDPATENT_PROCESSING: "특허 분석 중… (결과 대기)",
+};
+const STAGE_PCT = {
+  queued: 10, PARSING: 30, JDPATENT_SUBMIT: 50, JDPATENT_PROCESSING: 75,
+};
+const FAILURE_MSG = {
+  not_a_patent_document: "업로드한 문서가 특허 문서가 아닙니다.",
+  runpod_pdf_too_large: "OCR 처리 가능한 파일 크기를 초과했습니다.",
+  runpod_timeout: "OCR 처리 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.",
+  jdpatent_timeout: "특허 분석 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.",
+};
+
+const startedAt = Date.now();
+let elapsedTimer = null;
+function tickElapsed() {
+  const el = document.getElementById("loadingElapsed");
+  if (!el) return;
+  const s = Math.floor((Date.now() - startedAt) / 1000);
+  el.textContent = "경과 시간 " + Math.floor(s / 60) + "분 " + (s % 60) + "초";
+}
+
+async function load() {
+  if (!elapsedTimer) { tickElapsed(); elapsedTimer = setInterval(tickElapsed, 1000); }
+  const taskId = getTaskId();
+  let data;
+  try {
+    const res = await fetch(API_BASE + "/result/" + encodeURIComponent(taskId));
+    data = await res.json();
+    if (!res.ok) throw new Error(data.detail || data.msg || ("HTTP " + res.status));
+  } catch (err) {
+    // 네트워크 일시 오류는 멈추지 않고 재시도
+    setTimeout(load, 2500);
+    return;
+  }
+
+  if (data.status === "completed" && data.result) {
+    clearInterval(elapsedTimer);
+    render(data.result);
+    return;
+  }
+
+  // 실패는 항상 success:false 로 온다 (failed / not_a_patent_document / *_timeout 등).
+  // 그 외 success !== false 인 모든 상태(PARSING, JDPATENT_PROCESSING 등)는 "진행 중"이다.
+  if (data.success === false) {
+    clearInterval(elapsedTimer);
+    const msg = FAILURE_MSG[data.status] || data.msg || ("상태: " + (data.status || "알 수 없음"));
+    return renderError("분석에 실패했습니다.", msg);
+  }
+
+  // 진행 중 — 단계 표시 후 재폴링
+  const st = data.status || "queued";
+  const title = document.getElementById("loadingTitle");
+  const bar = document.getElementById("loadBar");
+  if (title) title.textContent = STAGE_LABEL[st] || "분석 진행 중…";
+  if (bar) bar.style.width = (STAGE_PCT[st] || 8) + "%";
+  setTimeout(load, 2500);
+}
+
+function renderError(title, sub) {
+  document.getElementById("app").innerHTML =
+    '<div class="state-screen error"><div class="state-title">' + esc(title) + "</div>" +
+    '<div class="state-sub">' + esc(sub || "") + "</div>" +
+    '<a class="back-link" href="/sample">← 새 분석 시작</a></div>';
+}
+
+function render(r) {
+  const basic = r.basic_info || {};
+  const patent = basic.patent || {};
+  const naics = r.naics || {};
+  const evalv = r.evaluation || {};
+  const fin = (evalv.final_result) || {};
+  const ma = evalv.ma_market_evaluation || {};
+  const tech = evalv.tech_evaluation || {};
+  const rights = evalv.rights_evaluation || {};
+  const ipcDescs = r.ipc_descriptions || [];
+  const rec = r.recommend_companies || {};
+  const patterns = (r.ma_patterns && r.ma_patterns.patterns) || [];
+
+  const naicsPrimary = naics.primary || {};
+  const countryLabel = basic.country || "-";
+  const fieldLabel = basic.field || "-";
+
+  let html = "";
+
+  // ---- Header ----
+  html += '<header>';
+  html += '<div class="badge">' + esc(countryLabel) + " Patent · " + esc(fieldLabel) + "</div>";
+  html += "<h1>" + esc(patent.title || "(제목 없음)") + "</h1>";
+  html += '<div class="meta">';
+  if (patent.applicant && patent.applicant.number)
+    html += metaItem("출원번호", patent.applicant.number);
+  if (patent.applicant && patent.applicant.name)
+    html += metaItem("출원인", patent.applicant.name);
+  if (patent.applicant && patent.applicant.date)
+    html += metaItem("출원일", patent.applicant.date);
+  if (patent.grant && patent.grant.date)
+    html += metaItem("등록일", patent.grant.date);
+  if (naicsPrimary.code)
+    html += metaItem("산업", naicsPrimary.code + " · " + (naicsPrimary.title || ""));
+  html += "</div></header>";
+
+  html += "<main>";
+
+  // ---- 종합 점수 ----
+  html += '<div class="card"><div class="card-title">종합 평가 점수</div><div class="score-grid">';
+  html += scoreItem("total", "종합 점수", fin.final_score, 100);
+  html += scoreItem("market", "M&A 시장 매력도", ma.ma_market_score, 50);
+  html += scoreItem("tech", "기술성", tech.tech_score, 25);
+  html += scoreItem("rights", "권리성", rights.rights_score, 25);
+  html += "</div>";
+  if (fin.evaluation)
+    html += '<div class="eval-text highlight">' + esc(fin.evaluation) + "</div>";
+  html += "</div>";
+
+  // ---- 기본정보 + IPC/NAICS ----
+  html += '<div class="two-col">';
+
+  // 기본정보
+  html += '<div class="card"><div class="card-title">특허 기본 정보</div><table class="patent-table">';
+  html += row("발명의 명칭", patent.title);
+  if (patent.applicant && patent.applicant.name) html += row("출원인", patent.applicant.name);
+  html += row("출원번호", patent.applicant && patent.applicant.number);
+  html += row("출원일", patent.applicant && patent.applicant.date);
+  html += row("등록번호", patent.grant && patent.grant.number);
+  html += row("등록일", patent.grant && patent.grant.date);
+  html += row("국가", basic.country);
+  html += row("기술 분야", basic.field);
+  if (basic.patent_type) html += row("공보 유형", basic.patent_type);
+  if (basic.patent_kind_code) html += row("Kind Code", basic.patent_kind_code);
+  html += "</table>";
+  if (patent.abstract)
+    html += '<div style="margin-top:20px;"><div class="card-title">초록</div><div class="abstract-text">' +
+      esc(patent.abstract) + "</div></div>";
+  html += "</div>";
+
+  // IPC + NAICS
+  html += '<div class="card"><div class="card-title">IPC 코드</div><div class="ipc-grid">';
+  if (ipcDescs.length) {
+    ipcDescs.forEach(ip => {
+      html += '<div class="ipc-chip"><div class="code">' + esc(ip.ipc_code) +
+        '</div><div class="desc">' + esc(ip.short_description || "") + "</div></div>";
+    });
+  } else if (patent.ipc_code) {
+    (patent.ipc_code || []).forEach(c => {
+      html += '<div class="ipc-chip"><div class="code">' + esc(c) + "</div></div>";
+    });
+  }
+  html += "</div>";
+  if (naicsPrimary.code) {
+    html += '<div style="margin-top:24px;"><div class="card-title">NAICS 산업 분류</div>' +
+      '<div class="naics-primary"><div class="naics-code">' + esc(naicsPrimary.code) + "</div>" +
+      '<div class="naics-title">' + esc(naicsPrimary.title || "") + "</div>" +
+      '<div class="naics-desc">' + esc(naicsPrimary.description || "") + "</div></div></div>";
+  }
+  html += "</div></div>";
+
+  // ---- 세부 평가 탭 ----
+  html += '<div class="card"><div class="card-title">세부 평가</div>';
+  html += '<div class="tab-wrap">' +
+    '<button class="tab-btn active" onclick="switchTab(event,\'tab-market\')">M&A 시장</button>' +
+    '<button class="tab-btn" onclick="switchTab(event,\'tab-tech\')">기술성</button>' +
+    '<button class="tab-btn" onclick="switchTab(event,\'tab-rights\')">권리성</button></div>';
+  html += tabContent("tab-market", true, ma.ma_market_evaluation, ma.ma_market_reason);
+  html += tabContent("tab-tech", false, tech.tech_evaluation, tech.tech_reason);
+  html += tabContent("tab-rights", false, rights.rights_evaluation, rights.rights_reason);
+  html += "</div>";
+
+  // ---- 유사 기업 추천 ----
+  const target = rec.target_similar_companies || [];
+  const acquiror = rec.acquiror_similar_companies || [];
+  if (target.length || acquiror.length) {
+    html += '<div class="two-col">';
+    html += companyCard("유사 기업 추천 — 피인수 기업 (Target)", target);
+    html += companyCard("유사 기업 추천 — 인수 기업 (Acquiror)", acquiror);
+    html += "</div>";
+  }
+
+  // ---- M&A 패턴 ----
+  if (patterns.length) {
+    html += '<div class="card"><div class="card-title">M&A 패턴</div><div class="pattern-list">';
+    patterns.forEach(p => {
+      html += '<div class="pattern-item"><div><strong>' + esc(p.acquirer_naic) + "</strong> · " +
+        esc(p.acquirer_naic_title || "") + "</div>" +
+        '<div class="pattern-meta">비중 ' + esc(p.ratio_percent) + "% · " +
+        esc(p.relation_label || "") + " · " + esc(p.one_line_description || "") + "</div>" +
+        '<div class="pattern-reason">' + esc(p.reason || "") + "</div></div>";
+    });
+    html += "</div></div>";
+  }
+
+  html += "</main>";
+
+  document.getElementById("app").innerHTML = html;
+  initEntryAnimations();
+}
+
+// ---- 렌더 헬퍼 ----
+function metaItem(label, val) {
+  return '<div class="meta-item">' + esc(label) + " <strong>" + esc(val) + "</strong></div>";
+}
+function scoreItem(cls, label, val, max) {
+  return '<div class="score-item ' + cls + '"><div class="score-label">' + esc(label) +
+    '</div><div class="score-number">' + (val == null ? "-" : esc(val)) +
+    '</div><div class="score-max">/ ' + max + "</div></div>";
+}
+function row(label, val) {
+  if (val == null || val === "") return "";
+  return "<tr><td>" + esc(label) + "</td><td>" + esc(val) + "</td></tr>";
+}
+function tabContent(id, active, evalText, reason) {
+  let h = '<div id="' + id + '" class="tab-content' + (active ? " active" : "") + '">';
+  h += '<div class="eval-text" style="color:var(--text);">' + esc(evalText || "(내용 없음)") + "</div>";
+  if (reason) h += '<div class="reason-block">' + esc(reason) + "</div>";
+  return h + "</div>";
+}
+function companyCard(title, companies) {
+  let h = '<div class="card"><div class="card-title">' + esc(title) + '</div><div class="company-list">';
+  if (!companies.length) {
+    h += '<div class="muted">추천 기업이 없습니다.</div>';
+  }
+  companies.forEach(c => {
+    const sim = c.avg_similarity != null ? pct(c.avg_similarity) : "-";
+    h += '<div class="company-card" onclick="toggleCompany(event,this)"><div class="company-header">' +
+      '<div class="company-rank">' + esc(c.rank != null ? c.rank : "") + "</div>" +
+      '<div class="company-info"><div class="company-name">' + esc(c.company_name || "") + "</div>" +
+      '<div class="company-meta"><span>유사도: <span class="val">' + sim + "</span></span>" +
+      '<span>매칭 특허: <span class="val">' + esc(c.matched_patent_count != null ? c.matched_patent_count : "") +
+      "</span></span></div></div><div class=\"company-chevron\">▼</div></div>";
+    h += '<div class="company-patents"><div class="company-patents-inner">';
+    (c.patents || []).forEach(p => {
+      h += '<div class="patent-item" onclick="togglePatent(event,this)"><div class="patent-item-head">' +
+        '<div class="patent-item-title-wrap"><span class="patent-item-title-text">' +
+        esc(p.title || "") + '</span><span class="patent-item-chevron">▼</span></div>' +
+        '<span class="country-pill">' + esc(p.patent_country || "") + "</span></div>";
+      if (p.ipc && p.ipc.length) {
+        h += '<div class="patent-item-ipc">';
+        p.ipc.forEach(t => { h += '<span class="ipc-tag">' + esc(t) + "</span>"; });
+        h += "</div>";
+      }
+      h += '<div class="patent-item-meta">출원번호: ' + esc(p.application_number || "-") +
+        " · 출원일: " + esc(fmtDate(p.application_date)) +
+        " · 유사도: " + (p.similarity != null ? pct(p.similarity) : "-") + "</div>";
+      h += '<div class="patent-item-abstract">' + esc(p.abstract || "") + "</div></div>";
+    });
+    h += "</div></div></div>";
+  });
+  return h + "</div></div>";
+}
+
+// ---- sample.html과 동일한 인터랙션 ----
+function switchTab(event, tabId) {
+  event.preventDefault();
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+  event.target.classList.add("active");
+  document.getElementById(tabId).classList.add("active");
+}
+function toggleCompany(event, el) { if (event) event.stopPropagation(); el.classList.toggle("open"); }
+function togglePatent(event, el) { if (event) event.stopPropagation(); el.classList.toggle("open"); }
+function initEntryAnimations() {
+  document.querySelectorAll("main > .card, main > .two-col").forEach((s, i) => {
+    s.classList.add("reveal-item");
+    s.style.animationDelay = (120 + i * 80) + "ms";
+  });
+}
+
+load();
+</script>
+
+
+</body></html>

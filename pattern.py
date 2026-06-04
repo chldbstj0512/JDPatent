@@ -4,6 +4,7 @@ from langchain_openai import ChatOpenAI
 from openai import OpenAI
 import json
 import os
+from openai_logging import openai_chat_options
 
 load_dotenv() 
 
@@ -166,6 +167,7 @@ reason (상세 설명) 조건 — 매우 중요:
         ],
         temperature=0,
         max_tokens=2800,
+        **openai_chat_options("pattern.naic_relation", model="gpt-4o-mini"),
     )
 
     content = response.choices[0].message.content.strip()

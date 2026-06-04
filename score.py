@@ -7,6 +7,7 @@ import re
 from dotenv import load_dotenv
 from openai import OpenAI 
 import os
+from openai_logging import openai_chat_options
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -1040,6 +1041,7 @@ def call_llm(prompt, model="gpt-4.1", max_tokens=None):
     )
     if max_tokens is not None:
         kwargs["max_tokens"] = max_tokens
+    kwargs.update(openai_chat_options("score.call_llm", model=model))
     response = client.chat.completions.create(**kwargs)
 
     raw_text = response.choices[0].message.content.strip()
@@ -1207,5 +1209,4 @@ def run_score(
     )
 
     return final_result, payload
-
 

@@ -24,6 +24,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from tqdm import tqdm
 from pinecone import Pinecone, ServerlessSpec
+from openai_logging import openai_chat_options
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -514,6 +515,7 @@ STATS_JSON:
             ],
             temperature=0,
             max_tokens=2200,
+            **openai_chat_options("extract.claim_family_reason", model=CLAIM_FAMILY_REASON_MODEL),
         )
         content = response.choices[0].message.content.strip()
         obj = _parse_json_object(content)
@@ -1299,6 +1301,7 @@ OCR TEXT (metadata prompt; 길이={len(text)} chars, 앞부분만 잘린 경우 
         ],
         temperature=0,
         max_tokens=5000,
+        **openai_chat_options("extract.metadata_legacy", model=METADATA_LEGACY_MODEL),
     )
 
     content = response.choices[0].message.content.strip()
@@ -1720,6 +1723,7 @@ OCR TEXT
         ],
         temperature=0,
         max_tokens=10000,
+        **openai_chat_options("extract.claim_legacy", model=CLAIM_LEGACY_MODEL),
     )
 
     content = response.choices[0].message.content.strip()
@@ -1808,6 +1812,7 @@ STRUCTURED_INPUT_JSON:
         ],
         temperature=0,
         max_tokens=3500,
+        **openai_chat_options("extract.metadata_reasoning", model=METADATA_REASONING_MODEL),
     )
     content = response.choices[0].message.content.strip()
     return _parse_json_object(content)
@@ -1918,6 +1923,7 @@ CLAIM_SECTION_PREVIEW:
         ],
         temperature=0,
         max_tokens=8000,
+        **openai_chat_options("extract.claim_reasoning", model=CLAIM_REASONING_MODEL),
     )
     content = response.choices[0].message.content.strip()
     try:
