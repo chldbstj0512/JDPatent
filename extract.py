@@ -306,10 +306,29 @@ def extract_forward_citation_count(text: str) -> int:
     return len(seen)
 
 
-CLAIM_SEC_START = re.compile(
-    r"(?:What\s+is\s+claimed\s+is\s*:?|The\s+invention\s+claimed\s+is\s*:?|^\s*Claims\s*$|청구범위)",
-    re.IGNORECASE | re.MULTILINE,
-)
+# 청구 시작 앵커(우선순위 순). PDF Ctrl+F와 동일한 실무 키워드.
+_CLAIM_START_ANCHOR_SPECS: list[tuple[str, re.Pattern[str]]] = [
+    ("what_is_claimed", re.compile(r"What\s+is\s+claimed\s+is\s*:?", re.IGNORECASE)),
+    ("invention_claimed", re.compile(r"The\s+invention\s+claimed\s+is\s*:?", re.IGNORECASE)),
+    ("claims_heading", re.compile(r"(?m)^\s*Claims\s*$", re.IGNORECASE)),
+    ("청구범위", re.compile(r"청구범위")),
+    ("1_method_comprising", re.compile(r"(?m)^\s*1\.\s+A\s+method\s+comprising\s*:?", re.IGNORECASE)),
+    ("1_apparatus_comprising", re.compile(r"(?m)^\s*1\.\s+An\s+apparatus\s+comprising\s*:?", re.IGNORECASE)),
+    ("1_system_comprising", re.compile(r"(?m)^\s*1\.\s+A\s+system\s+comprising\s*:?", re.IGNORECASE)),
+    ("1_method", re.compile(r"(?m)^\s*1\.\s+A\s+method\b", re.IGNORECASE)),
+    ("1_apparatus", re.compile(r"(?m)^\s*1\.\s+An\s+apparatus\b", re.IGNORECASE)),
+    ("1_system", re.compile(r"(?m)^\s*1\.\s+A\s+system\b", re.IGNORECASE)),
+    ("claim_1", re.compile(r"(?i)\bclaim\s+1\b")),
+    (
+        "1_comprising",
+        re.compile(
+            r"(?m)^\s*1\.\s+(?:A|An)\s+[\w-]+(?:\s+[\w-]+){0,6}\s+comprising\s*:?",
+            re.IGNORECASE,
+        ),
+    ),
+]
+
+CLAIM_SEC_START = _CLAIM_START_ANCHOR_SPECS[0][1]  # 하위 호환
 
 CLAIM_NUM_EN = re.compile(r"(?:^|\n)\s*(\d{1,3})\.\s+(?=\S)", re.MULTILINE)
 CLAIM_NUM_KO = re.compile(r"(?:^|\n)\s*제\s*(\d{1,3})\s*항\s*[:\.]?\s*", re.MULTILINE)
@@ -324,11 +343,42 @@ DEPENDENT_PATTERNS = [
 ]
 
 
+def claim_ocr_for_parsing(
+    country: Optional[str],
+    front: str,
+    back: Optional[str] = None,
+) -> str:
+    """
+    청구 파싱용 OCR 선택.
+    - KR: 앞(전면)부터 — front 우선, back이 있으면 이어 붙임.
+    - US(및 기타): 뒷면(back) 우선 — 장문 US는 청구·인용이 후반부에 있음.
+    """
+    front = (front or "").strip()
+    back = (back or "").strip() if back else ""
+    c = (country or "").upper()
+    if c == "US" and back:
+        return back
+    if back:
+        return front + ("\n" + back if front else "")
+    return front
+
+
+def find_claim_section_start(text: str) -> tuple[Optional[int], Optional[str]]:
+    """실무 검색 키워드 순으로 청구 구간 시작 위치·앵커 id 반환."""
+    if not text or not text.strip():
+        return None, None
+    for anchor_id, pat in _CLAIM_START_ANCHOR_SPECS:
+        m = pat.search(text)
+        if m:
+            return m.start(), anchor_id
+    return None, None
+
+
 def _extract_claim_section(text: str, max_len: int = 250_000) -> str:
-    m = CLAIM_SEC_START.search(text)
-    if not m:
+    start, _ = find_claim_section_start(text)
+    if start is None:
         return ""
-    return text[m.start() : m.start() + max_len]
+    return text[start : start + max_len]
 
 
 def split_claims(claim_text: str) -> list[tuple[int, str]]:
@@ -336,7 +386,9 @@ def split_claims(claim_text: str) -> list[tuple[int, str]]:
         return []
     matches = list(CLAIM_NUM_EN.finditer(claim_text))
     if len(matches) < 2:
-        matches = list(CLAIM_NUM_KO.finditer(claim_text))
+        ko = list(CLAIM_NUM_KO.finditer(claim_text))
+        if len(ko) > len(matches):
+            matches = ko
     claims: list[tuple[int, str]] = []
     for i, match in enumerate(matches):
         start = match.start()
@@ -635,6 +687,13 @@ def extract_first_independent_claim_ocr_slice(
     if start_idx is not None:
         return slice_from(start_idx)
 
+    for _aid, pat in _CLAIM_START_ANCHOR_SPECS:
+        if _aid in ("what_is_claimed", "invention_claimed", "claims_heading", "청구범위"):
+            continue
+        m_anchor = pat.search(raw)
+        if m_anchor:
+            return slice_from(m_anchor.start())
+
     m1 = re.search(r"(?ms)^\s*1\.\s+", raw)
     if m1:
         return slice_from(m1.start())
@@ -814,7 +873,12 @@ def extract_structured_metadata(user_ocr: str, back_ocr: Optional[str] = None) -
     country = _infer_country(blocks, front)
     ipc_norm_list = extract_ipc_codes_strict(combined)
     fwd = extract_forward_citation_count(combined)
-    claim_sec = _extract_claim_section(combined)
+    claim_ocr = claim_ocr_for_parsing(country, front, back if back else None)
+    claim_start, claim_anchor = find_claim_section_start(claim_ocr)
+    claim_sec = _extract_claim_section(claim_ocr)
+    if not claim_sec.strip() and claim_ocr != combined:
+        claim_start, claim_anchor = find_claim_section_start(combined)
+        claim_sec = _extract_claim_section(combined)
     cstats = extract_claim_statistics(claim_sec)
 
     return {
@@ -831,6 +895,9 @@ def extract_structured_metadata(user_ocr: str, back_ocr: Optional[str] = None) -
         "claim_statistics": cstats,
         "claim_section_full": claim_sec,
         "claim_section_preview": (claim_sec or "")[:16000],
+        "claim_parse_ocr_source": "back" if (country or "").upper() == "US" and back else "front",
+        "claim_section_anchor": claim_anchor,
+        "claim_section_start_offset": claim_start,
     }
 
 
@@ -1380,7 +1447,22 @@ _CLAIM_FOCUS_PROMPT_MAX_CHARS = 28000
 _CLAIM_FOCUS_BLOCK_MAX_CHARS = 12000
 
 
-def _build_combined_claim_text(text_front: str, text_back: Optional[str] = None) -> str:
+def _build_combined_claim_text(
+    text_front: str,
+    text_back: Optional[str] = None,
+    country: Optional[str] = None,
+) -> str:
+    claim_ocr = claim_ocr_for_parsing(country, text_front or "", text_back)
+    if text_back and (country or "").upper() == "US":
+        front_snip = (text_front or "")[:12000]
+        return f"""
+        [BIBLIO_FRONT_OCR - reference only, claims are usually NOT here]
+        {front_snip}
+
+        [CLAIM_PARSE_OCR - extract all claim fields from THIS section]
+        {claim_ocr}
+        """
+
     if text_back:
         return f"""
         [FRONT_PART_OCR]
@@ -1389,7 +1471,7 @@ def _build_combined_claim_text(text_front: str, text_back: Optional[str] = None)
         [BACK_PART_OCR]
         {text_back}
         """
-    return text_front or ""
+    return claim_ocr or text_front or ""
 
 
 def _find_claim_start_hint(text: str) -> Optional[dict]:
@@ -1477,17 +1559,21 @@ CLAIM-FOCUSED OCR WINDOW (FROM START HINT)
 def extract_patent_claims_llm_legacy(
     text_front: str,
     text_back: str = None,
+    country: Optional[str] = None,
     _claim_retry: bool = False,
 ):
     """
-    - 50페이지 미만: text_front 에 전체 OCR 텍스트 입력, text_back = None
-    - 53페이지 이상: text_front = 앞 3페이지 OCR
-                     text_back  = 뒤 50페이지 OCR
+    OCR 입력(업스트림):
+    - 50페이지 미만: text_front = 전체, text_back = None
+    - 53페이지 이상(US): text_front = 앞 3페이지, text_back = 뒤에서 OCR(예: 후 50페이지)
+
+    청구 추출 시 country에 따라 파싱 대상 OCR 선택(KR=앞부터, US=뒷면 우선) 후,
+    청구 시작 힌트가 잡히면 해당 구간을 중심으로 LLM 프롬프트를 축소한다.
     """
 
     clean_front = _sanitize_ocr_text(text_front or "")
     clean_back = _sanitize_ocr_text(text_back or "") if text_back else None
-    combined_source = _build_combined_claim_text(clean_front, clean_back)
+    combined_source = _build_combined_claim_text(clean_front, clean_back, country=country)
     claim_start_hint = _find_claim_start_hint(combined_source)
     claim_focus_text = None
     if claim_start_hint:
@@ -1579,13 +1665,15 @@ in the total count.
 3. CLAIM SECTION EXTRACTION RULE
 ----------------------------------------
 
-Locate claim section start:
-- English likely indicators:
-  - "What is claimed is:"
-  - "The invention claimed is:"
-  - "Claims"
-- Korean likely indicator:
-  - "청구범위"
+Locate claim section start (search in this practical order):
+- "claim 1"
+- "1. A method" / "1. An apparatus" / "1. A system"
+- "1. A method comprising:" (and similar … comprising — very common in US patents)
+- "comprising" near claim 1 wording
+- "What is claimed is:" / "The invention claimed is:" / "Claims"
+- Korean: "청구범위" / "제1항"
+
+For US patents, prioritize the [CLAIM_PARSE_OCR] block (back pages). For KR, read from the start of the document stream.
 
 Extract entire claim section.
 Exclude deleted claims.
@@ -2005,11 +2093,16 @@ def extract_patent_claims(text_front: str, text_back: str = None) -> dict[str, A
     """
     레거시 청구 LLM 호출 후, 인용·청구 수·첫 독립항 본문·**청구 계열 수(인용 그래프)**·**계열 수 진단(reason)**는 `extract_structured_metadata` 결정값·보조 LLM으로 병합한다.
     text_front / text_back 규칙은 `extract_patent_claims_llm_legacy` docstring 참고.
+    결정론 파서가 청구를 찾았는데 LLM만 실패한 경우 결정론 결과만으로 완료한다.
     """
     structured = extract_structured_metadata(text_front, text_back)
-    llm = extract_patent_claims_llm_legacy(text_front, text_back)
+    country = structured.get("country")
+    llm = extract_patent_claims_llm_legacy(text_front, text_back, country=country)
+    det_cc = int((structured.get("claim_statistics") or {}).get("claim_count") or 0)
     if not isinstance(llm, dict) or llm.get("error"):
-        return llm
+        if det_cc > 0:
+            return finalize_claims_with_deterministic(structured, {})
+        return llm if isinstance(llm, dict) else {"error": "claims_not_found"}
     return finalize_claims_with_deterministic(structured, llm)
 
 def run_NAIC_extract(
@@ -2165,7 +2258,7 @@ def run_NAIC_extract(
         try:
             claims = extract_patent_claims(
                 text_front=patent_text,
-                text_back=clean_back_ocr
+                text_back=clean_back_ocr,
             )
             if isinstance(claims, str):
                 claims = json.loads(claims)
