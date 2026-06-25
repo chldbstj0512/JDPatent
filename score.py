@@ -12,6 +12,76 @@ from openai_logging import openai_chat_options
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# 최소 점수(하한). 테스트 후 변경 시 .env 또는 환경변수로 조정 (0이면 비활성).
+_DEFAULT_MIN_MA_ATTRACTIVENESS_SCORE = 25
+_DEFAULT_MIN_TECHNICAL_SCORE = 15
+_DEFAULT_MIN_RIGHTS_SCORE = 15
+
+
+def _read_min_score(env_key: str, default: int, max_score: int) -> int:
+    raw = os.getenv(env_key)
+    if raw is None or str(raw).strip() == "":
+        val = default
+    else:
+        try:
+            val = int(float(raw))
+        except (TypeError, ValueError):
+            val = default
+    return max(0, min(max_score, val))
+
+
+def _apply_score_floor(raw: int, floor: int) -> int:
+    if floor <= 0:
+        return raw
+    return max(raw, floor)
+
+
+def get_score_floor_config() -> dict:
+    return {
+        "min_ma_attractiveness_score": _read_min_score(
+            "MIN_MA_ATTRACTIVENESS_SCORE", _DEFAULT_MIN_MA_ATTRACTIVENESS_SCORE, 50
+        ),
+        "min_technical_score": _read_min_score(
+            "MIN_TECH_SCORE", _DEFAULT_MIN_TECHNICAL_SCORE, 25
+        ),
+        "min_rights_score": _read_min_score(
+            "MIN_RIGHTS_SCORE", _DEFAULT_MIN_RIGHTS_SCORE, 25
+        ),
+    }
+
+
+def apply_score_floors(ma_result: dict, tech_result: dict, rights_result: dict) -> dict:
+    """LLM 산출 점수에 하한을 적용하고 적용 전·후 값을 반환한다."""
+    floors = get_score_floor_config()
+    ma_raw = int(ma_result.get("ma_attractiveness_score") or 0)
+    tech_raw = int(tech_result.get("technical_score") or 0)
+    rights_raw = int(rights_result.get("rights_score") or 0)
+
+    ma_result["ma_attractiveness_score"] = _apply_score_floor(
+        ma_raw, floors["min_ma_attractiveness_score"]
+    )
+    tech_result["technical_score"] = _apply_score_floor(
+        tech_raw, floors["min_technical_score"]
+    )
+    rights_result["rights_score"] = _apply_score_floor(
+        rights_raw, floors["min_rights_score"]
+    )
+
+    return {
+        **floors,
+        "raw_scores_before_floor": {
+            "ma_attractiveness_score": ma_raw,
+            "technical_score": tech_raw,
+            "rights_score": rights_raw,
+        },
+        "final_scores_after_floor": {
+            "ma_attractiveness_score": ma_result["ma_attractiveness_score"],
+            "technical_score": tech_result["technical_score"],
+            "rights_score": rights_result["rights_score"],
+        },
+    }
+
+
 def get_field(field_scores, user_field):
     field_score = field_scores.get(user_field)
 
@@ -1138,6 +1208,8 @@ def evaluate_patent(
     )
     _set_reason_from_metric_lines(rights_result)
 
+    score_floors = apply_score_floors(ma_result, tech_result, rights_result)
+
     total_score = (
         ma_result["ma_attractiveness_score"] +
         tech_result["technical_score"] +
@@ -1171,6 +1243,7 @@ def evaluate_patent(
             "final_score": total_score,
             "evaluation": evaluation_text,
             "reason": reason_text,
+            "score_floors": score_floors,
         }
     }
 
