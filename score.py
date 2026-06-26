@@ -11,74 +11,92 @@ import os
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# 최소 점수(하한). 테스트 후 변경 시 .env 또는 환경변수로 조정 (0이면 비활성).
-_DEFAULT_MIN_MA_ATTRACTIVENESS_SCORE = 25
-_DEFAULT_MIN_TECHNICAL_SCORE = 15
-_DEFAULT_MIN_RIGHTS_SCORE = 15
+# 사용자 노출 점수 구간(하한 컷이 아닌 채점 레인지). .env 로 조정 가능.
+_DEFAULT_SCORE_RANGES = {
+    "ma": {"min": 25, "max": 50, "internal_max": 50},
+    "tech": {"min": 15, "max": 25},
+    "rights": {"min": 15, "max": 25},
+}
 
 
-def _read_min_score(env_key: str, default: int, max_score: int) -> int:
+def _read_score_bound(env_key: str, default: int) -> int:
     raw = os.getenv(env_key)
     if raw is None or str(raw).strip() == "":
-        val = default
-    else:
-        try:
-            val = int(float(raw))
-        except (TypeError, ValueError):
-            val = default
-    return max(0, min(max_score, val))
+        return default
+    try:
+        return int(float(raw))
+    except (TypeError, ValueError):
+        return default
 
 
-def _apply_score_floor(raw: int, floor: int) -> int:
-    if floor <= 0:
-        return raw
-    return max(raw, floor)
+def get_score_display_ranges() -> dict:
+    ma_min = _read_score_bound("SCORE_RANGE_MA_MIN", _DEFAULT_SCORE_RANGES["ma"]["min"])
+    ma_max = _read_score_bound("SCORE_RANGE_MA_MAX", _DEFAULT_SCORE_RANGES["ma"]["max"])
+    tech_min = _read_score_bound("SCORE_RANGE_TECH_MIN", _DEFAULT_SCORE_RANGES["tech"]["min"])
+    tech_max = _read_score_bound("SCORE_RANGE_TECH_MAX", _DEFAULT_SCORE_RANGES["tech"]["max"])
+    rights_min = _read_score_bound("SCORE_RANGE_RIGHTS_MIN", _DEFAULT_SCORE_RANGES["rights"]["min"])
+    rights_max = _read_score_bound("SCORE_RANGE_RIGHTS_MAX", _DEFAULT_SCORE_RANGES["rights"]["max"])
 
+    if ma_max < ma_min:
+        ma_min, ma_max = ma_max, ma_min
+    if tech_max < tech_min:
+        tech_min, tech_max = tech_max, tech_min
+    if rights_max < rights_min:
+        rights_min, rights_max = rights_max, rights_min
 
-def get_score_floor_config() -> dict:
     return {
-        "min_ma_attractiveness_score": _read_min_score(
-            "MIN_MA_ATTRACTIVENESS_SCORE", _DEFAULT_MIN_MA_ATTRACTIVENESS_SCORE, 50
-        ),
-        "min_technical_score": _read_min_score(
-            "MIN_TECH_SCORE", _DEFAULT_MIN_TECHNICAL_SCORE, 25
-        ),
-        "min_rights_score": _read_min_score(
-            "MIN_RIGHTS_SCORE", _DEFAULT_MIN_RIGHTS_SCORE, 25
-        ),
+        "ma": {"min": ma_min, "max": ma_max, "internal_max": 50},
+        "tech": {"min": tech_min, "max": tech_max},
+        "rights": {"min": rights_min, "max": rights_max},
     }
 
 
-def apply_score_floors(ma_result: dict, tech_result: dict, rights_result: dict) -> dict:
-    """LLM 산출 점수에 하한을 적용하고 적용 전·후 값을 반환한다."""
-    floors = get_score_floor_config()
-    ma_raw = int(ma_result.get("ma_attractiveness_score") or 0)
-    tech_raw = int(tech_result.get("technical_score") or 0)
-    rights_raw = int(rights_result.get("rights_score") or 0)
+def _remap_linear(
+    raw: int,
+    internal_min: int,
+    internal_max: int,
+    display_min: int,
+    display_max: int,
+) -> int:
+    if internal_max <= internal_min:
+        return display_min
+    clamped = max(internal_min, min(internal_max, raw))
+    ratio = (clamped - internal_min) / (internal_max - internal_min)
+    return int(round(display_min + ratio * (display_max - display_min)))
 
-    ma_result["ma_attractiveness_score"] = _apply_score_floor(
-        ma_raw, floors["min_ma_attractiveness_score"]
-    )
-    tech_result["technical_score"] = _apply_score_floor(
-        tech_raw, floors["min_technical_score"]
-    )
-    rights_result["rights_score"] = _apply_score_floor(
-        rights_raw, floors["min_rights_score"]
+
+def _score_band_text(min_score: int, max_score: int) -> str:
+    span = max_score - min_score
+    high_lo = min_score + int(round(span * 0.6)) + 1
+    mid_lo = min_score + int(round(span * 0.33)) + 1
+    mid_hi = high_lo - 1
+    low_hi = mid_lo - 1
+    return (
+        f'"높음"에 해당하면 {high_lo}~{max_score}, '
+        f'"중간"에 해당하면 {mid_lo}~{mid_hi}, '
+        f'"낮음"에 해당하면 {min_score}~{low_hi} 범위를 사용하라.'
     )
 
-    return {
-        **floors,
-        "raw_scores_before_floor": {
-            "ma_attractiveness_score": ma_raw,
-            "technical_score": tech_raw,
-            "rights_score": rights_raw,
-        },
-        "final_scores_after_floor": {
-            "ma_attractiveness_score": ma_result["ma_attractiveness_score"],
-            "technical_score": tech_result["technical_score"],
-            "rights_score": rights_result["rights_score"],
-        },
+
+def apply_ma_display_score_range(ma_result: dict, ranges: dict | None = None) -> dict:
+    """내부 0~50 블렌드 점수를 시장성 노출 구간(기본 25~50)으로 선형 매핑한다."""
+    cfg = (ranges or get_score_display_ranges())["ma"]
+    internal = int(ma_result.get("ma_attractiveness_score") or 0)
+    display = _remap_linear(
+        internal,
+        0,
+        int(cfg["internal_max"]),
+        int(cfg["min"]),
+        int(cfg["max"]),
+    )
+    ma_result["ma_attractiveness_score_internal"] = internal
+    ma_result["ma_attractiveness_score"] = display
+    ma_result["ma_score_display_range"] = {
+        "min": cfg["min"],
+        "max": cfg["max"],
+        "internal_max": cfg["internal_max"],
     }
+    return ma_result
 
 
 def get_field(field_scores, user_field):
@@ -928,7 +946,9 @@ def run_ma_market_evaluation_four_calls(payload: dict) -> dict:
 
 def build_rights_prompt(
     row,
-    avg_claim_count
+    avg_claim_count,
+    score_min: int = 15,
+    score_max: int = 25,
 ):
 
     return f"""
@@ -983,12 +1003,18 @@ def build_rights_prompt(
 }}
 
 [추가 조건]
-- rights_score는 0~25 사이의 정수로 반환하라.
-- "높음"에 해당하면 18~25, "중간"에 해당하면 9~17, "낮음"에 해당하면 0~8 범위를 사용하라.
+- rights_score는 {score_min}~{score_max} 사이의 정수로 반환하라.
+- {_score_band_text(score_min, score_max)}
 - **reason 필드는 출력하지 마라.** 내부용 줄은 metric_evaluations만으로 충분하다.
 """
 
-def build_tech_prompt(row, avg_ipc_count, avg_citation_count):
+def build_tech_prompt(
+    row,
+    avg_ipc_count,
+    avg_citation_count,
+    score_min: int = 15,
+    score_max: int = 25,
+):
     return f"""
 너는 특허 기술성 평가 전문가이다.
 아래 특허공보의 기술성을 평가하라.
@@ -1037,8 +1063,8 @@ def build_tech_prompt(row, avg_ipc_count, avg_citation_count):
 }}
 
 [추가 조건]
-- technical_score는 0~25 사이의 정수로 반환하라.
-- "높음"에 해당하면 18~25, "중간"에 해당하면 9~17, "낮음"에 해당하면 0~8 범위를 사용하라.
+- technical_score는 {score_min}~{score_max} 사이의 정수로 반환하라.
+- {_score_band_text(score_min, score_max)}
 - **reason 필드는 출력하지 마라.** 내부용 줄은 metric_evaluations만으로 충분하다.
 """
 
@@ -1151,11 +1177,12 @@ def _set_reason_from_metric_lines(result: dict, fallback: str = "") -> None:
     result["reason"] = "\n".join(lines) if lines else (fallback or "")
 
 
-def _normalize_component_score(value, max_score):
+def _normalize_component_score(value, max_score, min_score: int = 0):
+    mid_score = (min_score + max_score) // 2
     score_map = {
         "높음": max_score,
-        "중간": max_score // 2,
-        "낮음": 0,
+        "중간": mid_score,
+        "낮음": min_score,
     }
 
     if isinstance(value, str):
@@ -1166,9 +1193,9 @@ def _normalize_component_score(value, max_score):
     try:
         score = int(float(value))
     except (TypeError, ValueError):
-        score = 0
+        score = min_score
 
-    return max(0, min(max_score, score))
+    return max(min_score, min(max_score, score))
 
 def evaluate_patent(
     payload,
@@ -1181,32 +1208,41 @@ def evaluate_patent(
     user_title = user_info.get("title")
     user_abstract = user_info.get("abstract")
 
+    score_ranges = get_score_display_ranges()
+    tech_range = score_ranges["tech"]
+    rights_range = score_ranges["rights"]
+
     ma_result = run_ma_market_evaluation_four_calls(payload)
+    apply_ma_display_score_range(ma_result, score_ranges)
 
     tech_prompt = build_tech_prompt(
         row=row,
         avg_ipc_count=avg_ipc_count,
-        avg_citation_count=avg_citation_count
+        avg_citation_count=avg_citation_count,
+        score_min=tech_range["min"],
+        score_max=tech_range["max"],
     )
     tech_result = call_llm(tech_prompt, max_tokens=3072)
     tech_result["technical_score"] = _normalize_component_score(
         tech_result.get("technical_score"),
-        25
+        tech_range["max"],
+        min_score=tech_range["min"],
     )
     _set_reason_from_metric_lines(tech_result)
 
     rights_prompt = build_rights_prompt(
         row=row,
-        avg_claim_count=avg_claim_count
+        avg_claim_count=avg_claim_count,
+        score_min=rights_range["min"],
+        score_max=rights_range["max"],
     )
     rights_result = call_llm(rights_prompt, max_tokens=3072)
     rights_result["rights_score"] = _normalize_component_score(
         rights_result.get("rights_score"),
-        25
+        rights_range["max"],
+        min_score=rights_range["min"],
     )
     _set_reason_from_metric_lines(rights_result)
-
-    score_floors = apply_score_floors(ma_result, tech_result, rights_result)
 
     total_score = (
         ma_result["ma_attractiveness_score"] +
@@ -1241,7 +1277,17 @@ def evaluate_patent(
             "final_score": total_score,
             "evaluation": evaluation_text,
             "reason": reason_text,
-            "score_floors": score_floors,
+            "score_ranges": {
+                **score_ranges,
+                "display_scores": {
+                    "ma_attractiveness_score": ma_result["ma_attractiveness_score"],
+                    "technical_score": tech_result["technical_score"],
+                    "rights_score": rights_result["rights_score"],
+                },
+                "ma_internal_score_before_range_map": ma_result.get(
+                    "ma_attractiveness_score_internal"
+                ),
+            },
         }
     }
 
